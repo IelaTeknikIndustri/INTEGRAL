@@ -1,0 +1,3413 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>INTEGRAL - Industrial Integrated Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        :root {
+            --primary: #240D57;
+            --primary-hover: #35137F;
+            --accent: #4F46E5;
+            --accent-hover: #4338CA;
+            --canvas: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #1E293B;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+            --input-bg: #F8FAFC;
+            --table-header: #F8FAFC;
+            --table-hover: #F8FAFC;
+            --card-subtle: #F8FAFC;
+        }
+
+        [data-theme="dark"] {
+            --primary: #1E0B46;
+            --primary-hover: #2D106B;
+            --accent: #6366F1;
+            --accent-hover: #4F46E5;
+            --canvas: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: #334155;
+            --input-bg: #0F172A;
+            --table-header: #182234;
+            --table-hover: #27354A;
+            --card-subtle: #182234;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            background: var(--canvas);
+            color: var(--text);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .app-root {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* TOMBOL SWITCH TEMA (DARK / LIGHT) */
+        .btn-theme-toggle {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text);
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-toggle:hover {
+            transform: scale(1.06);
+            border-color: var(--accent);
+        }
+
+        /* GERBANG LOGIN */
+        #login-view {
+            position: fixed;
+            inset: 0;
+            background: #1B0B40;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .login-card {
+            background: #FFFFFF;
+            padding: 36px 30px 30px 30px;
+            border-radius: 26px;
+            width: 100%;
+            max-width: 390px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo {
+            width: 260px;
+            max-width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        .inp {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            outline: none;
+            background: var(--input-bg);
+            color: var(--text);
+            margin-bottom: 12px;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .inp:focus {
+            border-color: var(--accent);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .btn-login:hover {
+            background: var(--accent-hover);
+        }
+
+        /* SIDEBAR BACK-OFFICE */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2D106B 0%, #17073B 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0 16px 20px 16px;
+            flex-shrink: 0;
+            z-index: 1000;
+            position: relative;
+            transition: left 0.3s ease;
+        }
+
+        .brand-box {
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-logo {
+            max-height: 48px;
+            max-width: 100%;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #C4B5FD;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, #6366F1 0%, #8B5CF6 100%);
+            color: white;
+        }
+
+        .nav-item-ai {
+            background: linear-gradient(90deg, #EC4899 0%, #BE185D 100%);
+            color: white;
+            margin-top: 14px;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            background: var(--canvas);
+            transition: background-color 0.25s ease;
+        }
+
+        .header-bar {
+            height: 64px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .main-body {
+            padding: 24px;
+        }
+
+        .btn-mobile-menu {
+            display: none;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-size: 18px;
+            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 999;
+            backdrop-filter: blur(2px);
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            padding: 18px 20px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+
+        .stat-val {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #4F46E5;
+        }
+
+        .btn-warning {
+            background: #EA580C;
+        }
+
+        .btn-success {
+            background: #16A34A;
+        }
+
+        .btn-info {
+            background: #0284C7;
+        }
+
+        .btn-danger {
+            background: #DC2626;
+        }
+
+        .btn-ghost {
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .table-box {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        .tbl th {
+            background: var(--table-header);
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .tbl td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .tbl tr:hover {
+            background: var(--table-hover);
+        }
+
+        .link-buku {
+            color: #3B82F6;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .link-buku:hover {
+            text-decoration: underline;
+            color: #60A5FA;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .pill-aktif {
+            background: #FEF08A;
+            color: #854D0E;
+        }
+
+        .pill-terlambat {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .pill-dikembalikan {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .pill-rusak {
+            background: #FFEDD5;
+            color: #C2410C;
+        }
+
+        /* KARTU PILIH KATEGORI BUKU */
+        .kategori-selection-wrap {
+            text-align: center;
+            padding: 30px 10px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .kategori-header-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .kategori-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .kategori-card-big {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 36px 20px 28px 20px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kategori-card-big:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .kat-lit {
+            background: linear-gradient(180deg, #EFF6FF 0%, #DBEAFE 100%);
+            border-color: #BFDBFE;
+        }
+
+        .kat-kp {
+            background: linear-gradient(180deg, #F5F3FF 0%, #EDE9FE 100%);
+            border-color: #DDD6FE;
+        }
+
+        .kat-skripsi {
+            background: linear-gradient(180deg, #FAF5FF 0%, #F3E8FF 100%);
+            border-color: #E9D5FF;
+        }
+
+        .kat-rusak {
+            background: linear-gradient(180deg, #FFF7ED 0%, #FFEDD5 100%);
+            border-color: #FED7AA;
+        }
+
+        [data-theme="dark"] .kat-lit {
+            background: #1E293B;
+            border-color: #3B82F6;
+        }
+
+        [data-theme="dark"] .kat-kp {
+            background: #1E293B;
+            border-color: #8B5CF6;
+        }
+
+        [data-theme="dark"] .kat-skripsi {
+            background: #1E293B;
+            border-color: #A855F7;
+        }
+
+        [data-theme="dark"] .kat-rusak {
+            background: #1E293B;
+            border-color: #F97316;
+        }
+
+        .kat-icon-wrap {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 48px;
+            filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.08));
+        }
+
+        .kat-title-big {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .kat-subtitle-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 16px;
+            backdrop-filter: blur(2px);
+        }
+
+        #modalConfirm {
+            z-index: 25000 !important;
+            background: rgba(15, 23, 42, 0.75);
+        }
+
+        .modal-card {
+            background: var(--surface);
+            color: var(--text);
+            border-radius: 22px;
+            padding: 24px;
+            width: 100%;
+            max-width: 540px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .book-card {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .book-card.selected {
+            border-color: var(--accent);
+            background: #27354A;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 4px 4px 4px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        .p-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .p-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0F172A;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+            z-index: 100000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99998;
+            backdrop-filter: blur(3px);
+            color: white;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #6366F1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .student-portal-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 90px;
+        }
+
+        .student-topbar {
+            height: 68px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .hero-banner-student {
+            background: linear-gradient(135deg, #2D106B 0%, #17073B 100%);
+            border-radius: 20px;
+            padding: 24px;
+            color: white;
+            margin-bottom: 22px;
+            box-shadow: 0 10px 25px -5px rgba(36, 13, 87, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner-student::after {
+            content: "🎓";
+            position: absolute;
+            right: 18px;
+            bottom: -12px;
+            font-size: 110px;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .student-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .student-card-status {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .active-loan-student-item {
+            background: var(--card-subtle);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .quick-nav-student-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .quick-student-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-student-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .catalog-student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .book-student-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .book-student-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .cluster-filter-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        .cluster-chip-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--card-subtle);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cluster-chip-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .student-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 1000;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .nav-tab-student {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            gap: 3px;
+            flex: 1;
+            height: 100%;
+        }
+
+        .nav-tab-student.active {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .btn-mobile-menu {
+                display: inline-flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: -280px;
+                width: 260px;
+                height: 100%;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-overlay.open {
+                display: block;
+            }
+
+            .header-bar {
+                padding: 0 14px;
+            }
+
+            .main-body {
+                padding: 14px;
+            }
+
+            .grid-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .book-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kategori-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-nav-student-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .catalog-student-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .student-status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ISOLASI PROTEKSI PRINT (A4 TETAP PUTIH BERSIH) */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printable-letter,
+            #printable-letter * {
+                visibility: visible;
+                background: white !important;
+                color: black !important;
+            }
+
+            #printable-letter {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20mm;
+                background: white !important;
+                font-family: "Times New Roman", Times, serif !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading">
+        <div style="text-align:center;">
+            <div class="spinner" style="margin:0 auto 10px auto;"></div><strong>Sinkronisasi Data...</strong>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <div id="login-view">
+        <div class="login-card">
+            <img src="https://i.ibb.co/xqkdqtmp/2-1.png" alt="INTEGRAL" class="login-logo">
+            <input type="text" id="login-user" class="inp" placeholder="Username atau NPM" autocomplete="username">
+            <input type="password" id="login-pass" class="inp" placeholder="Kata Sandi" autocomplete="current-password">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; padding:0 4px; text-align:left;">
+                <input type="checkbox" id="login-remember" checked style="accent-color: var(--accent); cursor:pointer;">
+                <label for="login-remember"
+                    style="font-size:12.5px; color:#64748B; font-weight:600; cursor:pointer;">Ingat saya di perangkat
+                    ini</label>
+            </div>
+            <button onclick="window.handleLogin()" class="btn-login">Masuk Sistem</button>
+            <div id="login-err"
+                style="color:#EF4444; font-size:12px; margin-top:12px; font-weight:600; min-height:16px;"></div>
+        </div>
+    </div>
+
+    <div class="app-root" id="main-view" style="display:none;">
+
+        <div class="mobile-overlay" id="mobile-overlay" onclick="window.toggleSidebar(false)"></div>
+
+        <aside class="sidebar" id="app-sidebar">
+            <div>
+                <div class="brand-box" style="position:relative;">
+                    <img src="https://i.ibb.co/kskd8DBN/1.png" alt="INTEGRAL" class="brand-logo">
+                    <button onclick="window.toggleSidebar(false)"
+                        style="display:none; position:absolute; right:0; background:none; border:none; color:white; font-size:22px; cursor:pointer;"
+                        id="btn-close-sidebar">&times;</button>
+                </div>
+                <nav style="margin-top:16px;">
+                    <button class="nav-item active" id="btn-dash" onclick="window.navTo('dashboard')">📊
+                        Dashboard</button>
+                    <button class="nav-item" id="btn-buku" onclick="window.navTo('buku')">📖 Data Buku</button>
+                    <button class="nav-item" id="btn-mhs" onclick="window.navTo('mahasiswa')">👥 Mahasiswa</button>
+                    <button class="nav-item" id="btn-pinjam" onclick="window.navTo('peminjaman')">📋 Peminjaman</button>
+                    <button class="nav-item nav-item-ai" id="btn-scanner" onclick="window.navTo('scanner')">📷 Smart
+                        Scanner AI</button>
+                </nav>
+            </div>
+            <div style="font-size:11.5px; color:#A78BFA; text-align:center; line-height:1.4;">
+                &copy; 2026 Created by Luqman Firdaus<br><strong style="color:#FFFFFF;">INTEGRAL UNIROW</strong>
+            </div>
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="header-bar">
+                <div style="display:flex; align-items:center;">
+                    <button class="btn-mobile-menu" onclick="window.toggleSidebar(true)"
+                        title="Menu Navigasi">&#9776;</button>
+                    <div
+                        style="font-size:16px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        INTEGRAL <span style="color:var(--accent); font-weight:600;">- Industrial Integrated
+                            Library</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="btn-theme-toggle" onclick="window.toggleTheme()" title="Ganti Mode Gelap / Terang">
+                        <span id="theme-toggle-icon">🌙</span>
+                    </button>
+                    <div style="text-align:right;">
+                        <div style="font-size:13px; font-weight:800;" id="user-display-name">Petugas Ruang Baca</div>
+                        <span class="pill" style="background:#EEF2FF; color:#4338CA; font-size:10px;"
+                            id="user-role-badge">Superadmin</span>
+                    </div>
+                    <button onclick="window.handleLogout()"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px;"
+                        title="Keluar Akun">&#x23FB;</button>
+                </div>
+            </header>
+
+            <main class="main-body">
+
+                <!-- DASHBOARD TAB -->
+                <div id="page-dashboard">
+                    <div class="actions-bar">
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn btn-info" onclick="window.openBebasPustaka()">📜 Bebas Pustaka</button>
+                            <button class="btn" id="btn-template-surat" style="background:#7C3AED;"
+                                onclick="window.openEditorTemplateSurat()">⚙️ Desain Template Surat</button>
+                            <button class="btn btn-warning" onclick="window.syncDenda()">🔄 Update Denda</button>
+                            <button class="btn btn-success" onclick="window.eksekusiBotReminder()">📧 Bot
+                                Reminder</button>
+                            <button class="btn" id="btn-import-dash" style="background:#EA580C;"
+                                onclick="window.openModalImport()">📤 Import Data</button>
+                        </div>
+                        <button class="btn btn-danger" id="btn-clean-dup" onclick="window.cleanDuplicates()">🧹
+                            Bersihkan Data Ganda</button>
+                    </div>
+                    <div class="grid-stats">
+                        <div class="stat-card" style="background:#2563EB;">
+                            <div class="stat-label">Buku Literatur</div>
+                            <div class="stat-val" id="stat-lit">0</div>
+                        </div>
+                        <div class="stat-card" style="background:#4F46E5;">
+                            <div class="stat-label">Laporan KP</div>
+                            <div class="stat-val" id="stat-kp">0</div>
+                        </div>
+                        <div class="stat-card" style="background:#9333EA;">
+                            <div class="stat-label">Skripsi</div>
+                            <div class="stat-val" id="stat-skripsi">0</div>
+                        </div>
+                        <div class="stat-card" style="background:#16A34A;">
+                            <div class="stat-label">Total Eksemplar</div>
+                            <div class="stat-val" id="stat-stok">0</div>
+                        </div>
+                        <div class="stat-card" style="background:#0D9488;">
+                            <div class="stat-label">Mahasiswa Terdaftar</div>
+                            <div class="stat-val" id="stat-mhs">0</div>
+                        </div>
+                        <div class="stat-card" style="background:#EA580C;">
+                            <div class="stat-label">Pinjaman Aktif</div>
+                            <div class="stat-val" id="stat-aktif">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-buku" style="display:none;">
+
+                    <div id="buku-landing-view" class="kategori-selection-wrap">
+                        <div class="kategori-header-title">
+                            <span>📚</span>
+                            <span>Pilih Kategori Buku</span>
+                        </div>
+                        <div class="kategori-grid">
+                            <div class="kategori-card-big kat-lit"
+                                onclick="window.bukaKatalogKategori('Buku Literatur')">
+                                <div class="kat-icon-wrap"><span>📚</span></div>
+                                <div class="kat-title-big">Buku Literatur</div>
+                                <div class="kat-subtitle-count" id="badge-count-lit">0 Judul Koleksi</div>
+                            </div>
+                            <div class="kategori-card-big kat-kp" onclick="window.bukaKatalogKategori('Laporan KP')">
+                                <div class="kat-icon-wrap"><span>📝</span></div>
+                                <div class="kat-title-big">Laporan KP</div>
+                                <div class="kat-subtitle-count" id="badge-count-kp">0 Naskah KP</div>
+                            </div>
+                            <div class="kategori-card-big kat-skripsi" onclick="window.bukaKatalogKategori('Skripsi')">
+                                <div class="kat-icon-wrap"><span>🎓</span></div>
+                                <div class="kat-title-big">Skripsi</div>
+                                <div class="kat-subtitle-count" id="badge-count-skripsi">0 Tugas Akhir</div>
+                            </div>
+                            <div class="kategori-card-big kat-rusak" onclick="window.bukaKatalogKategori('Buku Rusak')">
+                                <div class="kat-icon-wrap"><span>⚠️</span></div>
+                                <div class="kat-title-big" style="color:#EA580C;">Buku Rusak / Hilang</div>
+                                <div class="kat-subtitle-count" id="badge-count-rusak" style="color:#F97316;">0 Koleksi
+                                    Tercatat</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="buku-table-view" style="display:none;">
+                        <div
+                            style="background:var(--surface); border-radius:18px; padding:18px 20px; border:1px solid var(--border); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <button class="btn btn-ghost" onclick="window.kembaliKePilihanKategori()"
+                                    style="padding:8px 12px; font-size:12.5px;">&larr; Kembali</button>
+                                <div style="width:48px; height:48px; border-radius:14px; background:var(--card-subtle); display:flex; align-items:center; justify-content:center; font-size:24px;"
+                                    id="kat-active-icon">📚</div>
+                                <div>
+                                    <h3 style="font-size:18px; font-weight:800; color:var(--text); margin:0;"
+                                        id="kat-active-title">Buku Literatur</h3>
+                                    <div style="font-size:12px; color:var(--text-muted); margin-top:2px;"
+                                        id="kat-active-subtitle">Menampilkan 0 dari 0 buku</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn btn-ghost" onclick="window.loadServerData()">🔄 Refresh</button>
+                                <button class="btn btn-primary" onclick="window.exportCsvBuku()">📥 Export CSV</button>
+                                <button class="btn btn-success" onclick="window.openModalTambahBukuManual()">➕ Tambah
+                                    Buku</button>
+                            </div>
+                        </div>
+
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; gap:10px; align-items:center; flex:1; flex-wrap:wrap;">
+                                <input type="text" id="cari-buku-inp" class="inp" placeholder="Cari judul/penulis..."
+                                    style="margin-bottom:0; max-width:300px; min-width:200px;"
+                                    oninput="window.renderTabelBuku()">
+                                <select id="sel-filter-rak-buku" class="inp"
+                                    style="margin-bottom:0; width:auto; font-weight:600;"
+                                    onchange="window.filterRakBuku(this.value)">
+                                    <option value="SEMUA">Lokasi Rak (semua)</option>
+                                </select>
+                                <select id="sel-sort-buku" class="inp"
+                                    style="margin-bottom:0; width:auto; font-weight:600;"
+                                    onchange="window.sortBukuKatalog(this.value)">
+                                    <option value="ID_ASC">ID &uarr;</option>
+                                    <option value="ID_DESC">ID &darr;</option>
+                                    <option value="JUDUL_ASC">Judul A-Z</option>
+                                    <option value="TAHUN_DESC">Tahun Terbaru</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-box">
+                            <table class="tbl">
+                                <thead>
+                                    <tr>
+                                        <th>ID ▲</th>
+                                        <th>JUDUL KOLEKSI</th>
+                                        <th>PENULIS</th>
+                                        <th>TAHUN</th>
+                                        <th>STOK</th>
+                                        <th>LOKASI RAK</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabel-buku-body"></tbody>
+                            </table>
+                            <div class="pagination">
+                                <span id="info-p-buku">-</span>
+                                <div><button class="p-btn" onclick="window.pageBukuStep(-1)">&larr; Prev</button><button
+                                        class="p-btn" onclick="window.pageBukuStep(1)" style="margin-left:6px;">Next
+                                        &rarr;</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="page-mahasiswa" style="display:none;">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <select id="sel-angkatan-mhs" class="inp"
+                                style="margin-bottom:0; width:auto; font-weight:700;"
+                                onchange="window.filterMhsAngkatan(this.value)">
+                                <option value="SEMUA">Semua Angkatan</option>
+                            </select>
+                            <select id="sel-status-mhs" class="inp"
+                                style="margin-bottom:0; width:auto; font-weight:700;"
+                                onchange="window.filterMhsStatus(this.value)">
+                                <option value="SEMUA">Semua Status</option>
+                                <option value="Aktif">Aktif</option>
+                                <option value="Alumni">Alumni</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input type="text" id="cari-mhs-inp" class="inp" placeholder="Cari Nama / NPM..."
+                                style="margin-bottom:0; max-width:220px;" oninput="window.renderTabelMhs()">
+                            <button class="btn" id="btn-import-mhs" style="background:#EA580C;"
+                                onclick="window.openModalImport()">📤 Import</button>
+                            <button class="btn btn-primary" onclick="window.exportCsvMhs()">📥 Export CSV</button>
+                            <button class="btn btn-success" onclick="window.print()">🖨️ Cetak</button>
+                        </div>
+                    </div>
+                    <div class="table-box">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>NAMA MAHASISWA</th>
+                                    <th>NPM</th>
+                                    <th>EMAIL</th>
+                                    <th>ANGKATAN</th>
+                                    <th>STATUS</th>
+                                    <th>NO HP</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-mhs-body"></tbody>
+                        </table>
+                        <div class="pagination">
+                            <span id="info-p-mhs">-</span>
+                            <div><button class="p-btn" onclick="window.pageMhsStep(-1)">&larr; Prev</button><button
+                                    class="p-btn" onclick="window.pageMhsStep(1)" style="margin-left:6px;">Next
+                                    &rarr;</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-peminjaman" style="display:none;">
+                    <div class="filter-tabs">
+                        <button class="tab-btn active" id="tab-p-baru" onclick="window.switchTabPinjam('baru')">📝
+                            Peminjaman Baru</button>
+                        <button class="tab-btn" id="tab-p-riwayat" onclick="window.switchTabPinjam('riwayat')">📋
+                            Riwayat Peminjaman</button>
+                    </div>
+
+                    <div id="sub-p-baru" class="modal-card" style="max-width:100%;">
+                        <div style="margin-bottom:16px;">
+                            <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Pilih
+                                Mahasiswa Peminjam</label>
+                            <input list="dl-mhs" id="inp-pinjam-mhs" class="inp"
+                                placeholder="Ketik NPM atau Nama Lengkap Mahasiswa...">
+                            <datalist id="dl-mhs"></datalist>
+                        </div>
+
+                        <div style="margin-bottom:16px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <label style="font-size:13px; font-weight:700;">Pilih Koleksi Buku (Maksimal 2
+                                    Judul)</label>
+                                <span id="count-buku-terpilih"
+                                    style="font-size:12px; font-weight:700; color:var(--accent);">0 / 2 Terpilih</span>
+                            </div>
+                            <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                <button class="tab-btn active"
+                                    onclick="window.filterKategoriPinjam('SEMUA')">Semua</button>
+                                <button class="tab-btn"
+                                    onclick="window.filterKategoriPinjam('Buku Literatur')">Literatur</button>
+                                <button class="tab-btn" onclick="window.filterKategoriPinjam('Laporan KP')">Laporan
+                                    KP</button>
+                                <button class="tab-btn"
+                                    onclick="window.filterKategoriPinjam('Skripsi')">Skripsi</button>
+                                <input type="text" id="cari-buku-grid" class="inp"
+                                    placeholder="🔍 Cari judul/penulis..."
+                                    style="margin-bottom:0; flex:1; min-width:200px;" oninput="window.renderBookGrid()">
+                            </div>
+                            <div class="book-grid" id="grid-buku-pinjam"></div>
+                        </div>
+
+                        <button onclick="window.submitPinjamanBaru()" class="btn btn-primary"
+                            style="width:100%; padding:14px; font-size:14px; justify-content:center;">Simpan
+                            Peminjaman</button>
+                    </div>
+
+                    <div id="sub-p-riwayat" style="display:none;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                            <div class="filter-tabs" style="margin-bottom:0;">
+                                <button class="tab-btn active"
+                                    onclick="window.filterRiwayatStatus('SEMUA')">Semua</button>
+                                <button class="tab-btn" onclick="window.filterRiwayatStatus('aktif')">Aktif</button>
+                                <button class="tab-btn"
+                                    onclick="window.filterRiwayatStatus('terlambat')">Terlambat</button>
+                                <button class="tab-btn"
+                                    onclick="window.filterRiwayatStatus('dikembalikan')">Dikembalikan</button>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="cari-riwayat-inp" class="inp" placeholder="Cari nama/buku..."
+                                    style="margin-bottom:0; max-width:240px;" oninput="window.renderTabelRiwayat()">
+                                <button class="btn btn-primary" onclick="window.exportCsvRiwayat()">📥 Export
+                                    CSV</button>
+                            </div>
+                        </div>
+                        <div class="table-box">
+                            <table class="tbl">
+                                <thead>
+                                    <tr>
+                                        <th>NO</th>
+                                        <th>MAHASISWA</th>
+                                        <th>TGL PINJAM</th>
+                                        <th>BATAS KEMBALI</th>
+                                        <th>STATUS</th>
+                                        <th>DENDA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabel-riwayat-body"></tbody>
+                            </table>
+                            <div class="pagination">
+                                <span id="info-p-riwayat">-</span>
+                                <div><button class="p-btn" onclick="window.pageRiwayatStep(-1)">&larr;
+                                        Prev</button><button class="p-btn" onclick="window.pageRiwayatStep(1)"
+                                        style="margin-left:6px;">Next &rarr;</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-scanner" style="display:none;">
+                    <div class="modal-card" style="max-width:680px; margin:0 auto; text-align:center;">
+                        <div
+                            style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:4px;">
+                            <h3 style="font-size:18px; color:var(--text); margin:0;">📷 Smart Scanner AI</h3>
+                            <span class="pill"
+                                style="background:linear-gradient(135deg, #EC4899, #8B5CF6); color:white; font-size:10px;">Powered
+                                by Gemini</span>
+                        </div>
+                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">Pindai kode barcode atau
+                            foto sampul buku fisik untuk analisis &amp; input otomatis</p>
+
+                        <div class="filter-tabs" style="justify-content:center; margin-bottom:16px;">
+                            <button class="tab-btn active" id="btn-scan-tambah"
+                                onclick="window.setModeScanner('tambah')">➕ Tambah Buku</button>
+                            <button class="tab-btn" id="btn-scan-pinjam" onclick="window.setModeScanner('pinjam')">📝
+                                Pinjam Buku</button>
+                            <button class="tab-btn" id="btn-scan-kembali" onclick="window.setModeScanner('kembali')">🔄
+                                Pengembalian</button>
+                        </div>
+
+                        <div
+                            style="position:relative; width:100%; height:260px; background:#0F172A; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                            <img id="scanner-img-prev"
+                                style="width:100%; height:100%; object-fit:contain; display:none; background:#000;"
+                                alt="Hasil Foto Scanner">
+                            <div id="scanner-placeholder" style="color:#94A3B8; font-size:13px; padding:20px;">
+                                <span>Kamera siap. Ketuk tombol di bawah untuk memotret barcode / sampul buku. Gemini
+                                    Vision AI akan membaca detailnya otomatis.</span>
+                            </div>
+                            <div id="scanner-laser"
+                                style="position:absolute; width:100%; height:2px; background:#EC4899; box-shadow:0 0 10px #EC4899; top:50%; display:none; animation:laserMove 2s infinite ease-in-out;">
+                            </div>
+                            <div id="scanner-ai-badge"
+                                style="position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.85); color:#F472B6; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:800; display:none; backdrop-filter:blur(4px); border:1px solid rgba(236,72,153,0.4);">
+                                ✨ Gemini Vision Menganalisis...
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                            <label class="btn btn-primary"
+                                style="cursor:pointer; padding:12px 24px; font-size:14px; background:linear-gradient(135deg, #4F46E5, #9333EA);">
+                                📸 Buka Kamera HP
+                                <input type="file" accept="image/*" capture="environment" hidden
+                                    onchange="window.handleNativeCamCapture(event)">
+                            </label>
+                            <label class="btn btn-ghost" style="cursor:pointer; padding:12px 20px; font-size:14px;">
+                                📁 Unggah Berkas
+                                <input type="file" accept="image/*" hidden
+                                    onchange="window.handleNativeCamCapture(event)">
+                            </label>
+                        </div>
+
+                        <div id="scanner-action-box"
+                            style="margin-top:20px; text-align:left; border-top:1px solid var(--border); padding-top:18px;">
+                            <div id="scanner-panel-tambah">
+                                <div style="font-weight:700; font-size:13px; margin-bottom:10px; color:var(--text);">
+                                    Detail Koleksi Baru:</div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                                    <input type="text" id="scan-tambah-id" class="inp" placeholder="ID Buku (Otomatis)">
+                                    <select id="scan-tambah-kategori" class="inp">
+                                        <option value="Buku Literatur">Buku Literatur</option>
+                                        <option value="Laporan KP">Laporan KP</option>
+                                        <option value="Skripsi">Skripsi</option>
+                                    </select>
+                                </div>
+                                <input type="text" id="scan-tambah-judul" class="inp"
+                                    placeholder="Judul Buku Hasil Pindai...">
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                                    <input type="text" id="scan-tambah-penulis" class="inp" placeholder="Penulis">
+                                    <input type="text" id="scan-tambah-tahun" class="inp" placeholder="Tahun">
+                                </div>
+                                <input type="text" id="scan-tambah-rak" class="inp"
+                                    placeholder="Lokasi Rak (Contoh: RAK 1 BARIS 1)">
+                                <button class="btn btn-success" style="width:100%; justify-content:center;"
+                                    onclick="window.submitTambahDariScanner()">Simpan Buku Baru</button>
+                            </div>
+
+                            <div id="scanner-panel-pinjam" style="display:none;">
+                                <div style="font-weight:700; font-size:13px; margin-bottom:10px; color:var(--text);">
+                                    Proses Peminjaman Cepat:</div>
+                                <input list="dl-mhs" id="scan-pinjam-mhs" class="inp"
+                                    placeholder="Pilih / Ketik Mahasiswa...">
+                                <input list="dl-buku-scan" id="scan-pinjam-buku" class="inp"
+                                    placeholder="Buku yang Dipindai...">
+                                <datalist id="dl-buku-scan"></datalist>
+                                <button class="btn btn-primary" style="width:100%; justify-content:center;"
+                                    onclick="window.submitPinjamDariScanner()">Simpan Transaksi Pinjam</button>
+                            </div>
+
+                            <div id="scanner-panel-kembali" style="display:none;">
+                                <div style="font-weight:700; font-size:13px; margin-bottom:10px; color:var(--text);">
+                                    Proses Pengembalian Cepat:</div>
+                                <input type="text" id="scan-kembali-input" class="inp"
+                                    placeholder="ID / Judul Buku yang Dikembalikan...">
+                                <button class="btn btn-info" style="width:100%; justify-content:center;"
+                                    onclick="window.submitKembaliDariScanner()">Verifikasi &amp; Kembalikan
+                                    Buku</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <div id="student-view"
+        style="display:none; width:100%; min-height:100vh; overflow-y:auto; background:var(--canvas);">
+        <header class="student-topbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="https://i.ibb.co/M53NV70Y/1-1.png" alt="INTEGRAL" style="height:38px; object-fit:contain;">
+                <div style="border-left:2px solid var(--border); padding-left:10px;">
+                    <span style="font-size:12px; font-weight:800; color:var(--text);">Portal Mahasiswa TI</span>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn-theme-toggle" onclick="window.toggleTheme()" title="Ganti Mode Gelap / Terang">
+                    <span id="stu-theme-toggle-icon">🌙</span>
+                </button>
+                <div style="text-align:right;">
+                    <div style="font-size:13px; font-weight:800; color:var(--text);" id="stu-header-name">Nama Mahasiswa
+                    </div>
+                    <div style="font-size:10.5px; color:var(--text-muted); font-weight:600;" id="stu-header-npm">NPM •
+                        TI</div>
+                </div>
+                <div style="width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg, #4F46E5, #9333EA); color:white; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px;"
+                    id="stu-header-avatar">M</div>
+                <button onclick="window.handleLogout()" class="btn btn-ghost" style="padding:6px 10px; font-size:14px;"
+                    title="Keluar Akun">🚪</button>
+            </div>
+        </header>
+
+        <div class="student-portal-wrapper">
+            <main style="padding:20px 16px; flex:1;">
+
+                <!-- SUB-TAB 1: BERANDA MAHASISWA -->
+                <div id="stu-tab-dashboard">
+                    <div class="hero-banner-student">
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                            <span
+                                style="background:rgba(255,255,255,0.18); padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700;">S-1
+                                Teknik Industri UNIROW</span>
+                            <span
+                                style="background:rgba(255,255,255,0.18); padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700;"
+                                id="stu-hero-pill">Mahasiswa Aktif</span>
+                        </div>
+                        <h2 style="font-size:20px; font-weight:800; margin-bottom:4px;" id="stu-hero-greeting">Halo,
+                            Rekan Mahasiswa! 👋</h2>
+                        <p style="font-size:12.5px; color:#C4B5FD; line-height:1.5; max-width:620px;">
+                            Pantau masa pinjam buku, cek kelayakan bebas pustaka yudisium, dan telusuri ribuan referensi
+                            Tugas Akhir langsung dari ponsel Anda.
+                        </p>
+                    </div>
+
+                    <div class="student-status-grid">
+                        <div class="student-card-status">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                                <div
+                                    style="font-size:13.5px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:6px;">
+                                    <span>📖</span><span>Pinjaman Buku Berjalan</span>
+                                </div>
+                                <span class="pill pill-aktif" id="stu-badge-loan-count">0 Judul</span>
+                            </div>
+                            <div id="stu-box-active-loans"></div>
+                        </div>
+
+                        <div class="student-card-status">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                                <div
+                                    style="font-size:13.5px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:6px;">
+                                    <span>📜</span><span>Status Bebas Pustaka</span>
+                                </div>
+                                <span class="pill" id="stu-badge-bebas-status">Mengecek...</span>
+                            </div>
+                            <div id="stu-box-bebas-info" style="font-size:12.5px; line-height:1.6;"></div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                        <span>⚡</span><span>Layanan Cepat Ruang Baca</span>
+                    </div>
+                    <div class="quick-nav-student-row">
+                        <div class="quick-student-btn" onclick="window.switchStudentTab('katalog')">
+                            <div style="font-size:22px;">📚</div>
+                            <div style="font-size:11.5px; font-weight:700; color:var(--text);">Cari Buku / KP</div>
+                        </div>
+                        <div class="quick-student-btn" onclick="window.bukaModalAiAsisten()">
+                            <div style="font-size:22px;">🤖</div>
+                            <div style="font-size:11.5px; font-weight:700; color:var(--text);">Asisten Riset AI</div>
+                        </div>
+                        <div class="quick-student-btn" onclick="window.stuBukaModalDenah()">
+                            <div style="font-size:22px;">📍</div>
+                            <div style="font-size:11.5px; font-weight:700; color:var(--text);">Lokasi Rak</div>
+                        </div>
+                        <div class="quick-student-btn" onclick="window.switchStudentTab('riwayat')">
+                            <div style="font-size:22px;">📋</div>
+                            <div style="font-size:11.5px; font-weight:700; color:var(--text);">Riwayat Saya</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:14px; font-weight:800; color:var(--text);">🌟 Skripsi &amp; Tugas Akhir
+                            Terpopuler</div>
+                        <button class="tab-btn" onclick="window.stuFilterKategoriOpac('Skripsi')"
+                            style="font-size:11px; padding:4px 10px;">Lihat Semua &rarr;</button>
+                    </div>
+                    <div class="catalog-student-grid" id="stu-grid-spotlight"></div>
+                </div>
+
+                <!-- SUB-TAB 2: KATALOG OPAC -->
+                <div id="stu-tab-katalog" style="display:none;">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                        <div style="font-size:16px; font-weight:800; color:var(--text);">🔍 Katalog Terbuka Ruang Baca
+                            (OPAC)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted);" id="stu-counter-katalog">Memuat data...
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input type="text" id="stu-opac-search" class="inp"
+                            placeholder="Cari judul buku, penulis, topik skripsi..." style="margin-bottom:0;"
+                            oninput="window.stuRenderOpacCatalog()">
+                    </div>
+
+                    <div class="filter-tabs" style="margin-bottom:12px;">
+                        <button class="tab-btn active" onclick="window.stuFilterKategoriOpac('SEMUA')">Semua
+                            Koleksi</button>
+                        <button class="tab-btn" onclick="window.stuFilterKategoriOpac('Buku Literatur')">📚
+                            Literatur</button>
+                        <button class="tab-btn" onclick="window.stuFilterKategoriOpac('Laporan KP')">📝 Laporan
+                            KP</button>
+                        <button class="tab-btn" onclick="window.stuFilterKategoriOpac('Skripsi')">🎓 Skripsi TI</button>
+                    </div>
+
+                    <div
+                        style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+                        Klaster Keahlian Teknik Industri:</div>
+                    <div class="cluster-filter-scroll">
+                        <button class="cluster-chip-btn active" onclick="window.stuFilterKlaster('SEMUA')">Semua
+                            Klaster</button>
+                        <button class="cluster-chip-btn" onclick="window.stuFilterKlaster('ERGONOMI')">Ergonomi &amp;
+                            K3</button>
+                        <button class="cluster-chip-btn" onclick="window.stuFilterKlaster('MANUFAKTUR')">Manufaktur
+                            &amp; Lean</button>
+                        <button class="cluster-chip-btn" onclick="window.stuFilterKlaster('KUALITAS')">Pengendalian
+                            Kualitas</button>
+                        <button class="cluster-chip-btn" onclick="window.stuFilterKlaster('SUPPLY_CHAIN')">Supply
+                            Chain</button>
+                        <button class="cluster-chip-btn" onclick="window.stuFilterKlaster('RISET_OPERASI')">Riset
+                            Operasi</button>
+                    </div>
+
+                    <div class="catalog-student-grid" id="stu-grid-opac"></div>
+                </div>
+
+                <!-- SUB-TAB 3: RIWAYAT MAHASISWA -->
+                <div id="stu-tab-riwayat" style="display:none;">
+                    <div style="font-size:16px; font-weight:800; color:var(--text); margin-bottom:14px;">📋 Arsip
+                        Sirkulasi Pribadi Anda</div>
+                    <div class="table-box">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Tgl Pinjam</th>
+                                    <th>Koleksi Buku / Naskah</th>
+                                    <th>Batas Kembali</th>
+                                    <th>Status</th>
+                                    <th>Denda</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stu-tbl-history-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <nav class="student-bottom-nav">
+            <button class="nav-tab-student active" id="stu-nav-tab-home" onclick="window.switchStudentTab('dashboard')">
+                <span style="font-size:18px;">🏠</span><span>Beranda</span>
+            </button>
+            <button class="nav-tab-student" id="stu-nav-tab-katalog" onclick="window.switchStudentTab('katalog')">
+                <span style="font-size:18px;">📚</span><span>Katalog</span>
+            </button>
+            <button class="nav-tab-student" id="stu-nav-tab-riwayat" onclick="window.switchStudentTab('riwayat')">
+                <span style="font-size:18px;">📋</span><span>Riwayat</span>
+            </button>
+            <button class="nav-tab-student" onclick="window.stuBukaModalBebas()">
+                <span style="font-size:18px;">📜</span><span>Bebas Pustaka</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL ASISTEN RISET GEMINI AI MAHASISWA -->
+    <div class="modal-overlay" id="modalAiAsisten">
+        <div class="modal-card" style="max-width:580px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div
+                        style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #EC4899, #8B5CF6); display:flex; align-items:center; justify-content:center; color:white; font-size:18px;">
+                        🤖</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:800; color:var(--text); margin:0;">Asisten Riset AI Ruang
+                            Baca</h3>
+                        <span style="font-size:11px; color:var(--text-muted);">Didukung Google Gemini &bull; Teknik
+                            Industri UNIROW</span>
+                    </div>
+                </div>
+                <span onclick="document.getElementById('modalAiAsisten').style.display='none'"
+                    style="cursor:pointer; font-size:22px; color:var(--text-muted);">&times;</span>
+            </div>
+
+            <div
+                style="background:var(--card-subtle); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:14px; font-size:12px; color:var(--text-muted); line-height:1.5;">
+                💡 <strong>Tips Konsultasi:</strong> Tanyakan ide topik Tugas Akhir, penentuan metode penelitian (Lean,
+                Six Sigma, RULA/REBA, SPC, EOQ), atau rekomendasi buku literatur dan skripsi di perpustakaan.
+            </div>
+
+            <div id="ai-chat-response-box"
+                style="display:none; max-height:260px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; font-size:12.5px; line-height:1.6; color:var(--text); white-space:pre-wrap;">
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <textarea id="ai-user-query" class="inp" style="height:80px; resize:none;"
+                    placeholder="Contoh: Saya ingin mengambil topik skripsi penurunan defect produk paving, metode apa yang cocok dan ada referensi skripsi apa di ruang baca?"></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-ghost"
+                    onclick="document.getElementById('modalAiAsisten').style.display='none'">Tutup</button>
+                <button class="btn btn-primary" id="btn-submit-ai-query"
+                    style="background:linear-gradient(135deg, #EC4899, #8B5CF6);" onclick="window.kirimPertanyaanAi()">
+                    <span>✨ Tanyakan ke AI</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DENAH RAK -->
+    <div class="modal-overlay" id="modalStuDenah">
+        <div class="modal-card" style="max-width:520px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size:16px; font-weight:800; color:var(--text);">📍 Denah Rak Ruang Baca TI</h3>
+                <span onclick="document.getElementById('modalStuDenah').style.display='none'"
+                    style="cursor:pointer; font-size:22px; color:var(--text-muted);">&times;</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Panduan posisi nomor rak fisik untuk
+                mencari koleksi langsung di laboratorium:</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="background:var(--card-subtle); border:1px dashed var(--border); border-radius:10px; padding:12px; text-align:center; cursor:pointer;"
+                    onclick="window.stuFilterDariDenah('RAK 1')">
+                    <strong style="color:var(--text); font-size:13px;">📍 RAK 1</strong>
+                    <div style="font-size:11px; color:var(--text-muted);">Buku Literatur Manajemen</div>
+                </div>
+                <div style="background:var(--card-subtle); border:1px dashed var(--border); border-radius:10px; padding:12px; text-align:center; cursor:pointer;"
+                    onclick="window.stuFilterDariDenah('RAK 2')">
+                    <strong style="color:var(--text); font-size:13px;">📍 RAK 2</strong>
+                    <div style="font-size:11px; color:var(--text-muted);">Buku Literatur Ergonomi</div>
+                </div>
+                <div style="background:var(--card-subtle); border:1px dashed var(--border); border-radius:10px; padding:12px; text-align:center; cursor:pointer;"
+                    onclick="window.stuFilterDariDenah('RAK 3')">
+                    <strong style="color:var(--text); font-size:13px;">📍 RAK 3</strong>
+                    <div style="font-size:11px; color:var(--text-muted);">Arsip Laporan KP</div>
+                </div>
+                <div style="background:var(--card-subtle); border:1px dashed var(--border); border-radius:10px; padding:12px; text-align:center; cursor:pointer;"
+                    onclick="window.stuFilterDariDenah('RAK 4')">
+                    <strong style="color:var(--text); font-size:13px;">📍 RAK 4</strong>
+                    <div style="font-size:11px; color:var(--text-muted);">Naskah Skripsi / TA</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL TRANSAKSI -->
+    <div class="modal-overlay" id="modalDetail">
+        <div class="modal-card" style="max-width:520px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div
+                    style="display:flex; align-items:center; gap:8px; font-size:17px; font-weight:800; color:var(--text);">
+                    <span>📋</span><span>Detail Peminjaman</span>
+                </div>
+                <span onclick="document.getElementById('modalDetail').style.display='none'"
+                    style="cursor:pointer; font-size:22px; color:var(--text-muted);">&times;</span>
+            </div>
+
+            <div style="margin-bottom:12px; font-size:14px;">
+                <strong>Nama:</strong> <span id="mdl-mhs" style="color:var(--text); font-weight:700;">-</span>
+            </div>
+
+            <div
+                style="display:flex; justify-content:space-between; font-size:12px; background:var(--card-subtle); padding:10px 14px; border-radius:10px; margin-bottom:12px; border:1px solid var(--border);">
+                <div>
+                    <span style="color:var(--text-muted); font-weight:600; font-size:11px;">TGL PINJAM</span><br>
+                    <strong id="mdl-pinjam" style="color:var(--text); font-size:13px;">-</strong>
+                </div>
+                <div style="text-align:right;">
+                    <span style="color:var(--text-muted); font-weight:600; font-size:11px;">BATAS KEMBALI</span><br>
+                    <strong id="mdl-batas" style="color:#EF4444; font-size:13px;">-</strong>
+                </div>
+            </div>
+
+            <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <strong style="font-size:13px;">Status:</strong>
+                <span id="mdl-status" class="pill pill-aktif">AKTIF</span>
+            </div>
+
+            <div id="mdl-denda-box"
+                style="display:none; background:#FFF1F2; border:1px solid #FECDD3; border-radius:12px; padding:12px 14px; margin-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:6px; font-size:15px; font-weight:800; color:#DC2626;">
+                    <span>💰</span><span>Denda: <span id="mdl-denda-val">Rp 0</span></span>
+                </div>
+                <div style="font-size:11.5px; color:#E11D48; font-style:italic; margin-top:3px;" id="mdl-denda-ket">
+                    *Terlambat 0 hari × Rp 1.000
+                </div>
+            </div>
+
+            <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:var(--text);">Daftar Buku:</div>
+            <div id="mdl-buku-list" style="margin-bottom:16px; max-height:220px; overflow-y:auto;"></div>
+
+            <button id="btn-mdl-kembalikan-semua" onclick="window.kembalikanSemuaTrx()" class="btn btn-primary"
+                style="width:100%; justify-content:center; padding:13px; font-size:14px; background:#2563EB;">
+                Kembalikan Semua
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL BUKU -->
+    <div class="modal-overlay" id="modalDetailBuku">
+        <div class="modal-card" style="max-width:480px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:16px; color:var(--text);">📖 Rincian Koleksi Buku</h3>
+                <span onclick="document.getElementById('modalDetailBuku').style.display='none'"
+                    style="cursor:pointer; font-size:22px; color:var(--text-muted);">&times;</span>
+            </div>
+            <div
+                style="background:var(--card-subtle); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:14px; line-height:1.6; font-size:13px;">
+                <h4 id="mdl-buku-judul" style="font-size:15px; color:var(--text); margin-bottom:8px;">-</h4>
+                <div><strong>Kategori:</strong> <span id="mdl-buku-kat">-</span></div>
+                <div><strong>Penulis:</strong> <span id="mdl-buku-penulis">-</span></div>
+                <div><strong>Tahun Terbit:</strong> <span id="mdl-buku-tahun">-</span></div>
+                <div><strong>Stok Tersedia:</strong> <span id="mdl-buku-stok">-</span></div>
+                <div><strong>Lokasi Rak:</strong> <span id="mdl-buku-rak"
+                        style="color:var(--accent); font-weight:700;">-</span></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; gap:8px;">
+                <button class="btn btn-ghost" onclick="window.tandaiBukuKoleksiRusak()"
+                    style="font-size:12px; color:#EA580C;">⚠️ Tandai Rusak</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary" onclick="window.bukaEditBukuAktif()" style="font-size:12px;">✏️
+                        Ubah</button>
+                    <button class="btn btn-danger" id="btn-mdl-hapus-buku" onclick="window.hapusBukuAktif()"
+                        style="font-size:12px;">🗑️ Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI -->
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal-card" style="max-width:360px; text-align:center;">
+            <div style="font-size:40px; margin-bottom:8px;">⚠️</div>
+            <h3 style="margin-bottom:8px;" id="confirm-tit">Konfirmasi</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;" id="confirm-msg">-
+            </p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button class="btn btn-ghost" onclick="window.closeConfirm(false)"
+                    style="justify-content:center;">Batal</button>
+                <button class="btn btn-primary" onclick="window.closeConfirm(true)"
+                    style="justify-content:center;">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BEBAS PUSTAKA -->
+    <div class="modal-overlay" id="modalBebas">
+        <div class="modal-card" style="max-width:480px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:16px;">📜 Cek Bebas Pustaka</h3>
+                <span onclick="document.getElementById('modalBebas').style.display='none'"
+                    style="cursor:pointer; font-size:20px; color:var(--text-muted);">&times;</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <input type="text" id="inp-bebas" class="inp" placeholder="Ketik NPM mahasiswa..."
+                    style="margin-bottom:0; flex:1;">
+                <button onclick="window.eksekusiCekBebas()" class="btn btn-primary">Cek</button>
+            </div>
+            <div id="hasil-bebas"
+                style="display:none; padding:14px; border-radius:10px; font-size:13px; line-height:1.5;"></div>
+            <div id="btn-cetak-bebas-wrap" style="display:none; margin-top:12px;">
+                <button onclick="window.cetakSuratBebasResmi()" class="btn btn-success"
+                    style="width:100%; justify-content:center; padding:12px;">🖨️ Cetak Surat Resmi (A4)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITOR TEMPLATE SURAT BEBAS PUSTAKA (KHUSUS SUPERADMIN) -->
+    <div class="modal-overlay" id="modalTemplateEditor">
+        <div class="modal-card" style="max-width:760px; max-height:92vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">⚙️</span>
+                    <h3 style="font-size:16px; color:var(--text);">Editor Template Surat Bebas Ruang Baca</h3>
+                </div>
+                <span onclick="document.getElementById('modalTemplateEditor').style.display='none'"
+                    style="cursor:pointer; font-size:22px; color:var(--text-muted);">&times;</span>
+            </div>
+
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                Kustomisasi tampilan kop, logo, teks pernyataan, dan pejabat penandatangan. Gunakan variabel dinamis
+                berikut agar data terisi otomatis:
+            </p>
+
+            <div
+                style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; background:var(--card-subtle); padding:8px 12px; border-radius:10px; border:1px solid var(--border); font-size:11px;">
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{NOMOR_SURAT}}')">&#123;&#123;NOMOR_SURAT&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{NAMA}}')">&#123;&#123;NAMA&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{NPM}}')">&#123;&#123;NPM&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{ANGKATAN}}')">&#123;&#123;ANGKATAN&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{STATUS}}')">&#123;&#123;STATUS&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{TANGGAL_SURAT}}')">&#123;&#123;TANGGAL_SURAT&#125;&#125;</span>
+                <span class="pill" style="background:#EEF2FF; color:#4338CA; cursor:pointer;"
+                    onclick="window.sisipkanTagTemplate('{{KODE_VALIDASI}}')">&#123;&#123;KODE_VALIDASI&#125;&#125;</span>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; min-height:260px; margin-bottom:14px;">
+                <textarea id="template-html-editor" class="inp"
+                    style="flex:1; height:320px; font-family:Consolas, Monaco, monospace; font-size:12px; line-height:1.4; resize:vertical; background:var(--input-bg);"></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-ghost" onclick="window.resetTemplateSuratDefault()" style="font-size:12px;">🔄
+                    Kembalikan ke Standar</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-info" onclick="window.pratinjauTemplateSurat()" style="font-size:12px;">👁️
+                        Pratinjau Cetak (A4)</button>
+                    <button class="btn btn-success" onclick="window.simpanTemplateSuratAktif()"
+                        style="font-size:12px;">💾 Simpan Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORT DATA -->
+    <div class="modal-overlay" id="modalImport">
+        <div class="modal-card" style="max-width:540px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:16px;">📤 Import Data CSV</h3>
+                <span onclick="document.getElementById('modalImport').style.display='none'"
+                    style="cursor:pointer; font-size:20px; color:var(--text-muted);">&times;</span>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:6px;">Tempel Data CSV atau
+                    Unggah Berkas</label>
+                <textarea id="import-csv-area" class="inp" style="height:120px; resize:none;"
+                    placeholder="Contoh format:&#10;NAMA,NPM,ANGKATAN,STATUS,EMAIL,NO_HP"></textarea>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <input type="file" id="import-file-input" accept=".csv,text/csv"
+                    onchange="window.handleUploadCsvFile(event)">
+                <button onclick="window.eksekusiImportCsv()" class="btn btn-primary">Mulai Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SURAT RESMI A4 -->
+    <div id="printable-letter" style="display:none;"></div>
+
+    <script>
+        var isGAS = (typeof google !== 'undefined' && google.script && typeof google.script.run !== 'undefined');
+        var PER_PAGE = 15;
+        var STORAGE_KEY = "INTEGRAL_SESSION_ACTIVE";
+        var TEMPLATE_STORAGE_KEY = "INTEGRAL_SURAT_BEBAS_TEMPLATE";
+        var THEME_STORAGE_KEY = "INTEGRAL_THEME";
+
+        /* SISTEM SWITCHER TEMA (DARK / LIGHT MODE) */
+        window.initTheme = function () {
+            var savedTheme = "light";
+            try {
+                savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
+            } catch (e) { }
+            document.documentElement.setAttribute("data-theme", savedTheme);
+            window.updateThemeIcons(savedTheme);
+        };
+
+        window.toggleTheme = function () {
+            var cur = document.documentElement.getAttribute("data-theme") || "light";
+            var nextTheme = (cur === "dark") ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", nextTheme);
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            } catch (e) { }
+            window.updateThemeIcons(nextTheme);
+            window.showToast("Mode " + (nextTheme === "dark" ? "Gelap (Dark Mode)" : "Terang (Light Mode)") + " aktif!", "info");
+        };
+
+        window.updateThemeIcons = function (theme) {
+            var icon = theme === "dark" ? "☀️" : "🌙";
+            var tIcon1 = document.getElementById("theme-toggle-icon");
+            var tIcon2 = document.getElementById("stu-theme-toggle-icon");
+            if (tIcon1) tIcon1.innerText = icon;
+            if (tIcon2) tIcon2.innerText = icon;
+        };
+
+        window.initTheme();
+
+        var DEFAULT_SURAT_TEMPLATE =
+            '<div style="text-align:center; border-bottom:3px double #000; padding-bottom:10px; margin-bottom:16px;">\n' +
+            '  <table style="width:100%; border-collapse:collapse; margin-bottom:4px;">\n' +
+            '    <tr>\n' +
+            '      <td style="width:90px; text-align:center; vertical-align:middle;">\n' +
+            '        <img src="https://i.ibb.co/kskd8DBN/1.png" alt="UNIROW" style="height:70px; object-fit:contain;">\n' +
+            '      </td>\n' +
+            '      <td style="text-align:center; vertical-align:middle;">\n' +
+            '        <h3 style="font-size:15pt; margin:0; text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">UNIVERSITAS PGRI RONGGOLAWE (UNIROW) TUBAN</h3>\n' +
+            '        <h4 style="font-size:13pt; margin:3px 0; text-transform:uppercase; font-weight:bold;">PROGRAM STUDI TEKNIK INDUSTRI</h4>\n' +
+            '        <h5 style="font-size:11pt; margin:0; text-transform:uppercase; font-weight:bold;">RUANG BACA &amp; PUSTAKA INTEGRAL</h5>\n' +
+            '        <p style="font-size:8.5pt; margin:3px 0 0 0; font-style:italic;">Jl. Manunggal No. 61 Tuban, Jawa Timur 62319 &bull; Email: industri@unirow.ac.id</p>\n' +
+            '      </td>\n' +
+            '      <td style="width:90px; text-align:center; vertical-align:middle;">\n' +
+            '        <img src="https://i.ibb.co/xqkdqtmp/2-1.png" alt="INTEGRAL" style="height:65px; object-fit:contain;">\n' +
+            '      </td>\n' +
+            '    </tr>\n' +
+            '  </table>\n' +
+            '</div>\n\n' +
+            '<div style="text-align:center; margin-bottom:20px;">\n' +
+            '  <h4 style="font-size:13pt; text-decoration:underline; margin:0 0 4px 0; text-transform:uppercase; font-weight:bold;">SURAT KETERANGAN BEBAS RUANG BACA</h4>\n' +
+            '  <div style="font-size:11pt;">Nomor: {{NOMOR_SURAT}}</div>\n' +
+            '</div>\n\n' +
+            '<p style="font-size:11pt; line-height:1.6; margin-bottom:12px;">\n' +
+            '  Koordinator Ruang Baca Program Studi Teknik Industri Universitas PGRI Ronggolawe (UNIROW) Tuban dengan ini menerangkan bahwa:\n' +
+            '</p>\n\n' +
+            '<table style="width:100%; font-size:11pt; margin-bottom:14px; border-collapse:collapse;">\n' +
+            '  <tr><td style="width:230px; padding:3px 0;">Nama Mahasiswa</td><td style="width:15px;">:</td><td><strong>{{NAMA}}</strong></td></tr>\n' +
+            '  <tr><td style="padding:3px 0;">Nomor Pokok Mahasiswa (NPM)</td><td>:</td><td><strong>{{NPM}}</strong></td></tr>\n' +
+            '  <tr><td style="padding:3px 0;">Program Studi</td><td>:</td><td>Teknik Industri (S-1)</td></tr>\n' +
+            '  <tr><td style="padding:3px 0;">Angkatan / Status</td><td>:</td><td>{{ANGKATAN}} / {{STATUS}}</td></tr>\n' +
+            '</table>\n\n' +
+            '<p style="font-size:11pt; line-height:1.6; margin-bottom:10px;">\n' +
+            '  Berdasarkan pemeriksaan basis data sistem terintegrasi (INTEGRAL), mahasiswa yang bersangkutan dinyatakan <strong>TELAH BEBAS DARI SEGALA TANGGUNGAN</strong>, meliputi:\n' +
+            '</p>\n\n' +
+            '<ol style="font-size:11pt; line-height:1.6; margin-left:22px; margin-bottom:14px;">\n' +
+            '  <li>Peminjaman buku literatur dan referensi teks kuliah.</li>\n' +
+            '  <li>Peminjaman naskah Laporan Kerja Praktik (KP).</li>\n' +
+            '  <li>Peminjaman naskah Tugas Akhir / Skripsi sarjana.</li>\n' +
+            '  <li>Tunggakan denda keterlambatan pengembalian buku (Rp 0 / Lunas).</li>\n' +
+            '</ol>\n\n' +
+            '<p style="font-size:11pt; line-height:1.6; margin-bottom:24px;">\n' +
+            '  Surat keterangan ini diterbitkan secara sah oleh sistem untuk dipergunakan sebagai persyaratan pendaftaran Yudisium, Bebas Pustaka Fakultas, dan Pengambilan Ijazah Wisuda.\n' +
+            '</p>\n\n' +
+            '<div style="display:flex; justify-content:space-between; font-size:11pt; margin-top:20px;">\n' +
+            '  <div style="border:1px solid #000; padding:10px; width:220px; text-align:center; height:90px;">\n' +
+            '    <div style="font-size:8.5pt; margin-bottom:4px;">Verifikasi Sistem INTEGRAL:</div>\n' +
+            '    <div style="font-weight:bold; font-size:10pt; margin-top:16px;">{{KODE_VALIDASI}}</div>\n' +
+            '  </div>\n' +
+            '  <div style="text-align:center; width:240px;">\n' +
+            '    <div>{{TANGGAL_SURAT}}</div>\n' +
+            '    <div>Petugas Ruang Baca TI,</div>\n' +
+            '    <div style="height:55px;"></div>\n' +
+            '    <div style="font-weight:bold; text-decoration:underline;">Mochammad Luqman Firdaus</div>\n' +
+            '    <div>NIP/NIDN. 0715088901</div>\n' +
+            '  </div>\n' +
+            '</div>';
+
+        var state = { user: null, stats: {}, mahasiswa: [], bukuPinjam: [], riwayat: [], bukuRusak: [] };
+        var curKatBuku = "Buku Literatur", pageBuku = 1;
+        var filterRakBukuVal = "SEMUA", sortBukuVal = "ID_ASC";
+        var selectedBookDetail = null;
+
+        var filterAngkatanMhs = "SEMUA", filterStatusMhs = "SEMUA", pageMhs = 1;
+        var curKatPinjam = "SEMUA", selectedBukuIds = [];
+        var filterStRiwayat = "SEMUA", pageRiwayat = 1, activeTrxId = null;
+        var confirmCallback = null;
+        var lastBebasData = null;
+
+        var stuCurrentKat = "SEMUA", stuCurrentKlaster = "SEMUA";
+
+        window.applyRoleAccess = function () {
+            var isSuperadmin = state.user && state.user.peran === "Superadmin";
+            var roleBadge = document.getElementById("user-role-badge");
+            if (roleBadge && state.user) {
+                if (isSuperadmin) {
+                    roleBadge.style.background = "#EEF2FF";
+                    roleBadge.style.color = "#4338CA";
+                    roleBadge.innerText = "👑 Superadmin";
+                } else {
+                    roleBadge.style.background = "#E0F2FE";
+                    roleBadge.style.color = "#0369A1";
+                    roleBadge.innerText = "🎓 Aslab";
+                }
+            }
+
+            var btnClean = document.getElementById("btn-clean-dup");
+            if (btnClean) btnClean.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnImportDash = document.getElementById("btn-import-dash");
+            if (btnImportDash) btnImportDash.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnImportMhs = document.getElementById("btn-import-mhs");
+            if (btnImportMhs) btnImportMhs.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnHapusBuku = document.getElementById("btn-mdl-hapus-buku");
+            if (btnHapusBuku) btnHapusBuku.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnTpl = document.getElementById("btn-template-surat");
+            if (btnTpl) btnTpl.style.display = isSuperadmin ? "inline-flex" : "none";
+        };
+
+        window.toggleSidebar = function (open) {
+            var sb = document.getElementById("app-sidebar");
+            var ov = document.getElementById("mobile-overlay");
+            var btnClose = document.getElementById("btn-close-sidebar");
+            if (open) {
+                sb.classList.add("open");
+                ov.classList.add("open");
+                if (btnClose) btnClose.style.display = "block";
+            } else {
+                sb.classList.remove("open");
+                ov.classList.remove("open");
+                if (btnClose) btnClose.style.display = "none";
+            }
+        };
+
+        window.handleLogin = function () {
+            var u = document.getElementById("login-user").value.trim();
+            var p = document.getElementById("login-pass").value.trim();
+            var remember = document.getElementById("login-remember").checked;
+            var errEl = document.getElementById("login-err");
+
+            if (!u || !p) { errEl.innerText = "Isi username dan password!"; return; }
+            errEl.innerText = "Memverifikasi..."; window.showLoading(true);
+
+            var onLoginSuccess = function (user) {
+                state.user = user;
+                if (remember) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(user)); } catch (e) { } }
+                else { try { localStorage.removeItem(STORAGE_KEY); } catch (e) { } }
+
+                document.getElementById("login-view").style.display = "none";
+
+                if (user.peran === "Mahasiswa") {
+                    document.getElementById("main-view").style.display = "none";
+                    document.getElementById("student-view").style.display = "block";
+                    window.loadServerData();
+                } else {
+                    document.getElementById("student-view").style.display = "none";
+                    document.getElementById("main-view").style.display = "flex";
+                    document.getElementById("user-display-name").innerText = user.nama;
+                    window.applyRoleAccess();
+                    window.loadServerData();
+                }
+            };
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) onLoginSuccess(res.user);
+                        else errEl.innerText = res.message;
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false); errEl.innerText = "Koneksi gagal: " + (err.message || err);
+                    }).login(u, p);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    if (u === "admin" && (p === "das12345" || p === "luqman8790")) {
+                        onLoginSuccess({ username: "admin", nama: "Mochammad Luqman Firdaus", peran: "Superadmin" });
+                    } else if (u === "iela" && p === "iela.2027") {
+                        onLoginSuccess({ username: "iela", nama: "Iela (Asisten Lab)", peran: "Aslab" });
+                    } else if (u.length >= 6 || !isNaN(u)) {
+                        var matchMhs = state.mahasiswa.find(function (m) { return m.npm === u; });
+                        var mhsName = matchMhs ? matchMhs.nama : (u === "1411230105" ? "MOCHAMMAD LUQMAN FIRDAUS" : "MAHASISWA TI " + u);
+                        var mhsAngkatan = matchMhs ? matchMhs.angkatan : (u.length >= 6 ? "20" + u.substring(4, 6) : "2023");
+                        onLoginSuccess({
+                            username: u,
+                            nama: mhsName,
+                            npm: u,
+                            angkatan: mhsAngkatan,
+                            status: "Aktif",
+                            email: "mhs" + u + "@unirow.ac.id",
+                            peran: "Mahasiswa"
+                        });
+                    } else {
+                        errEl.innerText = "Username atau kata sandi tidak cocok!";
+                    }
+                }, 200);
+            }
+        };
+
+        window.handleLogout = function () {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
+            state.user = null;
+            document.getElementById("main-view").style.display = "none";
+            document.getElementById("student-view").style.display = "none";
+            document.getElementById("login-view").style.display = "flex";
+            document.getElementById("login-user").value = "";
+            document.getElementById("login-pass").value = "";
+            document.getElementById("login-err").innerText = "";
+        };
+
+        window.initStudentPortal = function () {
+            if (!state.user || state.user.peran !== "Mahasiswa") return;
+            var stu = state.user;
+
+            document.getElementById("stu-header-name").innerText = stu.nama;
+            document.getElementById("stu-header-npm").innerText = stu.npm + " • TI " + (stu.angkatan || "2023");
+            document.getElementById("stu-header-avatar").innerText = stu.nama.charAt(0).toUpperCase();
+            document.getElementById("stu-hero-greeting").innerText = "Halo, " + stu.nama.split(" ")[0] + "! 👋";
+            document.getElementById("stu-hero-pill").innerText = "Angkatan " + (stu.angkatan || "2023") + " (" + (stu.status || "Aktif") + ")";
+
+            var userLoans = state.riwayat.filter(function (r) {
+                var matchUser = (r.mahasiswa.toLowerCase().indexOf(stu.nama.toLowerCase()) > -1 || (stu.npm && r.mahasiswa.indexOf(stu.npm) > -1));
+                return matchUser && r.status !== "dikembalikan";
+            });
+
+            var boxLoans = document.getElementById("stu-box-active-loans");
+            document.getElementById("stu-badge-loan-count").innerText = userLoans.length + " Judul";
+
+            if (userLoans.length === 0) {
+                boxLoans.innerHTML = '<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">✨ Tidak ada pinjaman buku aktif.</div>';
+            } else {
+                boxLoans.innerHTML = userLoans.map(function (item) {
+                    var isLate = item.status === "terlambat";
+                    var badge = isLate
+                        ? '<span class="pill pill-terlambat" style="font-size:10px;">⚠️ Terlambat (' + item.denda + ')</span>'
+                        : '<span class="pill pill-dikembalikan" style="font-size:10px;">⏱️ Aktif</span>';
+                    return '<div class="active-loan-student-item">' +
+                        '<div style="font-weight:700; font-size:12.5px; color:var(--text); margin-bottom:4px;">' + item.detailBuku.split(" | RAK: ")[0] + '</div>' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted);">' +
+                        '<span>Batas: <strong style="color:var(--accent);">' + item.batasKembali + '</strong></span>' + badge +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+            }
+
+            var totalDenda = 0;
+            userLoans.forEach(function (l) {
+                if (l.denda && l.denda !== "-") totalDenda += Number(l.denda.replace(/[^0-9]/g, "")) || 0;
+            });
+
+            var bStatus = document.getElementById("stu-badge-bebas-status");
+            var bInfo = document.getElementById("stu-box-bebas-info");
+
+            if (userLoans.length === 0 && totalDenda === 0) {
+                bStatus.className = "pill pill-dikembalikan";
+                bStatus.innerText = "SIAP YUDISIUM ✅";
+                bInfo.innerHTML =
+                    '<div style="color:#166534; font-weight:700; margin-bottom:6px;">Bebas dari segala tanggungan ruang baca.</div>' +
+                    '<div style="background:var(--card-subtle); border:1px dashed #86EFAC; border-radius:10px; padding:12px; color:#15803D; font-size:12px; line-height:1.5;">' +
+                    '🏛️ <strong>Instruksi Validasi Yudisium:</strong><br>' +
+                    'Silakan datang ke <strong>Meja Sirkulasi Ruang Baca TI UNIROW</strong> untuk pencetakan dan legalisasi fisik Surat Bebas Pustaka resmi oleh Petugas/Asisten Lab.' +
+                    '</div>';
+            } else {
+                bStatus.className = "pill pill-terlambat";
+                bStatus.innerText = "BELUM BEBAS ⚠️";
+                bInfo.innerHTML = '<div style="color:#991B1B; font-weight:700; margin-bottom:4px;">Masih ada tanggungan:</div>' +
+                    '<div style="color:var(--text-muted); font-size:11.5px;">' + (userLoans.length > 0 ? '• ' + userLoans.length + ' buku belum kembali ke rak.<br>' : '') +
+                    (totalDenda > 0 ? '• Denda tertunggak: Rp ' + totalDenda.toLocaleString("id-ID") : '') + '</div>';
+            }
+
+            window.stuRenderSpotlight();
+            window.stuRenderOpacCatalog();
+            window.stuRenderRiwayat();
+        };
+
+        window.switchStudentTab = function (tabName) {
+            document.getElementById("stu-tab-dashboard").style.display = tabName === "dashboard" ? "block" : "none";
+            document.getElementById("stu-tab-katalog").style.display = tabName === "katalog" ? "block" : "none";
+            document.getElementById("stu-tab-riwayat").style.display = tabName === "riwayat" ? "block" : "none";
+
+            var btnH = document.getElementById("stu-nav-tab-home");
+            var btnK = document.getElementById("stu-nav-tab-katalog");
+            var btnR = document.getElementById("stu-nav-tab-riwayat");
+
+            if (btnH) btnH.classList.toggle("active", tabName === "dashboard");
+            if (btnK) btnK.classList.toggle("active", tabName === "katalog");
+            if (btnR) btnR.classList.toggle("active", tabName === "riwayat");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        window.stuFilterKategoriOpac = function (kat) {
+            stuCurrentKat = kat;
+            document.querySelectorAll("#stu-tab-katalog .tab-btn").forEach(function (b) {
+                b.classList.toggle("active", b.innerText.indexOf(kat === "SEMUA" ? "Semua" : (kat === "Buku Literatur" ? "Literatur" : kat)) > -1);
+            });
+            window.switchStudentTab("katalog");
+            window.stuRenderOpacCatalog();
+        };
+
+        window.stuFilterKlaster = function (klaster) {
+            stuCurrentKlaster = klaster;
+            document.querySelectorAll(".cluster-chip-btn").forEach(function (ch) {
+                ch.classList.toggle("active", ch.getAttribute("onclick").indexOf(klaster) > -1);
+            });
+            window.stuRenderOpacCatalog();
+        };
+
+        window.stuRenderSpotlight = function () {
+            var skripsis = state.bukuPinjam.filter(function (b) { return b.kategori === "Skripsi"; }).slice(0, 3);
+            document.getElementById("stu-grid-spotlight").innerHTML = skripsis.map(function (b) {
+                return window.stuGenerateBookCardHtml(b);
+            }).join('');
+        };
+
+        window.stuRenderOpacCatalog = function () {
+            var q = (document.getElementById("stu-opac-search") ? document.getElementById("stu-opac-search").value : "").toLowerCase();
+            var filtered = state.bukuPinjam.filter(function (b) {
+                var matchKat = (stuCurrentKat === "SEMUA" || b.kategori === stuCurrentKat);
+                var matchText = (b.judul.toLowerCase().indexOf(q) > -1 || b.penulis.toLowerCase().indexOf(q) > -1 || b.rak.toLowerCase().indexOf(q) > -1);
+                return matchKat && matchText;
+            });
+
+            var counter = document.getElementById("stu-counter-katalog");
+            if (counter) counter.innerText = "Menampilkan " + filtered.length + " koleksi";
+
+            var grid = document.getElementById("stu-grid-opac");
+            if (!grid) return;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-muted);">Tidak ada koleksi buku yang cocok.</div>';
+            } else {
+                grid.innerHTML = filtered.map(function (b) { return window.stuGenerateBookCardHtml(b); }).join('');
+            }
+        };
+
+        window.stuGenerateBookCardHtml = function (b) {
+            var icon = b.kategori === "Skripsi" ? "🎓" : (b.kategori === "Laporan KP" ? "📝" : "📚");
+            return '<div class="book-student-card" onclick="window.bukaDetailBukuModal(\'' + b.id + '\')">' +
+                '<div style="display:flex; gap:10px; margin-bottom:10px;">' +
+                '<div style="width:40px; height:40px; border-radius:10px; background:var(--card-subtle); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">' + icon + '</div>' +
+                '<div>' +
+                '<div style="font-size:10px; font-weight:800; color:var(--accent); text-transform:uppercase;">' + b.kategori + '</div>' +
+                '<div style="font-size:13px; font-weight:800; color:var(--text); line-height:1.35; margin-top:2px;">' + b.judul + '</div>' +
+                '<div style="font-size:11px; color:var(--text-muted); margin-top:3px;">👤 ' + b.penulis + '</div>' +
+                '</div>' +
+                '</div>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border); font-size:11px;">' +
+                '<span>📍 ' + b.rak + '</span>' +
+                '<span class="pill pill-dikembalikan" style="font-size:10px;">Tersedia (Stok: ' + b.stok + ')</span>' +
+                '</div>' +
+                '</div>';
+        };
+
+        window.stuRenderRiwayat = function () {
+            if (!state.user || !state.user.npm) return;
+            var stu = state.user;
+            var list = state.riwayat.filter(function (r) {
+                return (r.mahasiswa.toLowerCase().indexOf(stu.nama.toLowerCase()) > -1 || r.mahasiswa.indexOf(stu.npm) > -1);
+            });
+
+            var tbody = document.getElementById("stu-tbl-history-body");
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada riwayat transaksi peminjaman.</td></tr>';
+            } else {
+                tbody.innerHTML = list.map(function (h) {
+                    return '<tr>' +
+                        '<td>' + h.tglPinjam + '</td>' +
+                        '<td><strong>' + h.detailBuku.split(" | RAK: ")[0] + '</strong></td>' +
+                        '<td>' + h.batasKembali + '</td>' +
+                        '<td><span class="pill pill-' + h.status + '">' + h.status + '</span></td>' +
+                        '<td><strong style="color:' + (h.denda !== '-' ? '#DC2626' : 'inherit') + ';">' + h.denda + '</strong></td>' +
+                        '</tr>';
+                }).join('');
+            }
+        };
+
+        window.stuBukaModalBebas = function () {
+            window.switchStudentTab("dashboard");
+            window.showToast("Cek status bebas pustaka di kartu dashboard.", "info");
+        };
+
+        window.stuBukaModalDenah = function () {
+            document.getElementById("modalStuDenah").style.display = "flex";
+        };
+
+        window.stuFilterDariDenah = function (rakQuery) {
+            document.getElementById("modalStuDenah").style.display = "none";
+            window.switchStudentTab("katalog");
+            document.getElementById("stu-opac-search").value = rakQuery;
+            window.stuRenderOpacCatalog();
+        };
+
+        window.loadServerData = function () {
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            state.stats = res.data.stats;
+                            state.mahasiswa = res.data.mahasiswa;
+                            state.bukuPinjam = res.data.bukuPinjam;
+                            state.riwayat = res.data.riwayat;
+                            state.bukuRusak = res.data.bukuRusak || [];
+
+                            if (state.user && state.user.peran === "Mahasiswa") {
+                                window.initStudentPortal();
+                            } else {
+                                window.renderStats();
+                                window.updateKategoriBadges();
+                                window.buildAngkatanDropdown();
+                                window.buildRakDropdown();
+                                window.renderDatalistMhs();
+                                window.renderTabelBuku();
+                                window.renderTabelMhs();
+                                window.renderBookGrid();
+                                window.renderTabelRiwayat();
+                            }
+
+                            var dlBuku = document.getElementById("dl-buku-scan");
+                            if (dlBuku) {
+                                dlBuku.innerHTML = state.bukuPinjam.map(function (b) {
+                                    return '<option value="' + b.judul + '">[' + b.id + '] ' + b.kategori + '</option>';
+                                }).join('');
+                            }
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false); window.showToast("Gagal memuat data: " + (err.message || err), "error");
+                    }).getInitialData();
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    if (state.user && state.user.peran === "Mahasiswa") {
+                        window.initStudentPortal();
+                    } else {
+                        window.renderStats();
+                        window.updateKategoriBadges();
+                    }
+                }, 150);
+            }
+        };
+
+        window.renderStats = function () {
+            document.getElementById("stat-lit").innerText = state.stats.lit || 0;
+            document.getElementById("stat-kp").innerText = state.stats.kp || 0;
+            document.getElementById("stat-skripsi").innerText = state.stats.skripsi || 0;
+            document.getElementById("stat-stok").innerText = state.stats.totalStok || 0;
+            document.getElementById("stat-mhs").innerText = state.stats.mahasiswa || 0;
+            document.getElementById("stat-aktif").innerText = state.stats.aktif || 0;
+        };
+
+        window.updateKategoriBadges = function () {
+            var cLit = state.bukuPinjam.filter(function (b) { return b.kategori === "Buku Literatur"; }).length;
+            var cKp = state.bukuPinjam.filter(function (b) { return b.kategori === "Laporan KP"; }).length;
+            var cSkripsi = state.bukuPinjam.filter(function (b) { return b.kategori === "Skripsi"; }).length;
+            var cRusak = state.bukuRusak ? state.bukuRusak.length : 0;
+
+            var bLit = document.getElementById("badge-count-lit");
+            var bKp = document.getElementById("badge-count-kp");
+            var bSkripsi = document.getElementById("badge-count-skripsi");
+            var bRusak = document.getElementById("badge-count-rusak");
+
+            if (bLit) bLit.innerText = cLit + " Judul Koleksi";
+            if (bKp) bKp.innerText = cKp + " Naskah KP";
+            if (bSkripsi) bSkripsi.innerText = cSkripsi + " Tugas Akhir";
+            if (bRusak) bRusak.innerText = cRusak + " Koleksi Tercatat";
+        };
+
+        window.navTo = function (page) {
+            window.toggleSidebar(false);
+            document.querySelectorAll(".nav-item").forEach(function (b) { b.classList.remove("active"); });
+            document.querySelectorAll(".main-body > div").forEach(function (d) { d.style.display = "none"; });
+            document.getElementById("page-" + page).style.display = "block";
+            var btn = document.getElementById("btn-" + (page === "peminjaman" ? "pinjam" : (page === "mahasiswa" ? "mhs" : page)));
+            if (btn) btn.classList.add("active");
+
+            if (page === "buku") {
+                window.kembaliKePilihanKategori();
+            }
+        };
+
+        window.bukaKatalogKategori = function (kat) {
+            curKatBuku = kat;
+            pageBuku = 1;
+            filterRakBukuVal = "SEMUA";
+
+            document.getElementById("buku-landing-view").style.display = "none";
+            document.getElementById("buku-table-view").style.display = "block";
+
+            var iconEl = document.getElementById("kat-active-icon");
+            var titEl = document.getElementById("kat-active-title");
+
+            titEl.innerText = kat;
+            if (kat === "Buku Literatur") iconEl.innerText = "📚";
+            else if (kat === "Laporan KP") iconEl.innerText = "📝";
+            else if (kat === "Skripsi") iconEl.innerText = "🎓";
+            else iconEl.innerText = "⚠️";
+
+            window.buildRakDropdown();
+            window.renderTabelBuku();
+        };
+
+        window.kembaliKePilihanKategori = function () {
+            document.getElementById("buku-table-view").style.display = "none";
+            document.getElementById("buku-landing-view").style.display = "block";
+            window.updateKategoriBadges();
+        };
+
+        window.buildRakDropdown = function () {
+            var raks = {};
+            var sourceList = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
+            sourceList.forEach(function (b) { if (b.rak) raks[b.rak] = true; });
+
+            var opts = '<option value="SEMUA">Lokasi Rak (semua)</option>';
+            Object.keys(raks).sort().forEach(function (r) {
+                opts += '<option value="' + r + '">' + r + '</option>';
+            });
+            var sel = document.getElementById("sel-filter-rak-buku");
+            if (sel) sel.innerHTML = opts;
+        };
+
+        window.filterRakBuku = function (val) {
+            filterRakBukuVal = val;
+            pageBuku = 1;
+            window.renderTabelBuku();
+        };
+
+        window.sortBukuKatalog = function (val) {
+            sortBukuVal = val;
+            pageBuku = 1;
+            window.renderTabelBuku();
+        };
+
+        window.renderTabelBuku = function () {
+            var q = (document.getElementById("cari-buku-inp").value || "").toLowerCase();
+            var sourceList = curKatBuku === "Buku Rusak"
+                ? (state.bukuRusak || [])
+                : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
+
+            var list = sourceList.filter(function (b) {
+                var matchRak = (filterRakBukuVal === "SEMUA" || b.rak === filterRakBukuVal);
+                var matchText = (b.judul.toLowerCase().indexOf(q) > -1 || b.penulis.toLowerCase().indexOf(q) > -1 || String(b.id).indexOf(q) > -1);
+                return matchRak && matchText;
+            });
+
+            list.sort(function (a, b) {
+                if (sortBukuVal === "ID_ASC") return Number(a.id) - Number(b.id);
+                if (sortBukuVal === "ID_DESC") return Number(b.id) - Number(a.id);
+                if (sortBukuVal === "JUDUL_ASC") return a.judul.localeCompare(b.judul);
+                if (sortBukuVal === "TAHUN_DESC") return String(b.tahun).localeCompare(String(a.tahun));
+                return 0;
+            });
+
+            var total = list.length;
+            var start = (pageBuku - 1) * PER_PAGE;
+            var paged = list.slice(start, start + PER_PAGE);
+            var tbody = document.getElementById("tabel-buku-body");
+
+            document.getElementById("kat-active-subtitle").innerText = "Menampilkan " + total + " dari " + sourceList.length + " buku";
+
+            if (paged.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">Tidak ada data buku yang sesuai.</td></tr>';
+            } else {
+                tbody.innerHTML = paged.map(function (b) {
+                    return '<tr>' +
+                        '<td><strong>' + b.id + '</strong></td>' +
+                        '<td><a class="link-buku" onclick="window.bukaDetailBukuModal(\'' + b.id + '\')">' + b.judul + '</a></td>' +
+                        '<td>' + b.penulis + '</td>' +
+                        '<td>' + b.tahun + '</td>' +
+                        '<td><span class="pill" style="background:#DBEAFE; color:#1E40AF; font-size:11px;">Stok: ' + b.stok + '</span></td>' +
+                        '<td>📍 ' + b.rak + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+            document.getElementById("info-p-buku").innerText = 'Menampilkan ' + (total === 0 ? 0 : start + 1) + '-' + Math.min(start + PER_PAGE, total) + ' dari ' + total + ' buku';
+        };
+
+        window.pageBukuStep = function (step) {
+            var sourceList = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
+            var totalPages = Math.max(1, Math.ceil(sourceList.length / PER_PAGE));
+            pageBuku += step;
+            if (pageBuku < 1) pageBuku = 1;
+            if (pageBuku > totalPages) pageBuku = totalPages;
+            window.renderTabelBuku();
+        };
+
+        window.bukaDetailBukuModal = function (id) {
+            var sourceList = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam;
+            var b = sourceList.find(function (x) { return String(x.id) === String(id); });
+            if (!b) return;
+
+            selectedBookDetail = b;
+            document.getElementById("mdl-buku-judul").innerText = b.judul;
+            document.getElementById("mdl-buku-kat").innerText = b.kategori || curKatBuku;
+            document.getElementById("mdl-buku-penulis").innerText = b.penulis || "-";
+            document.getElementById("mdl-buku-tahun").innerText = b.tahun || "-";
+            document.getElementById("mdl-buku-stok").innerText = "Stok: " + (b.stok || 1);
+            document.getElementById("mdl-buku-rak").innerText = b.rak || "Ruang Baca TI";
+
+            window.applyRoleAccess();
+            document.getElementById("modalDetailBuku").style.display = "flex";
+        };
+
+        window.bukaEditBukuAktif = function () {
+            if (!selectedBookDetail) return;
+            var b = selectedBookDetail;
+            var newJudul = prompt("Ubah Judul Buku:", b.judul);
+            if (!newJudul) return;
+            var newPenulis = prompt("Ubah Penulis:", b.penulis);
+            var newTahun = prompt("Ubah Tahun Terbit:", b.tahun);
+            var newRak = prompt("Ubah Lokasi Rak:", b.rak);
+
+            b.judul = newJudul;
+            if (newPenulis) b.penulis = newPenulis;
+            if (newTahun) b.tahun = newTahun;
+            if (newRak) b.rak = newRak;
+
+            window.showToast("Data buku berhasil diperbarui!", "success");
+            document.getElementById("modalDetailBuku").style.display = "none";
+            window.renderTabelBuku();
+        };
+
+        window.hapusBukuAktif = function () {
+            if (!selectedBookDetail) return;
+            if (!state.user || state.user.peran !== "Superadmin") {
+                window.showToast("Akses Ditolak: Menghapus koleksi buku memerlukan otorisasi Superadmin!", "error");
+                return;
+            }
+            window.askConfirm("Yakin ingin menghapus koleksi '" + selectedBookDetail.judul + "'?", function () {
+                var idx = state.bukuPinjam.findIndex(function (x) { return String(x.id) === String(selectedBookDetail.id); });
+                if (idx > -1) state.bukuPinjam.splice(idx, 1);
+
+                document.getElementById("modalDetailBuku").style.display = "none";
+                window.showToast("Buku berhasil dihapus!", "success");
+                window.renderTabelBuku();
+                window.updateKategoriBadges();
+            }, "Hapus Buku");
+        };
+
+        window.tandaiBukuKoleksiRusak = function () {
+            if (!selectedBookDetail) return;
+            var alasan = prompt("Masukkan kondisi kerusakan / keterangan:", "Halaman sobek / Sampul rusak");
+            if (!alasan) return;
+
+            var b = selectedBookDetail;
+            if (!state.bukuRusak) state.bukuRusak = [];
+            state.bukuRusak.unshift({
+                id: b.id,
+                judul: b.judul,
+                penulis: b.penulis,
+                tahun: b.tahun,
+                stok: b.stok,
+                rak: b.rak,
+                kategori: "Buku Rusak",
+                keterangan: alasan
+            });
+
+            document.getElementById("modalDetailBuku").style.display = "none";
+            window.showToast("Buku dicatat ke dalam Daftar Buku Rusak!", "warning");
+            window.updateKategoriBadges();
+            window.renderTabelBuku();
+        };
+
+        window.openModalTambahBukuManual = function () {
+            var judul = prompt("Masukkan Judul Koleksi Buku Baru:");
+            if (!judul) return;
+            var penulis = prompt("Masukkan Penulis / Penyusun:", "-") || "-";
+            var tahun = prompt("Masukkan Tahun Terbit:", String(new Date().getFullYear())) || "-";
+            var rak = prompt("Masukkan Lokasi Rak:", "RAK 1 BARIS 1") || "Ruang Baca TI";
+
+            var newId = String(state.bukuPinjam.length + 1001);
+            state.bukuPinjam.unshift({
+                id: newId,
+                judul: judul,
+                penulis: penulis,
+                tahun: tahun,
+                stok: 1,
+                rak: rak,
+                kategori: curKatBuku === "Buku Rusak" ? "Buku Literatur" : curKatBuku
+            });
+
+            window.showToast("Koleksi baru berhasil ditambahkan!", "success");
+            window.renderTabelBuku();
+            window.updateKategoriBadges();
+        };
+
+        window.buildAngkatanDropdown = function () {
+            var angkatans = {};
+            state.mahasiswa.forEach(function (m) { if (m.angkatan) angkatans[m.angkatan] = (angkatans[m.angkatan] || 0) + 1; });
+            var keys = Object.keys(angkatans).sort(function (a, b) { return b.localeCompare(a); });
+            var opts = '<option value="SEMUA">Semua Angkatan (' + state.mahasiswa.length + ')</option>';
+            keys.forEach(function (k) { opts += '<option value="' + k + '">Angkatan ' + k + ' (' + angkatans[k] + ')</option>'; });
+            document.getElementById("sel-angkatan-mhs").innerHTML = opts;
+        };
+
+        window.filterMhsAngkatan = function (val) { filterAngkatanMhs = val; pageMhs = 1; window.renderTabelMhs(); };
+        window.filterMhsStatus = function (val) { filterStatusMhs = val; pageMhs = 1; window.renderTabelMhs(); };
+
+        window.renderTabelMhs = function () {
+            var q = (document.getElementById("cari-mhs-inp").value || "").toLowerCase();
+            var list = state.mahasiswa.filter(function (m) {
+                return (filterAngkatanMhs === "SEMUA" || String(m.angkatan) === String(filterAngkatanMhs)) &&
+                    (filterStatusMhs === "SEMUA" || m.status.toLowerCase() === filterStatusMhs.toLowerCase()) &&
+                    (m.nama.toLowerCase().indexOf(q) > -1 || m.npm.toLowerCase().indexOf(q) > -1);
+            });
+            var total = list.length, start = (pageMhs - 1) * PER_PAGE, paged = list.slice(start, start + PER_PAGE);
+            var tbody = document.getElementById("tabel-mhs-body");
+
+            if (paged.length === 0) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Tidak ada mahasiswa yang cocok.</td></tr>';
+            else tbody.innerHTML = paged.map(function (m, idx) {
+                return '<tr>' +
+                    '<td>' + (start + idx + 1) + '</td>' +
+                    '<td><strong>' + m.nama + '</strong></td>' +
+                    '<td>' + m.npm + '</td>' +
+                    '<td>' + m.email + '</td>' +
+                    '<td>' + m.angkatan + '</td>' +
+                    '<td><span class="pill pill-dikembalikan">' + m.status + '</span></td>' +
+                    '<td>' + m.noHp + '</td>' +
+                    '<td><button class="btn btn-info" style="padding:4px 8px; font-size:11px;" onclick="window.periksaBebasLangsung(\'' + m.npm + '\')">📜 Bebas</button></td>' +
+                    '</tr>';
+            }).join('');
+            document.getElementById("info-p-mhs").innerText = 'Menampilkan ' + (total === 0 ? 0 : start + 1) + '-' + Math.min(start + PER_PAGE, total) + ' dari ' + total + ' mahasiswa';
+        };
+
+        window.pageMhsStep = function (step) { pageMhs += step; window.renderTabelMhs(); };
+
+        window.renderDatalistMhs = function () {
+            document.getElementById("dl-mhs").innerHTML = state.mahasiswa.map(function (m) {
+                return '<option value="' + m.npm + ' - ' + m.nama + '">' + m.nama + ' (' + m.npm + ')</option>' +
+                    '<option value="' + m.npm + '">' + m.nama + '</option>' +
+                    '<option value="' + m.nama + '">' + m.npm + '</option>';
+            }).join('');
+        };
+
+        window.switchTabPinjam = function (tab) {
+            document.getElementById("sub-p-baru").style.display = tab === "baru" ? "block" : "none";
+            document.getElementById("sub-p-riwayat").style.display = tab === "riwayat" ? "block" : "none";
+            document.getElementById("tab-p-baru").classList.toggle("active", tab === "baru");
+            document.getElementById("tab-p-riwayat").classList.toggle("active", tab === "riwayat");
+        };
+
+        window.filterKategoriPinjam = function (kat) {
+            curKatPinjam = kat;
+            document.querySelectorAll("#sub-p-baru .tab-btn").forEach(function (b) {
+                b.classList.toggle("active", b.innerText.indexOf(kat === "SEMUA" ? "Semua" : (kat === "Buku Literatur" ? "Literatur" : kat)) > -1);
+            });
+            window.renderBookGrid();
+        };
+
+        window.renderBookGrid = function () {
+            var q = (document.getElementById("cari-buku-grid").value || "").toLowerCase();
+            var list = state.bukuPinjam.filter(function (b) {
+                var matchSelected = selectedBukuIds.indexOf(String(b.id)) > -1;
+                return matchSelected || ((curKatPinjam === "SEMUA" || b.kategori === curKatPinjam) && (b.judul.toLowerCase().indexOf(q) > -1 || b.penulis.toLowerCase().indexOf(q) > -1));
+            });
+            var grid = document.getElementById("grid-buku-pinjam");
+            if (!grid) return;
+            if (list.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">Tidak ada buku yang sesuai.</div>';
+            } else {
+                grid.innerHTML = list.map(function (b) {
+                    var isSel = selectedBukuIds.indexOf(String(b.id)) > -1;
+                    return '<div class="book-card ' + (isSel ? 'selected' : '') + '" onclick="window.toggleSelectBuku(\'' + b.id + '\')">' +
+                        '<div style="font-weight:700; color:var(--text); margin-bottom:2px;">' + b.judul + '</div>' +
+                        '<div style="color:var(--text-muted); font-size:11px;">' + b.penulis + ' (' + b.tahun + ')</div>' +
+                        '<div style="margin-top:4px; font-size:10.5px; color:var(--accent);">📍 ' + b.rak + '</div>' +
+                        '</div>';
+                }).join('');
+            }
+            var countEl = document.getElementById("count-buku-terpilih");
+            if (countEl) countEl.innerText = selectedBukuIds.length + " / 2 Terpilih";
+        };
+
+        window.toggleSelectBuku = function (id) {
+            id = String(id);
+            var idx = selectedBukuIds.indexOf(id);
+            if (idx > -1) {
+                selectedBukuIds.splice(idx, 1);
+            } else {
+                if (selectedBukuIds.length >= 2) {
+                    window.showToast("Maksimal hanya 2 buku sekaligus!", "error");
+                    return;
+                }
+                selectedBukuIds.push(id);
+            }
+            window.renderBookGrid();
+        };
+
+        window.submitPinjamanBaru = function () {
+            var mhsVal = document.getElementById("inp-pinjam-mhs").value.trim();
+            if (!mhsVal || selectedBukuIds.length === 0) { window.showToast("Pilih mahasiswa & minimal 1 buku!", "error"); return; }
+
+            var matchMhs = state.mahasiswa.find(function (m) {
+                return String(m.npm).trim() === mhsVal ||
+                    String(m.nama).toLowerCase().trim() === mhsVal.toLowerCase() ||
+                    mhsVal.indexOf(String(m.npm).trim()) > -1 ||
+                    mhsVal.toLowerCase().indexOf(String(m.nama).toLowerCase().trim()) > -1;
+            });
+            var namaPeminjam = matchMhs ? matchMhs.nama.toUpperCase() : mhsVal.toUpperCase();
+
+            window.showLoading(true);
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            window.showToast(res.message, "success");
+                            document.getElementById("inp-pinjam-mhs").value = "";
+                            selectedBukuIds = [];
+                            window.loadServerData();
+                            window.switchTabPinjam("riwayat");
+                        } else {
+                            window.showToast(res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal: " + (err.message || err), "error");
+                    }).simpanPeminjamanBaru(namaPeminjam, selectedBukuIds);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    window.showToast("Peminjaman untuk " + namaPeminjam + " dicatat!", "success");
+                    selectedBukuIds = [];
+                    window.switchTabPinjam("riwayat");
+                }, 300);
+            }
+        };
+
+        window.filterRiwayatStatus = function (st) {
+            filterStRiwayat = st; pageRiwayat = 1;
+            document.querySelectorAll("#sub-p-riwayat .tab-btn").forEach(function (b) {
+                b.classList.toggle("active", b.innerText.toLowerCase().indexOf(st.toLowerCase()) > -1);
+            });
+            window.renderTabelRiwayat();
+        };
+
+        window.renderTabelRiwayat = function () {
+            var q = (document.getElementById("cari-riwayat-inp").value || "").toLowerCase();
+            var list = state.riwayat.filter(function (r) {
+                return (filterStRiwayat === "SEMUA" || r.status.toLowerCase() === filterStRiwayat.toLowerCase()) &&
+                    (r.mahasiswa.toLowerCase().indexOf(q) > -1 || r.detailBuku.toLowerCase().indexOf(q) > -1);
+            });
+            var total = list.length, start = (pageRiwayat - 1) * PER_PAGE, paged = list.slice(start, start + PER_PAGE);
+            var tbody = document.getElementById("tabel-riwayat-body");
+
+            if (paged.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Tidak ada data peminjaman.</td></tr>';
+            } else {
+                tbody.innerHTML = paged.map(function (r, idx) {
+                    return '<tr onclick="window.openDetailPinjam(\'' + r.idTransaksi + '\')" style="cursor:pointer;">' +
+                        '<td><strong style="color:var(--accent);">#' + (start + idx + 1) + '</strong></td>' +
+                        '<td><strong>' + r.mahasiswa + '</strong></td>' +
+                        '<td>' + r.tglPinjam + '</td>' +
+                        '<td>' + r.batasKembali + '</td>' +
+                        '<td><span class="pill pill-' + r.status + '">' + r.status + '</span></td>' +
+                        '<td><strong style="color:' + (r.status === 'terlambat' ? '#DC2626' : 'inherit') + ';">' + r.denda + '</strong></td>' +
+                        '</tr>';
+                }).join('');
+            }
+            document.getElementById("info-p-riwayat").innerText = 'Menampilkan ' + (total === 0 ? 0 : start + 1) + '-' + Math.min(start + PER_PAGE, total) + ' dari ' + total + ' transaksi';
+        };
+
+        window.pageRiwayatStep = function (step) { pageRiwayat += step; window.renderTabelRiwayat(); };
+
+        window.openDetailPinjam = function (idTrx) {
+            var r = state.riwayat.find(function (x) { return String(x.idTransaksi) === String(idTrx); });
+            if (!r) return;
+            activeTrxId = idTrx;
+
+            document.getElementById("mdl-mhs").innerText = r.mahasiswa;
+            document.getElementById("mdl-pinjam").innerText = r.tglPinjam;
+            document.getElementById("mdl-batas").innerText = r.batasKembali;
+            document.getElementById("mdl-status").className = "pill pill-" + r.status;
+            document.getElementById("mdl-status").innerText = r.status.toUpperCase();
+
+            var dendaBox = document.getElementById("mdl-denda-box");
+            if (r.status === "terlambat" || (r.denda && r.denda !== "-" && r.denda !== "0")) {
+                dendaBox.style.display = "block";
+                document.getElementById("mdl-denda-val").innerText = r.denda;
+                var nominal = Number(r.denda.replace(/[^0-9]/g, "")) || 0;
+                var hariTelat = Math.max(1, Math.floor(nominal / 1000));
+                document.getElementById("mdl-denda-ket").innerText = "*Terlambat " + hariTelat + " hari × Rp 1.000";
+            } else {
+                dendaBox.style.display = "none";
+            }
+
+            var box = document.getElementById("mdl-buku-list");
+            if (!r.detailBuku || r.detailBuku === "-") {
+                box.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Tidak ada rincian buku.</div>';
+            } else {
+                box.innerHTML = r.detailBuku.split(" || ").map(function (bInfo, idx) {
+                    var isRet = bInfo.indexOf("[DIKEMBALIKAN]") > -1;
+                    var isDamaged = bInfo.indexOf("[RUSAK]") > -1;
+                    var clean = bInfo.replace("[DIKEMBALIKAN]", "").replace("[RUSAK]", "");
+                    var parts = clean.split(" | RAK: ");
+                    var lokasiRak = parts.length > 1 ? parts[1] : "Ruang Baca TI";
+
+                    var statusBadge = isRet
+                        ? '<span class="pill pill-dikembalikan">DIKEMBALIKAN</span>'
+                        : (isDamaged ? '<span class="pill pill-rusak">RUSAK</span>' : '<span class="pill pill-aktif">AKTIF</span>');
+
+                    var actionButtons = "";
+                    if (!isRet) {
+                        actionButtons =
+                            '<button class="btn" style="background:#2563EB; padding:5px 10px; font-size:11px;" onclick="window.triggerAksiBuku(' + idx + ', \'kembali\')">Kembali</button>' +
+                            '<button class="btn" style="background:#475569; padding:5px 10px; font-size:11px; margin-left:4px;" onclick="window.triggerAksiBuku(' + idx + ', \'perpanjang\')">Perpanjang</button>' +
+                            '<button class="btn" style="background:#EA580C; padding:5px 10px; font-size:11px; margin-left:4px;" onclick="window.triggerAksiBuku(' + idx + ', \'rusak\')">Rusak</button>';
+                    }
+
+                    return '<div style="background:var(--card-subtle); padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px;">' +
+                        '<div style="font-weight:700; font-size:12.5px; color:var(--text); margin-bottom:4px; line-height:1.4;">' + parts[0] + '</div>' +
+                        '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">📍 ' + lokasiRak + '</div>' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div>' + statusBadge + '</div>' +
+                        '<div style="display:flex;">' + actionButtons + '</div>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+            }
+
+            document.getElementById("btn-mdl-kembalikan-semua").style.display = r.status === "dikembalikan" ? "none" : "flex";
+            document.getElementById("modalDetail").style.display = "flex";
+        };
+
+        window.triggerAksiBuku = function (idxBuku, aksi) {
+            var pesan = "Apakah Anda yakin ingin memproses buku ini?";
+            if (aksi === "kembali") pesan = "Buku ini sudah diserahkan ke rak dan ingin ditandai dikembalikan?";
+            else if (aksi === "perpanjang") pesan = "Perpanjang durasi peminjaman selama 7 hari ke depan?";
+            else if (aksi === "rusak") pesan = "Tandai buku ini rusak/hilang dan catat ke data buku rusak?";
+
+            window.askConfirm(pesan, function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, "success");
+                            window.loadServerData();
+                            document.getElementById("modalDetail").style.display = "none";
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal: " + (err.message || err), "error");
+                        }).aksiBukuIndividual(activeTrxId, idxBuku, aksi);
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Status buku diperbarui!", "success");
+                        document.getElementById("modalDetail").style.display = "none";
+                    }, 300);
+                }
+            }, "Aksi Buku");
+        };
+
+        window.kembalikanSemuaTrx = function () {
+            window.askConfirm("Tandai seluruh buku pada transaksi ini telah dikembalikan?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, "success");
+                            window.loadServerData();
+                            document.getElementById("modalDetail").style.display = "none";
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal: " + (err.message || err), "error");
+                        }).kembalikanBukuRow(activeTrxId);
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Transaksi dikembalikan!", "success");
+                        document.getElementById("modalDetail").style.display = "none";
+                    }, 300);
+                }
+            }, "Selesaikan Transaksi");
+        };
+
+        window.askConfirm = function (msg, cb, title) {
+            document.getElementById("confirm-tit").innerText = title || "Konfirmasi";
+            document.getElementById("confirm-msg").innerText = msg;
+            confirmCallback = cb;
+            document.getElementById("modalConfirm").style.display = "flex";
+        };
+
+        window.closeConfirm = function (ok) {
+            document.getElementById("modalConfirm").style.display = "none";
+            if (ok && typeof confirmCallback === "function") {
+                confirmCallback();
+                confirmCallback = null;
+            }
+        };
+
+        window.syncDenda = function () {
+            window.askConfirm("Kalkulasi denda keterlambatan untuk seluruh transaksi aktif?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, "success");
+                            window.loadServerData();
+                        }).perbaruiDendaOtomatis();
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Denda diperbarui!", "success");
+                    }, 200);
+                }
+            }, "Update Denda");
+        };
+
+        window.cleanDuplicates = function () {
+            if (!state.user || state.user.peran !== "Superadmin") {
+                window.showToast("Akses Ditolak: Membersihkan data ganda memerlukan otorisasi Superadmin!", "error");
+                return;
+            }
+            window.askConfirm("Satukan transaksi peminjam yang sama di hari yang sama?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, "success");
+                            window.loadServerData();
+                        }).bersihkanDataGandaSemua();
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Data ganda dibersihkan!", "success");
+                    }, 200);
+                }
+            }, "Bersihkan Data Ganda");
+        };
+
+        window.eksekusiBotReminder = function () {
+            window.askConfirm("Kirim email pemberitahuan otomatis ke mahasiswa yang terlambat mengembalikan buku?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, res.success ? "success" : "error");
+                            window.loadServerData();
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal: " + (err.message || err), "error");
+                        }).kirimBotReminderEmail();
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Simulasi: 2 email peringatan terkirim!", "success");
+                    }, 400);
+                }
+            }, "Bot Reminder");
+        };
+
+        window.openEditorTemplateSurat = function () {
+            if (!state.user || state.user.peran !== "Superadmin") {
+                window.showToast("Akses Ditolak: Pengaturan template surat hanya dapat diakses oleh Superadmin!", "error");
+                return;
+            }
+            var tpl = localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
+            document.getElementById("template-html-editor").value = tpl;
+            document.getElementById("modalTemplateEditor").style.display = "flex";
+        };
+
+        window.sisipkanTagTemplate = function (tag) {
+            var textarea = document.getElementById("template-html-editor");
+            var start = textarea.selectionStart;
+            var end = textarea.selectionEnd;
+            var text = textarea.value;
+            textarea.value = text.substring(0, start) + tag + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+        };
+
+        window.resetTemplateSuratDefault = function () {
+            window.askConfirm("Kembalikan template surat ke pengaturan standar sistem?", function () {
+                document.getElementById("template-html-editor").value = DEFAULT_SURAT_TEMPLATE;
+                localStorage.setItem(TEMPLATE_STORAGE_KEY, DEFAULT_SURAT_TEMPLATE);
+                window.showToast("Template dikembalikan ke format standar!", "info");
+            }, "Reset Template");
+        };
+
+        window.simpanTemplateSuratAktif = function () {
+            var tpl = document.getElementById("template-html-editor").value;
+            localStorage.setItem(TEMPLATE_STORAGE_KEY, tpl);
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showToast(res.message || "Template berhasil disimpan di database!", "success");
+                        document.getElementById("modalTemplateEditor").style.display = "none";
+                    }).withFailureHandler(function (err) {
+                        window.showToast("Tersimpan lokal: " + err, "info");
+                        document.getElementById("modalTemplateEditor").style.display = "none";
+                    }).simpanSuratTemplate(tpl);
+            } else {
+                window.showToast("Template surat berhasil diperbarui!", "success");
+                document.getElementById("modalTemplateEditor").style.display = "none";
+            }
+        };
+
+        window.pratinjauTemplateSurat = function () {
+            lastBebasData = {
+                mhs: { nama: "MOCHAMMAD LUQMAN FIRDAUS", npm: "1411230105", angkatan: "2023", status: "Aktif" },
+                nomorSurat: "BP/1411230105/20260920"
+            };
+            window.cetakSuratBebasResmi();
+        };
+
+        window.cetakSuratBebasResmi = function () {
+            if (!lastBebasData || !lastBebasData.mhs) return;
+            var m = lastBebasData.mhs;
+            var tpl = localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
+
+            var d = new Date();
+            var bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            var tglSurat = "Tuban, " + d.getDate() + " " + bln[d.getMonth()] + " " + d.getFullYear();
+
+            var rendered = tpl
+                .replace(/\{\{NOMOR_SURAT\}\}/g, lastBebasData.nomorSurat || "BP/" + m.npm + "/20260920")
+                .replace(/\{\{NAMA\}\}/g, (m.nama || "-").toUpperCase())
+                .replace(/\{\{NPM\}\}/g, m.npm || "-")
+                .replace(/\{\{ANGKATAN\}\}/g, m.angkatan || "2023")
+                .replace(/\{\{STATUS\}\}/g, m.status || "Aktif")
+                .replace(/\{\{TANGGAL_SURAT\}\}/g, tglSurat)
+                .replace(/\{\{KODE_VALIDASI\}\}/g, "KODE VALIDASI: SHA-" + d.getFullYear());
+
+            var printContainer = document.getElementById("printable-letter");
+            printContainer.innerHTML = rendered;
+            printContainer.style.display = "block";
+            window.print();
+            setTimeout(function () {
+                printContainer.style.display = "none";
+            }, 800);
+        };
+
+        window.openBebasPustaka = function () {
+            document.getElementById("modalBebas").style.display = "flex";
+            document.getElementById("hasil-bebas").style.display = "none";
+            document.getElementById("btn-cetak-bebas-wrap").style.display = "none";
+            document.getElementById("inp-bebas").value = "";
+        };
+
+        window.periksaBebasLangsung = function (npm) {
+            window.openBebasPustaka();
+            document.getElementById("inp-bebas").value = npm;
+            window.eksekusiCekBebas();
+        };
+
+        window.eksekusiCekBebas = function () {
+            var q = document.getElementById("inp-bebas").value.trim();
+            if (!q) {
+                window.showToast("Ketikkan NPM mahasiswa!", "error");
+                return;
+            }
+            window.showLoading(true);
+
+            var tampilkanHasil = function (res) {
+                lastBebasData = res;
+                var box = document.getElementById("hasil-bebas");
+                var btnWrap = document.getElementById("btn-cetak-bebas-wrap");
+                box.style.display = "block";
+
+                if (res.eligible) {
+                    box.style.background = "#DCFCE7";
+                    box.style.color = "#166534";
+                    box.innerHTML = "✅ <b>BEBAS TANGGUNGAN:</b><br>" + (res.mhs ? res.mhs.nama : q) + " dinyatakan bebas dari tanggungan pustaka.<br>No Surat: <b>" + (res.nomorSurat || ("BP/" + q + "/" + new Date().getFullYear())) + "</b>";
+                    btnWrap.style.display = "block";
+                } else {
+                    box.style.background = "#FEE2E2";
+                    box.style.color = "#991B1B";
+                    var nominal = Number(res.totalDenda || 0).toLocaleString("id-ID");
+                    box.innerHTML = "❌ <b>BELUM BEBAS:</b><br>" + (res.mhs ? res.mhs.nama : q) + " masih memiliki tanggungan peminjaman aktif atau denda tertunggak (Rp " + nominal + ").";
+                    btnWrap.style.display = "none";
+                }
+            };
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        tampilkanHasil(res);
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal memeriksa bebas pustaka: " + (err.message || err), "error");
+                    }).verifikasiBebasPustaka(q);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    var mhsMatch = state.mahasiswa.find(function (m) {
+                        return m.npm.toLowerCase().indexOf(q.toLowerCase()) > -1 || m.nama.toLowerCase().indexOf(q.toLowerCase()) > -1;
+                    });
+                    var activeLoans = state.riwayat.filter(function (r) {
+                        return (r.mahasiswa.toLowerCase().indexOf(q.toLowerCase()) > -1 || (mhsMatch && r.mahasiswa.toLowerCase().indexOf(mhsMatch.nama.toLowerCase()) > -1)) && r.status !== "dikembalikan";
+                    });
+                    var totalDenda = 0;
+                    activeLoans.forEach(function (l) {
+                        if (l.denda && l.denda !== "-") totalDenda += Number(l.denda.replace(/[^0-9]/g, "")) || 0;
+                    });
+                    var isEligible = activeLoans.length === 0 && totalDenda === 0;
+                    tampilkanHasil({
+                        eligible: isEligible,
+                        mhs: mhsMatch || { nama: "MAHASISWA " + q, npm: q, angkatan: "2023", status: "Aktif" },
+                        nomorSurat: "BP/" + q + "/" + new Date().getFullYear() + ("0" + (new Date().getMonth() + 1)).slice(-2) + ("0" + new Date().getDate()).slice(-2),
+                        totalDenda: totalDenda
+                    });
+                }, 250);
+            }
+        };
+
+        window.setModeScanner = function (mode) {
+            document.getElementById("btn-scan-tambah").classList.toggle("active", mode === "tambah");
+            document.getElementById("btn-scan-pinjam").classList.toggle("active", mode === "pinjam");
+            document.getElementById("btn-scan-kembali").classList.toggle("active", mode === "kembali");
+
+            var pTambah = document.getElementById("scanner-panel-tambah");
+            var pPinjam = document.getElementById("scanner-panel-pinjam");
+            var pKembali = document.getElementById("scanner-panel-kembali");
+
+            if (pTambah) pTambah.style.display = mode === "tambah" ? "block" : "none";
+            if (pPinjam) pPinjam.style.display = mode === "pinjam" ? "block" : "none";
+            if (pKembali) pKembali.style.display = mode === "kembali" ? "block" : "none";
+
+            window.showToast("Mode scanner: " + (mode === "tambah" ? "Tambah Buku" : (mode === "pinjam" ? "Pinjam Buku" : "Pengembalian Buku")), "info");
+        };
+
+        window.handleNativeCamCapture = function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function (evt) {
+                var dataUrl = evt.target.result;
+                var imgPrev = document.getElementById("scanner-img-prev");
+                var ph = document.getElementById("scanner-placeholder");
+                var laser = document.getElementById("scanner-laser");
+                var badgeAi = document.getElementById("scanner-ai-badge");
+
+                if (ph) ph.style.display = "none";
+                if (imgPrev) {
+                    imgPrev.src = dataUrl;
+                    imgPrev.style.display = "block";
+                }
+                if (laser) laser.style.display = "block";
+                if (badgeAi) badgeAi.style.display = "block";
+
+                window.showToast("Mengirim foto ke Gemini Vision AI...", "info");
+
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            if (laser) laser.style.display = "none";
+                            if (badgeAi) badgeAi.style.display = "none";
+
+                            if (res.success && res.data) {
+                                var d = res.data;
+                                var inJudul = document.getElementById("scan-tambah-judul");
+                                var inPenulis = document.getElementById("scan-tambah-penulis");
+                                var inTahun = document.getElementById("scan-tambah-tahun");
+                                var inKat = document.getElementById("scan-tambah-kategori");
+                                var inRak = document.getElementById("scan-tambah-rak");
+
+                                if (inJudul) inJudul.value = d.judul || "";
+                                if (inPenulis) inPenulis.value = d.penulis || "-";
+                                if (inTahun) inTahun.value = d.tahun || String(new Date().getFullYear());
+                                if (inKat && d.kategori) inKat.value = d.kategori;
+                                if (inRak) inRak.value = d.rak || "RAK 1 BARIS 1";
+
+                                var pinjamInp = document.getElementById("scan-pinjam-buku");
+                                if (pinjamInp) pinjamInp.value = d.judul || "";
+
+                                var kembaliInp = document.getElementById("scan-kembali-input");
+                                if (kembaliInp) kembaliInp.value = d.judul || "";
+
+                                window.showToast("✨ Metadata berhasil diekstrak oleh Gemini AI!", "success");
+                            } else {
+                                window.showToast("AI: " + (res.message || "Gagal mengenali"), "warning");
+                            }
+                        }).withFailureHandler(function (err) {
+                            if (laser) laser.style.display = "none";
+                            if (badgeAi) badgeAi.style.display = "none";
+                            window.showToast("Gemini Vision AI offline: " + err, "error");
+                        }).prosesScannerDenganAI(dataUrl, file.type || "image/jpeg");
+                } else {
+                    setTimeout(function () {
+                        if (laser) laser.style.display = "none";
+                        if (badgeAi) badgeAi.style.display = "none";
+
+                        var scanJudul = document.getElementById("scan-tambah-judul");
+                        var scanPenulis = document.getElementById("scan-tambah-penulis");
+                        var scanTahun = document.getElementById("scan-tambah-tahun");
+                        var scanRak = document.getElementById("scan-tambah-rak");
+
+                        if (scanJudul) scanJudul.value = "Pengendalian Kualitas Terpadu & Six Sigma";
+                        if (scanPenulis) scanPenulis.value = "Vincent Gaspersz";
+                        if (scanTahun) scanTahun.value = "2024";
+                        if (scanRak) scanRak.value = "RAK 2 BARIS 1";
+
+                        window.showToast("✨ Berhasil dianalisis oleh Gemini AI (Simulasi)!", "success");
+                    }, 1500);
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.bukaModalAiAsisten = function () {
+            document.getElementById("modalAiAsisten").style.display = "flex";
+            var box = document.getElementById("ai-chat-response-box");
+            if (box && !box.innerText) box.style.display = "none";
+        };
+
+        window.kirimPertanyaanAi = function () {
+            var q = document.getElementById("ai-user-query").value.trim();
+            if (!q) {
+                window.showToast("Tuliskan pertanyaan riset atau topik skripsi Anda!", "error");
+                return;
+            }
+
+            var box = document.getElementById("ai-chat-response-box");
+            var btn = document.getElementById("btn-submit-ai-query");
+            box.style.display = "block";
+            box.innerText = "⏳ Gemini AI sedang menyusun rekomendasi akademis...";
+            btn.disabled = true;
+
+            var npm = (state.user && state.user.npm) ? state.user.npm : "";
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        btn.disabled = false;
+                        if (res.success) {
+                            box.innerText = res.jawaban;
+                        } else {
+                            box.innerText = "⚠️ " + (res.message || "Gagal memproses jawaban.");
+                        }
+                    }).withFailureHandler(function (err) {
+                        btn.disabled = false;
+                        box.innerText = "⚠️ Terjadi kesalahan koneksi AI: " + err;
+                    }).konsultasiAiMahasiswa(q, npm);
+            } else {
+                setTimeout(function () {
+                    btn.disabled = false;
+                    box.innerText =
+                        "🎓 Rekomendasi Asisten AI untuk Topik: \"" + q + "\"\n\n" +
+                        "1. Pendekatan Metode: Anda dapat menggunakan siklus DMAIC (Define, Measure, Analyze, Improve, Control) dipadukan dengan diagram Ishikawa dan FMEA untuk memprioritaskan cacat dominan.\n\n" +
+                        "2. Rekomendasi Literatur di Ruang Baca TI UNIROW:\n" +
+                        "• [Skripsi] Penerapan Lean Six Sigma untuk Meminimasi Cacat Produk Paving - Mochamad Rizky (Lokasi: RAK 4 BARIS 1)\n" +
+                        "• [Buku Literatur] Service, Quality & Satisfaction Edisi 3 - Fandy Tjiptono (Lokasi: RAK 1 BARIS 3)\n\n" +
+                        "Silakan berkunjung ke meja sirkulasi untuk meminjam naskah tersebut!";
+                }, 1200);
+            }
+        };
+
+        window.submitTambahDariScanner = function () {
+            var id = document.getElementById("scan-tambah-id").value.trim();
+            var kat = document.getElementById("scan-tambah-kategori").value;
+            var judul = document.getElementById("scan-tambah-judul").value.trim();
+            var penulis = document.getElementById("scan-tambah-penulis").value.trim() || "-";
+            var tahun = document.getElementById("scan-tambah-tahun").value.trim() || String(new Date().getFullYear());
+            var rak = document.getElementById("scan-tambah-rak").value.trim() || "Ruang Baca TI";
+
+            if (!judul) { window.showToast("Isi judul koleksi buku yang dipindai!", "error"); return; }
+
+            state.bukuPinjam.unshift({
+                id: id || String(state.bukuPinjam.length + 1001),
+                judul: judul,
+                penulis: penulis,
+                tahun: tahun,
+                stok: 1,
+                rak: rak,
+                kategori: kat
+            });
+
+            window.renderTabelBuku();
+            window.renderBookGrid();
+            window.renderStats();
+            window.updateKategoriBadges();
+            window.showToast("Koleksi " + judul + " berhasil ditambahkan!", "success");
+            document.getElementById("scan-tambah-judul").value = "";
+            document.getElementById("scan-tambah-id").value = "";
+        };
+
+        window.submitKembaliDariScanner = function () {
+            var query = document.getElementById("scan-kembali-input").value.trim().toLowerCase();
+            if (!query) { window.showToast("Ketik judul/ID buku yang dikembalikan!", "error"); return; }
+
+            var targetTrx = state.riwayat.find(function (r) {
+                return r.status !== "dikembalikan" && r.detailBuku.toLowerCase().indexOf(query) > -1;
+            });
+
+            if (!targetTrx) {
+                window.showToast("Tidak ditemukan transaksi aktif untuk buku tersebut.", "info");
+                return;
+            }
+
+            window.askConfirm("Kembalikan buku untuk transaksi " + targetTrx.mahasiswa + "?", function () {
+                activeTrxId = targetTrx.idTransaksi;
+                window.kembalikanSemuaTrx();
+                document.getElementById("scan-kembali-input").value = "";
+            }, "Konfirmasi Pengembalian Scan");
+        };
+
+        window.openModalImport = function () {
+            if (!state.user || state.user.peran !== "Superadmin") {
+                window.showToast("Akses Ditolak: Impor data master memerlukan otorisasi Superadmin!", "error");
+                return;
+            }
+            document.getElementById("modalImport").style.display = "flex";
+            document.getElementById("import-csv-area").value = "";
+        };
+
+        window.handleUploadCsvFile = function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function (evt) {
+                document.getElementById("import-csv-area").value = evt.target.result;
+            };
+            reader.readAsText(file);
+        };
+
+        window.eksekusiImportCsv = function () {
+            var txt = document.getElementById("import-csv-area").value.trim();
+            if (!txt) { window.showToast("Data CSV belum diisi!", "error"); return; }
+            window.showToast("Data CSV berhasil diproses ke antarmuka!", "success");
+            document.getElementById("modalImport").style.display = "none";
+        };
+
+        window.exportCsvBuku = function () {
+            var rows = [["ID", "Judul", "Penulis", "Tahun", "Stok", "Rak", "Kategori"]];
+            var source = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
+            source.forEach(function (b) {
+                rows.push([b.id, '"' + b.judul.replace(/"/g, '""') + '"', '"' + b.penulis.replace(/"/g, '""') + '"', b.tahun, b.stok, '"' + b.rak.replace(/"/g, '""') + '"', b.kategori || curKatBuku]);
+            });
+            window.unduhCsv(rows, "Katalog_" + curKatBuku.replace(/\s+/g, "_") + ".csv");
+        };
+
+        window.exportCsvMhs = function () {
+            var rows = [["No", "Nama", "NPM", "Email", "Angkatan", "Status", "No HP"]];
+            state.mahasiswa.forEach(function (m, idx) {
+                rows.push([idx + 1, '"' + m.nama.replace(/"/g, '""') + '"', "'" + m.npm, m.email, m.angkatan, m.status, "'" + m.noHp]);
+            });
+            window.unduhCsv(rows, "Direktori_Mahasiswa_INTEGRAL.csv");
+        };
+
+        window.exportCsvRiwayat = function () {
+            var rows = [["No", "Mahasiswa", "Tgl Pinjam", "Batas Kembali", "Status", "Denda", "Detail Buku"]];
+            state.riwayat.forEach(function (r, idx) {
+                rows.push([idx + 1, '"' + r.mahasiswa.replace(/"/g, '""') + '"', r.tglPinjam, r.batasKembali, r.status, r.denda, '"' + r.detailBuku.replace(/"/g, '""') + '"']);
+            });
+            window.unduhCsv(rows, "Riwayat_Peminjaman_INTEGRAL.csv");
+        };
+
+        window.unduhCsv = function (rows, filename) {
+            var link = document.createElement("a");
+            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8,\uFEFF" + rows.map(function (e) { return e.join(","); }).join("\n")));
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.showLoading = function (show) { document.getElementById("loading").style.display = show ? "flex" : "none"; };
+        window.showToast = function (msg, type) {
+            var t = document.getElementById("toast");
+            t.innerText = msg;
+            t.style.background = type === "error" ? "#DC2626" : (type === "success" ? "#059669" : (type === "info" ? "#4F46E5" : "#0F172A"));
+            t.style.display = "block";
+            setTimeout(function () { t.style.display = "none"; }, 3000);
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            window.initTheme();
+            try {
+                var saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    var user = JSON.parse(saved);
+                    if (user && user.username) {
+                        state.user = user;
+                        document.getElementById("login-view").style.display = "none";
+                        if (user.peran === "Mahasiswa") {
+                            document.getElementById("main-view").style.display = "none";
+                            document.getElementById("student-view").style.display = "block";
+                            window.loadServerData();
+                        } else {
+                            document.getElementById("student-view").style.display = "none";
+                            document.getElementById("main-view").style.display = "flex";
+                            document.getElementById("user-display-name").innerText = user.nama;
+                            window.applyRoleAccess();
+                            window.loadServerData();
+                        }
+                    }
+                }
+            } catch (e) { }
+        });
+    </script>
+</body>
+
+</html>
