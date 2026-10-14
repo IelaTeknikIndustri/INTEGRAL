@@ -779,6 +779,248 @@ function simpanSuratTemplate(htmlContent) {
   }
 }
 
+/**
+ * ====================================================================
+ * MANAJEMEN CRUD KATALOG BUKU & MAHASISWA
+ * ====================================================================
+ */
+
+function tambahBukuBaru(kategori, bukuData) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetName = kategori || "Buku Literatur";
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) throw new Error("Kategori sheet '" + sheetName + "' tidak ditemukan!");
+
+    var raw = sheet.getDataRange().getDisplayValues();
+    var headers = raw[0].map(function(h) { return String(h).trim().toLowerCase(); });
+    var idxId = headers.indexOf("id");
+    var idxJudul = headers.indexOf("judul");
+    var idxPenulis = headers.indexOf("penulis");
+    var idxTahun = headers.indexOf("tahun_terbit") > -1 ? headers.indexOf("tahun_terbit") : headers.indexOf("tahun");
+    var idxStok = headers.indexOf("stok");
+    var idxRak = headers.indexOf("rak");
+
+    var newId = bukuData.id || String(sheet.getLastRow() > 1 ? (Number(raw[raw.length - 1][idxId > -1 ? idxId : 0]) + 1 || (sheet.getLastRow() + 1000)) : 1001);
+    var row = [];
+    for (var c = 0; c < headers.length; c++) {
+      var col = headers[c];
+      if (col === "id") row.push(newId);
+      else if (col === "judul") row.push(bukuData.judul || "");
+      else if (col === "penulis") row.push(bukuData.penulis || "-");
+      else if (col === "tahun_terbit" || col === "tahun") row.push(bukuData.tahun || String(new Date().getFullYear()));
+      else if (col === "stok") row.push(Number(bukuData.stok) || 1);
+      else if (col === "rak") row.push(bukuData.rak || "RAK 1 BARIS 1");
+      else if (col === "keterangan") row.push(bukuData.keterangan || "-");
+      else row.push("");
+    }
+
+    sheet.appendRow(row);
+    return {
+      success: true,
+      message: "Koleksi buku '" + bukuData.judul + "' berhasil disimpan ke database!",
+      buku: {
+        id: String(newId),
+        judul: bukuData.judul,
+        penulis: bukuData.penulis || "-",
+        tahun: bukuData.tahun || String(new Date().getFullYear()),
+        stok: Number(bukuData.stok) || 1,
+        rak: bukuData.rak || "RAK 1 BARIS 1",
+        kategori: sheetName
+      }
+    };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function editBukuKatalog(kategori, id, updatedData) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetNames = kategori && kategori !== "SEMUA" ? [kategori] : ["Buku Literatur", "Laporan KP", "Skripsi", "Buku Rusak"];
+    for (var s = 0; s < sheetNames.length; s++) {
+      var sheet = ss.getSheetByName(sheetNames[s]);
+      if (!sheet || sheet.getLastRow() <= 1) continue;
+      var raw = sheet.getDataRange().getDisplayValues();
+      var headers = raw[0].map(function(h) { return String(h).trim().toLowerCase(); });
+      var idxId = headers.indexOf("id");
+      var idxJudul = headers.indexOf("judul");
+      var idxPenulis = headers.indexOf("penulis");
+      var idxTahun = headers.indexOf("tahun_terbit") > -1 ? headers.indexOf("tahun_terbit") : headers.indexOf("tahun");
+      var idxStok = headers.indexOf("stok");
+      var idxRak = headers.indexOf("rak");
+      var idxKet = headers.indexOf("keterangan");
+
+      for (var i = 1; i < raw.length; i++) {
+        if (String(raw[i][idxId]).trim() === String(id).trim()) {
+          var rowNum = i + 1;
+          if (updatedData.judul !== undefined && idxJudul > -1) sheet.getRange(rowNum, idxJudul + 1).setValue(updatedData.judul);
+          if (updatedData.penulis !== undefined && idxPenulis > -1) sheet.getRange(rowNum, idxPenulis + 1).setValue(updatedData.penulis);
+          if (updatedData.tahun !== undefined && idxTahun > -1) sheet.getRange(rowNum, idxTahun + 1).setValue(updatedData.tahun);
+          if (updatedData.stok !== undefined && idxStok > -1) sheet.getRange(rowNum, idxStok + 1).setValue(Number(updatedData.stok) || 0);
+          if (updatedData.rak !== undefined && idxRak > -1) sheet.getRange(rowNum, idxRak + 1).setValue(updatedData.rak);
+          if (updatedData.keterangan !== undefined && idxKet > -1) sheet.getRange(rowNum, idxKet + 1).setValue(updatedData.keterangan);
+          return { success: true, message: "Data buku #" + id + " berhasil diperbarui di database!" };
+        }
+      }
+    }
+    throw new Error("Buku ID #" + id + " tidak ditemukan!");
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function hapusBukuKatalog(kategori, id) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetNames = kategori && kategori !== "SEMUA" ? [kategori] : ["Buku Literatur", "Laporan KP", "Skripsi", "Buku Rusak"];
+    for (var s = 0; s < sheetNames.length; s++) {
+      var sheet = ss.getSheetByName(sheetNames[s]);
+      if (!sheet || sheet.getLastRow() <= 1) continue;
+      var raw = sheet.getDataRange().getDisplayValues();
+      var headers = raw[0].map(function(h) { return String(h).trim().toLowerCase(); });
+      var idxId = headers.indexOf("id");
+      if (idxId === -1) continue;
+
+      for (var i = 1; i < raw.length; i++) {
+        if (String(raw[i][idxId]).trim() === String(id).trim()) {
+          sheet.deleteRow(i + 1);
+          return { success: true, message: "Koleksi buku ID #" + id + " berhasil dihapus dari database!" };
+        }
+      }
+    }
+    throw new Error("Buku ID #" + id + " tidak ditemukan!");
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function catatBukuRusakDatabase(bukuData, keterangan) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var shRusak = ss.getSheetByName("Buku Rusak");
+    if (!shRusak) {
+      shRusak = ss.insertSheet("Buku Rusak");
+      shRusak.appendRow(["id", "judul", "penulis", "tahun_terbit", "stok", "rak", "keterangan"]);
+    }
+    var nextId = shRusak.getLastRow();
+    shRusak.appendRow([
+      nextId,
+      bukuData.judul || "-",
+      bukuData.penulis || "-",
+      bukuData.tahun || "-",
+      1,
+      bukuData.rak || "Ruang Baca TI",
+      keterangan || "Kerusakan koleksi"
+    ]);
+
+    if (bukuData.id) {
+      updateStokBuku(ss, bukuData.id, -1);
+    }
+    return { success: true, message: "Buku berhasil dicatat ke data Buku Rusak & stok katalog diperbarui!" };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function tambahMahasiswaBaru(mhsData) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Mahasiswa");
+    if (!sheet) throw new Error("Sheet Mahasiswa tidak ditemukan!");
+
+    var npm = String(mhsData.npm || "").trim();
+    var nama = String(mhsData.nama || "").trim().toUpperCase();
+    if (!npm || !nama) throw new Error("NPM dan Nama mahasiswa wajib diisi!");
+
+    var raw = sheet.getDataRange().getDisplayValues();
+    var headers = raw[0].map(function(h) { return String(h).trim().toLowerCase(); });
+    var idxNpm = headers.indexOf("npm");
+    if (idxNpm > -1) {
+      for (var i = 1; i < raw.length; i++) {
+        if (raw[i][idxNpm].trim().toLowerCase() === npm.toLowerCase()) {
+          throw new Error("Mahasiswa dengan NPM " + npm + " sudah terdaftar!");
+        }
+      }
+    }
+
+    var angkatan = mhsData.angkatan || (npm.length >= 6 ? "20" + npm.substring(4, 6) : "2023");
+    sheet.appendRow([
+      nama,
+      npm,
+      angkatan,
+      mhsData.status || "Aktif",
+      mhsData.email || (npm + "@unirow.ac.id"),
+      mhsData.noHp || "-"
+    ]);
+
+    return { success: true, message: "Mahasiswa " + nama + " (" + npm + ") berhasil didaftarkan!" };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function importDataCsvDatabase(tipe, csvText) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var lines = csvText.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+    if (lines.length <= 1) throw new Error("Data CSV tidak memiliki baris data yang cukup.");
+
+    var parseCsvLine = function(text) {
+      var re = /(?:^|,)(?:"([^"]*(?:""[^"]*)*)"|([^",]*))/g;
+      var arr = [];
+      var match;
+      while ((match = re.exec(text)) !== null) {
+        var str = match[1] !== undefined ? match[1].replace(/""/g, '"') : match[2];
+        arr.push(str ? str.trim() : "");
+      }
+      return arr;
+    };
+
+    var sheet;
+    var count = 0;
+
+    if (tipe === "mahasiswa") {
+      sheet = ss.getSheetByName("Mahasiswa");
+      if (!sheet) throw new Error("Sheet Mahasiswa tidak ditemukan!");
+      for (var i = 1; i < lines.length; i++) {
+        var cols = parseCsvLine(lines[i]);
+        if (cols.length >= 2) {
+          var nama = cols[1] && isNaN(cols[0]) ? cols[0] : (cols[1] || cols[0]);
+          var npm = cols[2] && isNaN(cols[0]) ? cols[1] : (cols[2] || cols[1]);
+          var email = cols[3] || "-";
+          var angkatan = cols[4] || (npm && npm.length >= 6 ? "20" + npm.substring(4, 6) : "2023");
+          var status = cols[5] || "Aktif";
+          var noHp = cols[6] || "-";
+          sheet.appendRow([nama.toUpperCase(), String(npm).replace(/^'/, ''), angkatan, status, email, String(noHp).replace(/^'/, '')]);
+          count++;
+        }
+      }
+    } else {
+      var sheetName = tipe || "Buku Literatur";
+      sheet = ss.getSheetByName(sheetName);
+      if (!sheet) throw new Error("Sheet " + sheetName + " tidak ditemukan!");
+      for (var j = 1; j < lines.length; j++) {
+        var bCols = parseCsvLine(lines[j]);
+        if (bCols.length >= 2) {
+          var id = bCols[0] || String(sheet.getLastRow() + 1000);
+          var judul = bCols[1] || bCols[0];
+          var penulis = bCols[2] || "-";
+          var tahun = bCols[3] || String(new Date().getFullYear());
+          var stok = Number(bCols[4]) || 1;
+          var rak = bCols[5] || "Ruang Baca TI";
+          sheet.appendRow([id, judul, penulis, tahun, stok, rak]);
+          count++;
+        }
+      }
+    }
+
+    return { success: true, message: "Berhasil mengimpor " + count + " baris data ke sheet " + (sheet ? sheet.getName() : "") + "!" };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
 function getGeminiApiKey() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -797,7 +1039,7 @@ function getGeminiApiKey() {
 }
 
 /**
- * Pemrosesan Multimodal Vision OCR Eksklusif Gemini 3.6 Flash
+ * Pemrosesan Multimodal Vision OCR Menggunakan Gemini 2.5 / 2.0 / 1.5 Flash
  */
 function prosesScannerDenganAI(base64Image, mimeType) {
   try {
@@ -828,7 +1070,6 @@ function prosesScannerDenganAI(base64Image, mimeType) {
       '  "ringkasan": "Deskripsi topik buku singkat (maksimal 15 kata)"\n' +
       "}";
 
-    // Struktur payload standar Gemini 3.6 Flash
     var payload = {
       contents: [
         {
@@ -842,19 +1083,19 @@ function prosesScannerDenganAI(base64Image, mimeType) {
             }
           ]
         }
-      ]
+      ],
+      generationConfig: {
+        temperature: 0.2
+      }
     };
 
-    // Jalur endpoint resmi Gemini 3.6 Flash
-    var endpoints = [
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + encodeURIComponent(apiKey),
-      "https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=" + encodeURIComponent(apiKey)
-    ];
-
+    // Model resmi Google Generative AI dengan fallback otomatis
+    var models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     var lastError = "";
 
-    for (var e = 0; e < endpoints.length; e++) {
-      var endpoint = endpoints[e];
+    for (var m = 0; m < models.length; m++) {
+      var modelName = models[m];
+      var endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + encodeURIComponent(apiKey);
       var options = {
         method: "post",
         contentType: "application/json",
@@ -862,36 +1103,40 @@ function prosesScannerDenganAI(base64Image, mimeType) {
         muteHttpExceptions: true
       };
 
-      var response = UrlFetchApp.fetch(endpoint, options);
-      var responseCode = response.getResponseCode();
-      var resultText = response.getContentText();
+      try {
+        var response = UrlFetchApp.fetch(endpoint, options);
+        var responseCode = response.getResponseCode();
+        var resultText = response.getContentText();
 
-      if (responseCode === 200) {
-        var parsedRes = JSON.parse(resultText);
-        if (parsedRes.candidates && parsedRes.candidates.length > 0 && parsedRes.candidates[0].content && parsedRes.candidates[0].content.parts) {
-          var rawCandidate = parsedRes.candidates[0].content.parts[0].text;
-          var cleanJson = rawCandidate.replace(/```json/gi, "").replace(/```/g, "").trim();
+        if (responseCode === 200) {
+          var parsedRes = JSON.parse(resultText);
+          if (parsedRes.candidates && parsedRes.candidates.length > 0 && parsedRes.candidates[0].content && parsedRes.candidates[0].content.parts) {
+            var rawCandidate = parsedRes.candidates[0].content.parts[0].text;
+            var cleanJson = rawCandidate.replace(/```json/gi, "").replace(/```/g, "").trim();
 
-          var firstBrace = cleanJson.indexOf("{");
-          var lastBrace = cleanJson.lastIndexOf("}");
-          if (firstBrace > -1 && lastBrace > -1) {
-            cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+            var firstBrace = cleanJson.indexOf("{");
+            var lastBrace = cleanJson.lastIndexOf("}");
+            if (firstBrace > -1 && lastBrace > -1) {
+              cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+            }
+
+            var bookData = JSON.parse(cleanJson);
+            return {
+              success: true,
+              data: bookData,
+              message: "Metadata buku berhasil diekstrak oleh " + modelName + "!"
+            };
           }
-
-          var bookData = JSON.parse(cleanJson);
-          return {
-            success: true,
-            data: bookData,
-            message: "Metadata buku berhasil diekstrak oleh Gemini 3.6 Flash!"
-          };
+        } else {
+          try {
+            var errObj = JSON.parse(resultText);
+            lastError = (errObj.error && errObj.error.message) ? errObj.error.message : ("HTTP " + responseCode);
+          } catch (err) {
+            lastError = "HTTP " + responseCode + ": " + resultText.substring(0, 100);
+          }
         }
-      } else {
-        try {
-          var errObj = JSON.parse(resultText);
-          lastError = (errObj.error && errObj.error.message) ? errObj.error.message : ("HTTP " + responseCode);
-        } catch (err) {
-          lastError = "HTTP " + responseCode + ": " + resultText.substring(0, 100);
-        }
+      } catch (callErr) {
+        lastError = callErr.toString();
       }
     }
 
@@ -913,7 +1158,7 @@ function konsultasiAiMahasiswa(pertanyaan, npmMahasiswa) {
     if (!apiKey || apiKey === "") {
       return {
         success: false,
-        message: "Kunci API Gemini belum terpasang di database Config."
+        message: "Kunci API Gemini belum terpasang di database Config (baris GEMINI_API_KEY)."
       };
     }
 
@@ -943,16 +1188,17 @@ function konsultasiAiMahasiswa(pertanyaan, npmMahasiswa) {
           role: "user",
           parts: [{ text: systemPrompt + "\n\nPertanyaan Mahasiswa: " + pertanyaan }]
         }
-      ]
+      ],
+      generationConfig: {
+        temperature: 0.7
+      }
     };
 
-    var endpoints = [
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + encodeURIComponent(apiKey),
-      "https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=" + encodeURIComponent(apiKey)
-    ];
+    var models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
-    for (var i = 0; i < endpoints.length; i++) {
-      var endpoint = endpoints[i];
+    for (var m = 0; m < models.length; m++) {
+      var modelName = models[m];
+      var endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + encodeURIComponent(apiKey);
       var options = {
         method: "post",
         contentType: "application/json",
@@ -960,19 +1206,21 @@ function konsultasiAiMahasiswa(pertanyaan, npmMahasiswa) {
         muteHttpExceptions: true
       };
 
-      var response = UrlFetchApp.fetch(endpoint, options);
-      if (response.getResponseCode() === 200) {
-        var parsed = JSON.parse(response.getContentText());
-        if (parsed.candidates && parsed.candidates.length > 0 && parsed.candidates[0].content) {
-          return {
-            success: true,
-            jawaban: parsed.candidates[0].content.parts[0].text
-          };
+      try {
+        var response = UrlFetchApp.fetch(endpoint, options);
+        if (response.getResponseCode() === 200) {
+          var parsed = JSON.parse(response.getContentText());
+          if (parsed.candidates && parsed.candidates.length > 0 && parsed.candidates[0].content) {
+            return {
+              success: true,
+              jawaban: parsed.candidates[0].content.parts[0].text
+            };
+          }
         }
-      }
+      } catch (fetchErr) {}
     }
 
-    return { success: false, message: "AI sedang sibuk atau kuota tercapai." };
+    return { success: false, message: "AI sedang sibuk atau kuota API Gemini tercapai." };
   } catch (err) {
     return {
       success: false,
@@ -1084,6 +1332,139 @@ function kirimBotReminderEmail() {
     return {
       success: true,
       message: "Bot Reminder selesai! Berhasil mengirim " + sentCount + " email notifikasi." + (skipCount > 0 ? " (" + skipCount + " mahasiswa dilewati karena tidak ada email valid)" : "")
+    };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+/**
+ * ====================================================================
+ * OTOMATISASI HARIAN (JAM 08:00 PAGI WIB) VIA TIME-DRIVEN TRIGGER
+ * ====================================================================
+ */
+
+/**
+ * Fungsi utama yang dipicu otomatis oleh Google Cloud setiap hari jam 08:00 pagi.
+ * 1. Menghitung dan memperbarui denda keterlambatan buku.
+ * 2. Mengirimkan email bot reminder resmi kepada mahasiswa yang terlambat.
+ * 3. Menyimpan riwayat eksekusi ke sheet 'Config'.
+ */
+function jadwalOtomatisJam8Pagi() {
+  var logText = "";
+  try {
+    // 1. Perbarui denda keterlambatan otomatis
+    var resDenda = perbaruiDendaOtomatis();
+    logText += "Denda: " + (resDenda && resDenda.message ? resDenda.message : "OK") + " | ";
+
+    // 2. Eksekusi pengiriman email bot reminder
+    var resReminder = kirimBotReminderEmail();
+    logText += "Reminder: " + (resReminder && resReminder.message ? resReminder.message : "OK");
+
+    Logger.log("[JADWAL 08:00] Berhasil dieksekusi: " + logText);
+
+    // Simpan catatan waktu terakhir eksekusi otomatis ke Config
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var shConfig = ss.getSheetByName("Config");
+    if (shConfig) {
+      var data = shConfig.getDataRange().getValues();
+      var foundRow = -1;
+      for (var i = 1; i < data.length; i++) {
+        if (String(data[i][0]).trim() === "LAST_AUTO_RUN") {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      var nowStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss");
+      if (foundRow > -1) {
+        shConfig.getRange(foundRow, 2).setValue(nowStr + " WIB");
+        shConfig.getRange(foundRow, 3).setValue(logText);
+      } else {
+        shConfig.appendRow(["LAST_AUTO_RUN", nowStr + " WIB", logText]);
+      }
+    }
+
+    return { success: true, message: "Otomatisasi sukses: " + logText };
+  } catch (err) {
+    Logger.log("[JADWAL 08:00] Error: " + err.toString());
+    return { success: false, message: err.toString() };
+  }
+}
+
+/**
+ * Memasang atau memperbarui pemicu otomatis harian jam 08:00 pagi.
+ * Pemicu ini berjalan di server Google tanpa memerlukan aplikasi tetap terbuka.
+ */
+function pasangTriggerOtomatisJam8Pagi() {
+  try {
+    // Hapus trigger lama jika sudah ada untuk fungsi yang sama agar tidak ganda
+    var triggers = ScriptApp.getProjectTriggers();
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "jadwalOtomatisJam8Pagi") {
+        ScriptApp.deleteTrigger(triggers[i]);
+      }
+    }
+
+    // Buat trigger baru jam 08:00 pagi (WIB) setiap hari
+    var newTrigger = ScriptApp.newTrigger("jadwalOtomatisJam8Pagi")
+      .timeBased()
+      .atHour(8)
+      .everyDays(1)
+      .inTimezone("Asia/Jakarta")
+      .create();
+
+    return {
+      success: true,
+      message: "Jadwal otomatis harian pukul 08:00 WIB berhasil diaktifkan di Google Cloud!",
+      triggerId: newTrigger.getUniqueId()
+    };
+  } catch (err) {
+    return { success: false, message: "Gagal memasang trigger: " + err.toString() };
+  }
+}
+
+/**
+ * Memeriksa status apakah pemicu otomatis jam 08:00 pagi sedang aktif.
+ */
+function cekStatusTriggerOtomatis() {
+  try {
+    var triggers = ScriptApp.getProjectTriggers();
+    var aktif = false;
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "jadwalOtomatisJam8Pagi") {
+        aktif = true;
+        break;
+      }
+    }
+
+    var lastRun = getConfigValue("LAST_AUTO_RUN", "Belum pernah berjalan");
+
+    return {
+      success: true,
+      aktif: aktif,
+      lastRun: lastRun
+    };
+  } catch (err) {
+    return { success: false, aktif: false, message: err.toString() };
+  }
+}
+
+/**
+ * Menonaktifkan pemicu otomatis jam 08:00 pagi.
+ */
+function nonaktifkanTriggerOtomatis() {
+  try {
+    var triggers = ScriptApp.getProjectTriggers();
+    var count = 0;
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "jadwalOtomatisJam8Pagi") {
+        ScriptApp.deleteTrigger(triggers[i]);
+        count++;
+      }
+    }
+    return {
+      success: true,
+      message: count > 0 ? "Jadwal otomatis jam 08:00 berhasil dinonaktifkan." : "Tidak ada jadwal otomatis yang sedang aktif."
     };
   } catch (err) {
     return { success: false, message: err.toString() };

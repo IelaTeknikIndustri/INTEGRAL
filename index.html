@@ -95,13 +95,16 @@
         }
 
         .login-card {
-            background: #FFFFFF;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
             padding: 36px 30px 30px 30px;
             border-radius: 26px;
             width: 100%;
             max-width: 390px;
             text-align: center;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
         }
 
         .login-logo {
@@ -576,7 +579,8 @@
 
         .book-card.selected {
             border-color: var(--accent);
-            background: #27354A;
+            background: rgba(79, 70, 229, 0.12);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
         }
 
         .filter-tabs {
@@ -949,6 +953,11 @@
     <div id="toast"></div>
 
     <div id="login-view">
+        <div style="position:absolute; top:20px; right:20px;">
+            <button class="btn-theme-toggle" onclick="window.toggleTheme()" title="Ganti Mode Gelap / Terang">
+                <span id="login-theme-toggle-icon">🌙</span>
+            </button>
+        </div>
         <div class="login-card">
             <img src="https://i.ibb.co/xqkdqtmp/2-1.png" alt="INTEGRAL" class="login-logo">
             <input type="text" id="login-user" class="inp" placeholder="Username atau NPM" autocomplete="username">
@@ -1030,6 +1039,8 @@
                             <button class="btn btn-warning" onclick="window.syncDenda()">🔄 Update Denda</button>
                             <button class="btn btn-success" onclick="window.eksekusiBotReminder()">📧 Bot
                                 Reminder</button>
+                            <button class="btn" id="btn-auto-trigger" style="background:#0D9488;"
+                                onclick="window.openModalAutoTrigger()">⏰ Otomatisasi (08:00)</button>
                             <button class="btn" id="btn-import-dash" style="background:#EA580C;"
                                 onclick="window.openModalImport()">📤 Import Data</button>
                         </div>
@@ -1187,6 +1198,7 @@
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <input type="text" id="cari-mhs-inp" class="inp" placeholder="Cari Nama / NPM..."
                                 style="margin-bottom:0; max-width:220px;" oninput="window.renderTabelMhs()">
+                            <button class="btn btn-info" onclick="window.openModalTambahMhsManual()">➕ Tambah Mahasiswa</button>
                             <button class="btn" id="btn-import-mhs" style="background:#EA580C;"
                                 onclick="window.openModalImport()">📤 Import</button>
                             <button class="btn btn-primary" onclick="window.exportCsvMhs()">📥 Export CSV</button>
@@ -1870,15 +1882,60 @@
                     style="cursor:pointer; font-size:20px; color:var(--text-muted);">&times;</span>
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:6px;">Tempel Data CSV atau
-                    Unggah Berkas</label>
+                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:6px;">Target Lembar Kerja (Sheet):</label>
+                <select id="import-target-sheet" class="inp" style="margin-bottom:12px; font-weight:600;">
+                    <option value="mahasiswa">👥 Data Mahasiswa (Sheet: Mahasiswa)</option>
+                    <option value="Buku Literatur">📚 Buku Literatur</option>
+                    <option value="Laporan KP">📝 Laporan KP</option>
+                    <option value="Skripsi">🎓 Skripsi</option>
+                </select>
+                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:6px;">Tempel Data CSV atau Unggah Berkas:</label>
                 <textarea id="import-csv-area" class="inp" style="height:120px; resize:none;"
-                    placeholder="Contoh format:&#10;NAMA,NPM,ANGKATAN,STATUS,EMAIL,NO_HP"></textarea>
+                    placeholder="Contoh header Mahasiswa:&#10;NAMA,NPM,ANGKATAN,STATUS,EMAIL,NO_HP&#10;&#10;Contoh header Buku:&#10;ID,JUDUL,PENULIS,TAHUN_TERBIT,STOK,RAK"></textarea>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <input type="file" id="import-file-input" accept=".csv,text/csv"
                     onchange="window.handleUploadCsvFile(event)">
                 <button onclick="window.eksekusiImportCsv()" class="btn btn-primary">Mulai Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OTOMATISASI HARIAN (JAM 08:00 PAGI) -->
+    <div class="modal-overlay" id="modalAutoTrigger">
+        <div class="modal-card" style="max-width:520px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:16.5px; display:flex; align-items:center; gap:8px;">⏰ Otomatisasi Harian (08:00 WIB)</h3>
+                <span onclick="document.getElementById('modalAutoTrigger').style.display='none'"
+                    style="cursor:pointer; font-size:20px; color:var(--text-muted);">&times;</span>
+            </div>
+            
+            <div style="background:var(--card-subtle); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12.5px; font-weight:700; color:var(--text-muted);">STATUS TRIGGER GOOGLE CLOUD:</span>
+                    <span id="auto-trigger-status-badge" class="pill" style="background:#FEF08A; color:#854D0E;">Memeriksa...</span>
+                </div>
+                <div style="font-size:12px; color:var(--text); line-height:1.5;">
+                    <div>Jadwal Sistem: <strong>Setiap Hari pukul 08:00 - 09:00 WIB</strong></div>
+                    <div style="margin-top:4px;">Riwayat Terakhir: <strong id="auto-trigger-last-run" style="color:var(--accent);">-</strong></div>
+                </div>
+            </div>
+
+            <div style="font-size:12.5px; color:var(--text); line-height:1.6; margin-bottom:18px;">
+                <strong style="display:block; margin-bottom:6px; color:var(--text);">Siklus yang Dijalankan Otomatis di Server Google:</strong>
+                <ul style="padding-left:20px; margin:0; color:var(--text-muted);">
+                    <li>🔄 <strong>Update Denda:</strong> Memeriksa seluruh peminjaman aktif &amp; mengakumulasi denda keterlambatan buku.</li>
+                    <li>📧 <strong>Bot Reminder:</strong> Mengirimkan email notifikasi berformat resmi ke seluruh mahasiswa yang terlambat.</li>
+                    <li>☁️ <strong>Berjalan Mandiri:</strong> Komputer/browser tidak perlu menyala. Server Google Apps Script memproses otomatis.</li>
+                </ul>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-top:1px solid var(--border); padding-top:14px;">
+                <button class="btn btn-warning" onclick="window.eksekusiAutoTriggerManual()" style="font-size:12px;">⚡ Uji Coba Sekarang</button>
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-toggle-auto-trigger" class="btn btn-success" style="font-size:12px;" onclick="window.hidupkanAutoTrigger()">▶️ Aktifkan Jam 08:00</button>
+                    <button class="btn btn-ghost" onclick="document.getElementById('modalAutoTrigger').style.display='none'" style="font-size:12px;">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1916,8 +1973,10 @@
 
         window.updateThemeIcons = function (theme) {
             var icon = theme === "dark" ? "☀️" : "🌙";
+            var tIcon0 = document.getElementById("login-theme-toggle-icon");
             var tIcon1 = document.getElementById("theme-toggle-icon");
             var tIcon2 = document.getElementById("stu-theme-toggle-icon");
+            if (tIcon0) tIcon0.innerText = icon;
             if (tIcon1) tIcon1.innerText = icon;
             if (tIcon2) tIcon2.innerText = icon;
         };
@@ -2024,6 +2083,9 @@
 
             var btnTpl = document.getElementById("btn-template-surat");
             if (btnTpl) btnTpl.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnAuto = document.getElementById("btn-auto-trigger");
+            if (btnAuto) btnAuto.style.display = isSuperadmin ? "inline-flex" : "none";
         };
 
         window.toggleSidebar = function (open) {
@@ -2516,19 +2578,54 @@
             if (!selectedBookDetail) return;
             var b = selectedBookDetail;
             var newJudul = prompt("Ubah Judul Buku:", b.judul);
-            if (!newJudul) return;
-            var newPenulis = prompt("Ubah Penulis:", b.penulis);
-            var newTahun = prompt("Ubah Tahun Terbit:", b.tahun);
-            var newRak = prompt("Ubah Lokasi Rak:", b.rak);
+            if (newJudul === null) return;
+            newJudul = newJudul.trim();
+            if (!newJudul) { window.showToast("Judul buku tidak boleh kosong!", "error"); return; }
+            var newPenulis = prompt("Ubah Penulis / Penyusun:", b.penulis) || "-";
+            var newTahun = prompt("Ubah Tahun Terbit:", b.tahun) || String(new Date().getFullYear());
+            var newRak = prompt("Ubah Lokasi Rak:", b.rak) || "Ruang Baca TI";
 
-            b.judul = newJudul;
-            if (newPenulis) b.penulis = newPenulis;
-            if (newTahun) b.tahun = newTahun;
-            if (newRak) b.rak = newRak;
+            var updatedData = {
+                judul: newJudul,
+                penulis: newPenulis,
+                tahun: newTahun,
+                rak: newRak
+            };
 
-            window.showToast("Data buku berhasil diperbarui!", "success");
-            document.getElementById("modalDetailBuku").style.display = "none";
-            window.renderTabelBuku();
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            b.judul = newJudul;
+                            b.penulis = newPenulis;
+                            b.tahun = newTahun;
+                            b.rak = newRak;
+                            window.showToast(res.message, "success");
+                            document.getElementById("modalDetailBuku").style.display = "none";
+                            window.renderTabelBuku();
+                            window.renderBookGrid();
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal simpan ke database: " + (err.message || err), "error");
+                    }).editBukuKatalog(b.kategori || curKatBuku, b.id, updatedData);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    b.judul = newJudul;
+                    b.penulis = newPenulis;
+                    b.tahun = newTahun;
+                    b.rak = newRak;
+                    window.showToast("Data buku berhasil diperbarui!", "success");
+                    document.getElementById("modalDetailBuku").style.display = "none";
+                    window.renderTabelBuku();
+                    window.renderBookGrid();
+                }, 200);
+            }
         };
 
         window.hapusBukuAktif = function () {
@@ -2537,62 +2634,152 @@
                 window.showToast("Akses Ditolak: Menghapus koleksi buku memerlukan otorisasi Superadmin!", "error");
                 return;
             }
-            window.askConfirm("Yakin ingin menghapus koleksi '" + selectedBookDetail.judul + "'?", function () {
-                var idx = state.bukuPinjam.findIndex(function (x) { return String(x.id) === String(selectedBookDetail.id); });
-                if (idx > -1) state.bukuPinjam.splice(idx, 1);
-
-                document.getElementById("modalDetailBuku").style.display = "none";
-                window.showToast("Buku berhasil dihapus!", "success");
-                window.renderTabelBuku();
-                window.updateKategoriBadges();
+            var b = selectedBookDetail;
+            window.askConfirm("Yakin ingin menghapus koleksi '" + b.judul + "' dari database?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            if (res.success) {
+                                var idx = state.bukuPinjam.findIndex(function (x) { return String(x.id) === String(b.id); });
+                                if (idx > -1) state.bukuPinjam.splice(idx, 1);
+                                document.getElementById("modalDetailBuku").style.display = "none";
+                                window.showToast(res.message, "success");
+                                window.renderTabelBuku();
+                                window.renderBookGrid();
+                                window.renderStats();
+                                window.updateKategoriBadges();
+                            } else {
+                                window.showToast("Gagal: " + res.message, "error");
+                            }
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal menghapus: " + (err.message || err), "error");
+                        }).hapusBukuKatalog(b.kategori || curKatBuku, b.id);
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        var idx = state.bukuPinjam.findIndex(function (x) { return String(x.id) === String(b.id); });
+                        if (idx > -1) state.bukuPinjam.splice(idx, 1);
+                        document.getElementById("modalDetailBuku").style.display = "none";
+                        window.showToast("Buku berhasil dihapus!", "success");
+                        window.renderTabelBuku();
+                        window.renderBookGrid();
+                        window.renderStats();
+                        window.updateKategoriBadges();
+                    }, 200);
+                }
             }, "Hapus Buku");
         };
 
         window.tandaiBukuKoleksiRusak = function () {
             if (!selectedBookDetail) return;
-            var alasan = prompt("Masukkan kondisi kerusakan / keterangan:", "Halaman sobek / Sampul rusak");
+            var alasan = prompt("Masukkan kondisi kerusakan / catatan:", "Halaman sobek / Sampul rusak");
             if (!alasan) return;
 
             var b = selectedBookDetail;
-            if (!state.bukuRusak) state.bukuRusak = [];
-            state.bukuRusak.unshift({
-                id: b.id,
-                judul: b.judul,
-                penulis: b.penulis,
-                tahun: b.tahun,
-                stok: b.stok,
-                rak: b.rak,
-                kategori: "Buku Rusak",
-                keterangan: alasan
-            });
+            window.showLoading(true);
 
-            document.getElementById("modalDetailBuku").style.display = "none";
-            window.showToast("Buku dicatat ke dalam Daftar Buku Rusak!", "warning");
-            window.updateKategoriBadges();
-            window.renderTabelBuku();
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            b.stok = Math.max(0, (Number(b.stok) || 1) - 1);
+                            if (!state.bukuRusak) state.bukuRusak = [];
+                            state.bukuRusak.unshift({
+                                id: b.id,
+                                judul: b.judul,
+                                penulis: b.penulis,
+                                tahun: b.tahun,
+                                stok: 1,
+                                rak: b.rak,
+                                kategori: "Buku Rusak",
+                                keterangan: alasan
+                            });
+                            document.getElementById("modalDetailBuku").style.display = "none";
+                            window.showToast(res.message, "warning");
+                            window.updateKategoriBadges();
+                            window.renderTabelBuku();
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal: " + (err.message || err), "error");
+                    }).catatBukuRusakDatabase(b, alasan);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    if (!state.bukuRusak) state.bukuRusak = [];
+                    state.bukuRusak.unshift({
+                        id: b.id,
+                        judul: b.judul,
+                        penulis: b.penulis,
+                        tahun: b.tahun,
+                        stok: 1,
+                        rak: b.rak,
+                        kategori: "Buku Rusak",
+                        keterangan: alasan
+                    });
+                    document.getElementById("modalDetailBuku").style.display = "none";
+                    window.showToast("Buku dicatat ke dalam Daftar Buku Rusak!", "warning");
+                    window.updateKategoriBadges();
+                    window.renderTabelBuku();
+                }, 200);
+            }
         };
 
         window.openModalTambahBukuManual = function () {
             var judul = prompt("Masukkan Judul Koleksi Buku Baru:");
-            if (!judul) return;
+            if (!judul || !judul.trim()) return;
             var penulis = prompt("Masukkan Penulis / Penyusun:", "-") || "-";
             var tahun = prompt("Masukkan Tahun Terbit:", String(new Date().getFullYear())) || "-";
             var rak = prompt("Masukkan Lokasi Rak:", "RAK 1 BARIS 1") || "Ruang Baca TI";
+            var kat = curKatBuku === "Buku Rusak" ? "Buku Literatur" : curKatBuku;
 
-            var newId = String(state.bukuPinjam.length + 1001);
-            state.bukuPinjam.unshift({
-                id: newId,
-                judul: judul,
+            var bukuData = {
+                judul: judul.trim(),
                 penulis: penulis,
                 tahun: tahun,
                 stok: 1,
                 rak: rak,
-                kategori: curKatBuku === "Buku Rusak" ? "Buku Literatur" : curKatBuku
-            });
+                kategori: kat
+            };
 
-            window.showToast("Koleksi baru berhasil ditambahkan!", "success");
-            window.renderTabelBuku();
-            window.updateKategoriBadges();
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success && res.buku) {
+                            state.bukuPinjam.unshift(res.buku);
+                            window.showToast(res.message, "success");
+                            window.renderTabelBuku();
+                            window.renderBookGrid();
+                            window.renderStats();
+                            window.updateKategoriBadges();
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal menambahkan buku: " + (err.message || err), "error");
+                    }).tambahBukuBaru(kat, bukuData);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    var newId = String(state.bukuPinjam.length + 1001);
+                    bukuData.id = newId;
+                    state.bukuPinjam.unshift(bukuData);
+                    window.showToast("Koleksi baru berhasil ditambahkan!", "success");
+                    window.renderTabelBuku();
+                    window.renderBookGrid();
+                    window.renderStats();
+                    window.updateKategoriBadges();
+                }, 200);
+            }
         };
 
         window.buildAngkatanDropdown = function () {
@@ -2966,6 +3153,125 @@
             }, "Bot Reminder");
         };
 
+        window.openModalAutoTrigger = function () {
+            if (!state.user || state.user.peran !== "Superadmin") {
+                window.showToast("Akses Ditolak: Fitur otomatisasi hanya untuk Superadmin!", "error");
+                return;
+            }
+            document.getElementById("modalAutoTrigger").style.display = "flex";
+            window.muatStatusAutoTrigger();
+        };
+
+        window.muatStatusAutoTrigger = function () {
+            var badgeEl = document.getElementById("auto-trigger-status-badge");
+            var lastRunEl = document.getElementById("auto-trigger-last-run");
+            var btnToggle = document.getElementById("btn-toggle-auto-trigger");
+
+            badgeEl.className = "pill";
+            badgeEl.style.background = "#FEF08A";
+            badgeEl.style.color = "#854D0E";
+            badgeEl.innerText = "Memeriksa status...";
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (res.success) {
+                            if (res.aktif) {
+                                badgeEl.className = "pill pill-dikembalikan";
+                                badgeEl.innerText = "AKTIF (Tiap Hari 08:00 WIB)";
+                                btnToggle.className = "btn btn-danger";
+                                btnToggle.innerText = "🛑 Nonaktifkan Otomatisasi";
+                                btnToggle.onclick = window.matikanAutoTrigger;
+                            } else {
+                                badgeEl.className = "pill pill-terlambat";
+                                badgeEl.innerText = "TIDAK AKTIF";
+                                btnToggle.className = "btn btn-success";
+                                btnToggle.innerText = "▶️ Aktifkan Jam 08:00 Pagi";
+                                btnToggle.onclick = window.hidupkanAutoTrigger;
+                            }
+                            lastRunEl.innerText = res.lastRun || "Belum pernah berjalan";
+                        }
+                    }).withFailureHandler(function (err) {
+                        badgeEl.innerText = "Gagal memuat status";
+                    }).cekStatusTriggerOtomatis();
+            } else {
+                badgeEl.className = "pill pill-dikembalikan";
+                badgeEl.innerText = "AKTIF (Simulasi 08:00 WIB)";
+                lastRunEl.innerText = "Hari ini 08:00:15 WIB (Sukses)";
+                btnToggle.className = "btn btn-danger";
+                btnToggle.innerText = "🛑 Nonaktifkan Otomatisasi";
+                btnToggle.onclick = window.matikanAutoTrigger;
+            }
+        };
+
+        window.hidupkanAutoTrigger = function () {
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        window.showToast(res.message, res.success ? "success" : "error");
+                        window.muatStatusAutoTrigger();
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal: " + (err.message || err), "error");
+                    }).pasangTriggerOtomatisJam8Pagi();
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    window.showToast("Jadwal harian 08:00 aktif!", "success");
+                    window.muatStatusAutoTrigger();
+                }, 300);
+            }
+        };
+
+        window.matikanAutoTrigger = function () {
+            window.askConfirm("Nonaktifkan jadwal otomatis jam 08:00 pagi?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message, "info");
+                            window.muatStatusAutoTrigger();
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal: " + (err.message || err), "error");
+                        }).nonaktifkanTriggerOtomatis();
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Jadwal otomatis dinonaktifkan.", "info");
+                        window.muatStatusAutoTrigger();
+                    }, 300);
+                }
+            }, "Nonaktifkan Jadwal");
+        };
+
+        window.eksekusiAutoTriggerManual = function () {
+            window.askConfirm("Jalankan siklus otomatisasi (Update Denda + Bot Reminder) sekarang?", function () {
+                window.showLoading(true);
+                if (isGAS) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            window.showLoading(false);
+                            window.showToast(res.message || "Siklus otomatisasi selesai!", res.success ? "success" : "error");
+                            window.loadServerData();
+                            window.muatStatusAutoTrigger();
+                        }).withFailureHandler(function (err) {
+                            window.showLoading(false);
+                            window.showToast("Gagal: " + (err.message || err), "error");
+                        }).jadwalOtomatisJam8Pagi();
+                } else {
+                    setTimeout(function () {
+                        window.showLoading(false);
+                        window.showToast("Simulasi siklus otomatisasi sukses!", "success");
+                        window.loadServerData();
+                    }, 400);
+                }
+            }, "Jalankan Sekarang");
+        };
+
         window.openEditorTemplateSurat = function () {
             if (!state.user || state.user.peran !== "Superadmin") {
                 window.showToast("Akses Ditolak: Pengaturan template surat hanya dapat diakses oleh Superadmin!", "error");
@@ -2974,6 +3280,16 @@
             var tpl = localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
             document.getElementById("template-html-editor").value = tpl;
             document.getElementById("modalTemplateEditor").style.display = "flex";
+
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (res.success && res.template) {
+                            document.getElementById("template-html-editor").value = res.template;
+                            try { localStorage.setItem(TEMPLATE_STORAGE_KEY, res.template); } catch (e) {}
+                        }
+                    }).getSuratTemplate();
+            }
         };
 
         window.sisipkanTagTemplate = function (tag) {
@@ -3275,23 +3591,51 @@
 
             if (!judul) { window.showToast("Isi judul koleksi buku yang dipindai!", "error"); return; }
 
-            state.bukuPinjam.unshift({
-                id: id || String(state.bukuPinjam.length + 1001),
+            var bukuData = {
+                id: id,
                 judul: judul,
                 penulis: penulis,
                 tahun: tahun,
                 stok: 1,
                 rak: rak,
                 kategori: kat
-            });
+            };
 
-            window.renderTabelBuku();
-            window.renderBookGrid();
-            window.renderStats();
-            window.updateKategoriBadges();
-            window.showToast("Koleksi " + judul + " berhasil ditambahkan!", "success");
-            document.getElementById("scan-tambah-judul").value = "";
-            document.getElementById("scan-tambah-id").value = "";
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success && res.buku) {
+                            state.bukuPinjam.unshift(res.buku);
+                            window.renderTabelBuku();
+                            window.renderBookGrid();
+                            window.renderStats();
+                            window.updateKategoriBadges();
+                            window.showToast(res.message, "success");
+                            document.getElementById("scan-tambah-judul").value = "";
+                            document.getElementById("scan-tambah-id").value = "";
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal menyimpan ke database: " + (err.message || err), "error");
+                    }).tambahBukuBaru(kat, bukuData);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    bukuData.id = id || String(state.bukuPinjam.length + 1001);
+                    state.bukuPinjam.unshift(bukuData);
+                    window.renderTabelBuku();
+                    window.renderBookGrid();
+                    window.renderStats();
+                    window.updateKategoriBadges();
+                    window.showToast("Koleksi " + judul + " berhasil ditambahkan!", "success");
+                    document.getElementById("scan-tambah-judul").value = "";
+                    document.getElementById("scan-tambah-id").value = "";
+                }, 200);
+            }
         };
 
         window.submitKembaliDariScanner = function () {
@@ -3333,11 +3677,107 @@
             reader.readAsText(file);
         };
 
+        window.openModalTambahMhsManual = function () {
+            var npm = prompt("Masukkan NPM Mahasiswa:");
+            if (!npm || !npm.trim()) return;
+            npm = npm.trim();
+
+            var nama = prompt("Masukkan Nama Lengkap Mahasiswa:");
+            if (!nama || !nama.trim()) { window.showToast("Nama tidak boleh kosong!", "error"); return; }
+            nama = nama.trim();
+
+            var defaultAngkatan = (npm.length >= 6 && !isNaN(npm.substring(4, 6))) ? "20" + npm.substring(4, 6) : "2023";
+            var angkatan = prompt("Masukkan Tahun Angkatan:", defaultAngkatan) || defaultAngkatan;
+            var email = prompt("Masukkan Email Mahasiswa:", npm + "@unirow.ac.id") || (npm + "@unirow.ac.id");
+            var noHp = prompt("Masukkan Nomor HP / WhatsApp:", "-") || "-";
+
+            var mhsData = {
+                npm: npm,
+                nama: nama,
+                angkatan: angkatan,
+                email: email,
+                noHp: noHp,
+                status: "Aktif"
+            };
+
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            state.mahasiswa.unshift({
+                                no: state.mahasiswa.length + 1,
+                                npm: npm,
+                                nama: nama.toUpperCase(),
+                                angkatan: angkatan,
+                                email: email,
+                                noHp: noHp,
+                                status: "Aktif"
+                            });
+                            window.showToast(res.message, "success");
+                            window.renderTabelMhs();
+                            window.renderDatalistMhs();
+                            window.buildAngkatanDropdown();
+                            window.renderStats();
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal simpan mahasiswa: " + (err.message || err), "error");
+                    }).tambahMahasiswaBaru(mhsData);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    state.mahasiswa.unshift({
+                        no: state.mahasiswa.length + 1,
+                        npm: npm,
+                        nama: nama.toUpperCase(),
+                        angkatan: angkatan,
+                        email: email,
+                        noHp: noHp,
+                        status: "Aktif"
+                    });
+                    window.showToast("Mahasiswa " + nama + " berhasil ditambahkan!", "success");
+                    window.renderTabelMhs();
+                    window.renderDatalistMhs();
+                    window.buildAngkatanDropdown();
+                    window.renderStats();
+                }, 200);
+            }
+        };
+
         window.eksekusiImportCsv = function () {
             var txt = document.getElementById("import-csv-area").value.trim();
             if (!txt) { window.showToast("Data CSV belum diisi!", "error"); return; }
-            window.showToast("Data CSV berhasil diproses ke antarmuka!", "success");
-            document.getElementById("modalImport").style.display = "none";
+            var targetSheet = document.getElementById("import-target-sheet") ? document.getElementById("import-target-sheet").value : "mahasiswa";
+
+            window.showLoading(true);
+            if (isGAS) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        window.showLoading(false);
+                        if (res.success) {
+                            window.showToast(res.message, "success");
+                            document.getElementById("modalImport").style.display = "none";
+                            document.getElementById("import-csv-area").value = "";
+                            window.loadServerData();
+                        } else {
+                            window.showToast("Gagal: " + res.message, "error");
+                        }
+                    }).withFailureHandler(function (err) {
+                        window.showLoading(false);
+                        window.showToast("Gagal mengimpor: " + (err.message || err), "error");
+                    }).importDataCsvDatabase(targetSheet, txt);
+            } else {
+                setTimeout(function () {
+                    window.showLoading(false);
+                    window.showToast("Simulasi: Data CSV berhasil diproses!", "success");
+                    document.getElementById("modalImport").style.display = "none";
+                    document.getElementById("import-csv-area").value = "";
+                }, 300);
+            }
         };
 
         window.exportCsvBuku = function () {

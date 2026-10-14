@@ -80,7 +80,8 @@ function setupDatabase() {
           ["NAMA_PRODI", "Ruang Baca Teknik Industri UNIROW", "Nama institusi perpustakaan prodi"],
           ["LOGO_EMAIL_URL", "https://i.ibb.co/4RjHXJ9j/Desain-tanpa-judul-4.png", "Logo kop email reminder"],
           ["TEMPLATE_SURAT_BEBAS", DEFAULT_TEMPLATE_SURAT, "Template HTML resmi Surat Bebas Ruang Baca"],
-          ["GEMINI_API_KEY", "", "Google Gemini AI API Key untuk Smart Scanner Vision & Asisten Riset TI"]
+          ["GEMINI_API_KEY", "", "Google Gemini AI API Key untuk Smart Scanner Vision & Asisten Riset TI"],
+          ["LAST_AUTO_RUN", "-", "Riwayat waktu eksekusi otomatisasi bot jam 08:00 WIB"]
         ]
       },
       {
