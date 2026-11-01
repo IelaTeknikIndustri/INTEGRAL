@@ -1,286 +1,425 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import { supabase } from '@/lib/supabase';
-import { formatDateIndo } from '@/lib/utils';
 
-// Fetch Initial Catalog Data and Stats directly via Supabase SSR
+// Fetch Initial Catalog from Supabase
 const { data: collections = [] } = await supabase
   .from('collections')
   .select('*')
   .order('created_at', { ascending: false })
-  .limit(100);
+  .limit(120);
 
 const { count: totalCollections } = await supabase
   .from('collections')
   .select('*', { count: 'exact', head: true });
 
-const { count: totalStudents } = await supabase
-  .from('students')
-  .select('*', { count: 'exact', head: true });
-
-const { count: activeLoans } = await supabase
-  .from('loans')
+const { count: totalLit } = await supabase
+  .from('collections')
   .select('*', { count: 'exact', head: true })
-  .in('status', ['Dipinjam', 'Terlambat']);
+  .eq('kategori', 'Buku Literatur');
+
+const { count: totalKp } = await supabase
+  .from('collections')
+  .select('*', { count: 'exact', head: true })
+  .eq('kategori', 'Laporan KP');
+
+const { count: totalSkripsi } = await supabase
+  .from('collections')
+  .select('*', { count: 'exact', head: true })
+  .eq('kategori', 'Skripsi');
 ---
 
-<Layout title="INTEGRAL - Industrial Integrated Library UNIROW">
-  <!-- Hero Section with Modern Bento Grid -->
-  <section class="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50 to-slate-100/60">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        <!-- Hero Left Pitch -->
-        <div class="lg:col-span-7 space-y-6">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold tracking-wide">
-            <span class="flex h-2 w-2 rounded-full bg-blue-600"></span>
-            Edisi Cloud 2.0 • Teknik Industri UNIROW
-          </div>
+<Layout title="Portal Mahasiswa • INTEGRAL Perpustakaan TI UNIROW">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-            Akses Referensi Ilmiah <br />
-            <span class="bg-gradient-to-r from-blue-700 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              Cepat, Cerdas & Terintegrasi
-            </span>
-          </h1>
-
-          <p class="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed">
-            Katalog sirkulasi pustaka, arsip Laporan Kerja Praktik (KP), dan naskah Skripsi sarjana terintegrasi kecerdasan buatan <strong>Google Gemini AI</strong>.
-          </p>
-
-          <!-- Quick Action Buttons -->
-          <div class="flex flex-wrap items-center gap-3 pt-2">
-            <a href="#katalog" class="px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-              Cari Katalog Sekarang
-            </a>
-            <button onclick="openModalClearance()" class="px-5 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all shadow-xs flex items-center gap-2">
-              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Cek Bebas Pustaka
-            </button>
-          </div>
+    <!-- HERO BANNER MAHASISWA (Authentic Royal Gradient from GAS) -->
+    <section class="p-6 sm:p-8 rounded-3xl text-white shadow-lg relative overflow-hidden"
+             style="background: var(--hero-student);">
+      <div class="relative z-10 max-w-2xl">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-white/15 backdrop-blur-md">
+            S-1 Teknik Industri UNIROW
+          </span>
+          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-white/15 backdrop-blur-md text-emerald-300">
+            ● Layanan Online Aktif
+          </span>
         </div>
-
-        <!-- Hero Right: Bento Metrics Cards -->
-        <div class="lg:col-span-5 grid grid-cols-2 gap-4">
-          <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-            <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg mb-4">
-              📚
-            </div>
-            <div>
-              <div class="text-3xl font-extrabold text-slate-900 tracking-tight">{totalCollections || 977}</div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Total Koleksi</div>
-            </div>
-          </div>
-
-          <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-            <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg mb-4">
-              🎓
-            </div>
-            <div>
-              <div class="text-3xl font-extrabold text-slate-900 tracking-tight">{totalStudents || 443}</div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Mahasiswa Terdaftar</div>
-            </div>
-          </div>
-
-          <div class="col-span-2 p-5 rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 text-white shadow-md relative overflow-hidden">
-            <div class="relative z-10">
-              <div class="flex items-center justify-between mb-3">
-                <span class="px-2.5 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-md">
-                  ✨ Gemini AI Research Assistant
-                </span>
-                <span class="text-xs text-blue-200 font-medium">Aktif 24/7</span>
-              </div>
-              <h3 class="font-bold text-lg leading-snug">Bingung mencari topik KP atau metode Skripsi?</h3>
-              <p class="text-xs text-indigo-100/80 mt-1 mb-4 leading-relaxed">
-                Tanyakan metode (Lean, Six Sigma, Ergonomi, Supply Chain) dan dapatkan rekomendasi buku & naskah nyata yang tersedia di rak.
-              </p>
-              <button onclick="openModalChat()" class="w-full py-2.5 px-4 rounded-xl bg-white text-indigo-900 font-bold text-xs hover:bg-indigo-50 transition-colors shadow-sm flex items-center justify-center gap-2">
-                💬 Mulai Konsultasi AI Sekarang
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section: Katalog Pencarian Buku -->
-  <section id="katalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-      <div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-editorial">
-          Eksplorasi Katalog Koleksi
-        </h2>
-        <p class="text-sm text-slate-500 mt-1">
-          Cari buku literatur kuliah, laporan kerja praktik di industri, dan naskah skripsi.
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Halo, Rekan Mahasiswa! 👋
+        </h1>
+        <p class="text-xs sm:text-sm text-indigo-100/90 mt-2 leading-relaxed font-normal">
+          Pantau masa pinjam buku, cek kelayakan bebas pustaka untuk syarat Yudisium & Wisuda, serta telusuri <strong>{totalCollections || 977}</strong> koleksi naskah Kerja Praktik dan Skripsi langsung dari perangkatmu.
         </p>
       </div>
 
-      <!-- Live Search Input -->
-      <div class="relative w-full md:w-80">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Cari judul, penulis, metode..."
-          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm bg-white shadow-xs"
-        />
-        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      <!-- Subtle background graphic -->
+      <div class="absolute -right-8 -bottom-10 opacity-10 pointer-events-none text-9xl font-black">
+        ∫
+      </div>
+    </section>
+
+    <!-- STATUS CARD GRID (Pinjaman Mandiri & Bebas Pustaka) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Card 1: Cek Pinjaman Mandiri -->
+      <div class="p-5 sm:p-6 rounded-2xl border transition-colors shadow-xs"
+           style="background: var(--surface); border-color: var(--border);">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--text);">
+            <span class="text-lg">📖</span>
+            <span>Pinjaman Buku Berjalan</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            Cek Mandiri
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+          Ketahui batas pengembalian buku dan status denda kamu dengan memasukkan NPM.
+        </p>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="studentNpmInput"
+            placeholder="Ketik NPM kamu (misal: 1411230105)..."
+            class="flex-1 px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+            style="background: var(--canvas); border-color: var(--border); color: var(--text);"
+          />
+          <button
+            type="button"
+            onclick="checkMyLoans()"
+            id="btnCheckLoans"
+            class="px-4 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-xs"
+            style="background: var(--accent);"
+          >
+            Cek
+          </button>
+        </div>
+        <div id="studentLoanBox" class="mt-4 hidden space-y-2 text-xs"></div>
+      </div>
+
+      <!-- Card 2: Status Bebas Pustaka -->
+      <div class="p-5 sm:p-6 rounded-2xl border transition-colors shadow-xs"
+           style="background: var(--surface); border-color: var(--border);">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--text);">
+            <span class="text-lg">📜</span>
+            <span>Surat Bebas Ruang Baca</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Syarat Yudisium
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+          Pemeriksaan bebas tanggungan terotomasi. Terbitkan surat keterangan resmi ber-QR Code untuk pendaftaran wisuda.
+        </p>
+        <button
+          type="button"
+          onclick="openModalClearance()"
+          class="w-full py-2.5 px-4 rounded-xl text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-extrabold text-xs transition-all flex items-center justify-center gap-2"
+        >
+          <span>✨</span>
+          <span>Buka Verifikasi Bebas Pustaka Digital</span>
+        </button>
       </div>
     </div>
 
-    <!-- Category Filter Tabs -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 text-xs font-semibold">
-      <button onclick="filterCategory('all')" id="btn-all" class="cat-btn px-4 py-2 rounded-xl bg-indigo-600 text-white transition-all shadow-xs">
-        Semua Koleksi ({totalCollections})
-      </button>
-      <button onclick="filterCategory('Buku Literatur')" id="btn-lit" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
-        📖 Buku Literatur (228)
-      </button>
-      <button onclick="filterCategory('Laporan KP')" id="btn-kp" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
-        🏭 Laporan KP (480)
-      </button>
-      <button onclick="filterCategory('Skripsi')" id="btn-skripsi" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
-        📜 Skripsi Sarjana (272)
-      </button>
-    </div>
-
-    <!-- Catalog Grid -->
-    <div id="catalogGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      {collections.map((item) => {
-        const isAvailable = item.stok > 0;
-        const katBadgeColor = 
-          item.kategori === 'Buku Literatur' ? 'bg-blue-50 text-blue-700 border-blue-200/60' :
-          item.kategori === 'Laporan KP' ? 'bg-amber-50 text-amber-700 border-amber-200/60' :
-          'bg-purple-50 text-purple-700 border-purple-200/60';
-
-        return (
-          <div class="book-card p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all hover:shadow-md flex flex-col justify-between"
-               data-kategori={item.kategori}
-               data-search={`${item.judul} ${item.penulis} ${item.rak}`.toLowerCase()}>
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <span class={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${katBadgeColor}`}>
-                  {item.kategori}
-                </span>
-                <span class={`text-xs font-semibold flex items-center gap-1 ${isAvailable ? 'text-emerald-600' : 'text-rose-500'}`}>
-                  <span class={`h-1.5 w-1.5 rounded-full ${isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                  {isAvailable ? `Stok: ${item.stok}` : 'Dipinjam'}
-                </span>
-              </div>
-
-              <h3 class="font-bold text-slate-900 text-sm line-clamp-2 leading-snug group-hover:text-indigo-600">
-                {item.judul}
-              </h3>
-              
-              <div class="mt-3 text-xs text-slate-500 space-y-1">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-slate-400">Penulis:</span>
-                  <span class="font-medium text-slate-700 truncate">{item.penulis || '-'}</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-slate-400">Tahun:</span>
-                  <span class="font-medium text-slate-700">{item.tahun_terbit || '-'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <span class="px-2 py-1 rounded-md bg-slate-100 font-mono text-slate-600 font-medium">
-                📍 {item.rak}
-              </span>
-              <span class="text-slate-400 font-mono">ID: #{item.id}</span>
-            </div>
+    <!-- QUICK ACTION NAVIGATION ROW -->
+    <div>
+      <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+        <span>⚡</span><span>Layanan Cepat Ruang Baca</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <a href="#katalog" class="p-4 rounded-2xl border transition-all hover:scale-[1.02] shadow-xs flex items-center gap-3"
+           style="background: var(--surface); border-color: var(--border);">
+          <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">📚</div>
+          <div>
+            <div class="text-xs font-extrabold" style="color: var(--text);">Cari Koleksi</div>
+            <div class="text-[10px] text-slate-400">Buku, KP, Skripsi</div>
           </div>
-        );
-      })}
-    </div>
-  </section>
+        </a>
 
-  <!-- Modal: Cek Bebas Pustaka Mandiri -->
+        <button onclick="openModalChat()" class="p-4 rounded-2xl border transition-all hover:scale-[1.02] shadow-xs flex items-center gap-3 text-left"
+           style="background: var(--surface); border-color: var(--border);">
+          <div class="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">🤖</div>
+          <div>
+            <div class="text-xs font-extrabold" style="color: var(--text);">Asisten Riset AI</div>
+            <div class="text-[10px] text-slate-400">Konsultasi Metode</div>
+          </div>
+        </button>
+
+        <button onclick="openModalDenah()" class="p-4 rounded-2xl border transition-all hover:scale-[1.02] shadow-xs flex items-center gap-3 text-left"
+           style="background: var(--surface); border-color: var(--border);">
+          <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">📍</div>
+          <div>
+            <div class="text-xs font-extrabold" style="color: var(--text);">Lokasi Rak</div>
+            <div class="text-[10px] text-slate-400">Denah Ruang Baca</div>
+          </div>
+        </button>
+
+        <button onclick="openModalClearance()" class="p-4 rounded-2xl border transition-all hover:scale-[1.02] shadow-xs flex items-center gap-3 text-left"
+           style="background: var(--surface); border-color: var(--border);">
+          <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">📜</div>
+          <div>
+            <div class="text-xs font-extrabold" style="color: var(--text);">Bebas Pustaka</div>
+            <div class="text-[10px] text-slate-400">Cetak Surat Sah</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- OPAC OPEN CATALOG SECTION -->
+    <section id="katalog" class="pt-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-lg font-black tracking-tight" style="color: var(--text);">
+            🔍 Katalog Terbuka Ruang Baca (OPAC)
+          </h2>
+          <p class="text-xs text-slate-400">Total {totalCollections} judul referensi terdata secara digital</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-72">
+          <input
+            type="text"
+            id="opacSearch"
+            placeholder="Cari judul, penulis, topik skripsi..."
+            class="w-full pl-9 pr-3.5 py-2 rounded-xl border text-xs transition-all outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+            style="background: var(--surface); border-color: var(--border); color: var(--text);"
+          />
+          <span class="absolute left-3 top-2.5 text-xs text-slate-400">🔍</span>
+        </div>
+      </div>
+
+      <!-- Filter Tabs (Authentic GAS Buttons) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 text-xs font-bold">
+        <button onclick="filterCategory('all')" id="btn-all" class="cat-pill px-3.5 py-2 rounded-xl text-white transition-all shadow-xs" style="background: var(--accent);">
+          Semua Koleksi ({totalCollections})
+        </button>
+        <button onclick="filterCategory('Buku Literatur')" id="btn-lit" class="cat-pill px-3.5 py-2 rounded-xl border transition-all" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+          📖 Buku Literatur ({totalLit})
+        </button>
+        <button onclick="filterCategory('Laporan KP')" id="btn-kp" class="cat-pill px-3.5 py-2 rounded-xl border transition-all" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+          🏭 Laporan KP ({totalKp})
+        </button>
+        <button onclick="filterCategory('Skripsi')" id="btn-skripsi" class="cat-pill px-3.5 py-2 rounded-xl border transition-all" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+          📜 Skripsi ({totalSkripsi})
+        </button>
+      </div>
+
+      <!-- Book Grid -->
+      <div id="catalogGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {collections.map((item) => {
+          const isAvailable = item.stok > 0;
+          const isKP = item.kategori === 'Laporan KP';
+          const isSkripsi = item.kategori === 'Skripsi';
+          
+          const badgeClass = isKP 
+            ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+            : isSkripsi
+            ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+            : 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+
+          return (
+            <div class="book-item p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-md flex flex-col justify-between"
+                 style="background: var(--surface); border-color: var(--border);"
+                 data-kategori={item.kategori}
+                 data-search={`${item.judul} ${item.penulis} ${item.rak}`.toLowerCase()}>
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-2.5">
+                  <span class={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClass}`}>
+                    {item.kategori}
+                  </span>
+                  <span class={`text-[11px] font-bold flex items-center gap-1.5 ${isAvailable ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <span class={`h-1.5 w-1.5 rounded-full ${isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                    {isAvailable ? `Tersedia (${item.stok})` : 'Dipinjam'}
+                  </span>
+                </div>
+
+                <h3 class="font-bold text-[13px] leading-snug line-clamp-2" style="color: var(--text);">
+                  {item.judul}
+                </h3>
+
+                <div class="mt-2.5 text-[11px] text-slate-400 space-y-0.5">
+                  <div class="truncate"><span class="text-slate-500 font-medium">Penulis:</span> {item.penulis || '-'}</div>
+                  <div><span class="text-slate-500 font-medium">Tahun:</span> {item.tahun_terbit || '-'}</div>
+                </div>
+              </div>
+
+              <div class="mt-3.5 pt-2.5 border-t flex items-center justify-between text-[11px]" style="border-color: var(--border);">
+                <span class="px-2 py-0.5 rounded font-mono font-semibold text-[10px]" style="background: var(--canvas); color: var(--text);">
+                  📍 {item.rak}
+                </span>
+                <span class="text-slate-400 font-mono text-[10px]">#{item.id}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: CEK BEBAS PUSTAKA -->
   <div id="modalClearance" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
-      <button onclick="closeModalClearance()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+    <div class="rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border relative animate-in fade-in zoom-in duration-200"
+         style="background: var(--surface); border-color: var(--border); color: var(--text);">
+      <button onclick="closeModalClearance()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
 
       <div class="text-center mb-6">
-        <div class="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center text-2xl mb-3">
-          📜
-        </div>
-        <h3 class="text-xl font-extrabold text-slate-900">Cek Status Bebas Ruang Baca</h3>
-        <p class="text-xs text-slate-500 mt-1">Masukkan Nomor Pokok Mahasiswa (NPM) untuk verifikasi kelulusan & syarat yudisium.</p>
+        <div class="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center text-2xl mb-3">📜</div>
+        <h3 class="text-lg font-extrabold">Verifikasi Bebas Ruang Baca</h3>
+        <p class="text-xs text-slate-400 mt-1">Syarat pendaftaran Yudisium & Bebas Pustaka Fakultas TI</p>
       </div>
 
-      <form id="formClearance" onsubmit="handleCheckClearance(event)" class="space-y-4">
+      <form onsubmit="handleCheckClearance(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Pokok Mahasiswa (NPM)</label>
-          <input type="text" id="npmInput" placeholder="Contoh: 1411230105" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-mono" />
+          <label class="block text-xs font-semibold mb-1">Nomor Pokok Mahasiswa (NPM)</label>
+          <input type="text" id="clearanceNpmInput" placeholder="Masukkan 10 digit NPM..." required
+                 class="w-full px-4 py-2.5 rounded-xl border text-xs font-mono outline-hidden focus:ring-2 focus:ring-emerald-500/20"
+                 style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
         </div>
-
-        <button type="submit" id="btnSubmitClearance" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20">
-          Periksa Status Sekarang
+        <button type="submit" id="btnSubmitClearance" class="w-full py-2.5 rounded-xl text-white font-bold text-xs bg-emerald-600 hover:bg-emerald-700 transition-all shadow-xs">
+          Periksa Bebas Tanggungan
         </button>
       </form>
 
-      <!-- Result Container -->
-      <div id="clearanceResult" class="mt-6 hidden"></div>
+      <div id="clearanceResult" class="mt-4 hidden"></div>
     </div>
   </div>
 
-  <!-- Modal: Asisten AI Riset TI -->
+  <!-- MODAL: ASISTEN AI RISET -->
   <div id="modalChat" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">🤖</div>
+    <div class="rounded-3xl max-w-xl w-full p-6 shadow-2xl border relative flex flex-col max-h-[85vh]"
+         style="background: var(--surface); border-color: var(--border); color: var(--text);">
+      <div class="flex items-center justify-between pb-3 border-b" style="border-color: var(--border);">
+        <div class="flex items-center gap-2.5">
+          <div class="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">🤖</div>
           <div>
-            <h3 class="font-extrabold text-slate-900 text-sm">INTEGRAL AI • Asisten Riset TI</h3>
-            <p class="text-[10px] text-slate-400">Konsultasi metode riset & referensi skripsi prodi</p>
+            <h3 class="font-extrabold text-xs">INTEGRAL AI • Asisten Riset Mahasiswa TI</h3>
+            <p class="text-[10px] text-slate-400">Rekomendasi topik KP, metode skripsi & referensi buku</p>
           </div>
         </div>
         <button onclick="closeModalChat()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
 
-      <!-- Chat History -->
       <div id="chatHistory" class="flex-1 overflow-y-auto py-4 space-y-3 text-xs leading-relaxed">
-        <div class="p-3.5 rounded-2xl bg-slate-100 text-slate-700 max-w-[85%]">
-          Halo! Saya INTEGRAL AI. Kamu sedang merencanakan Kerja Praktik atau Skripsi tentang apa? (Misal: <em>"Rekomendasi metode penataan layout pabrik"</em> atau <em>"Analisis postur ergonomi pekerja"</em>).
+        <div class="p-3 rounded-2xl max-w-[85%]" style="background: var(--canvas); color: var(--text);">
+          Halo! Saya INTEGRAL AI. Kamu sedang merencanakan Kerja Praktik atau Skripsi tentang metode apa di Teknik Industri?
         </div>
       </div>
 
-      <!-- Chat Input -->
-      <form onsubmit="handleSendChat(event)" class="pt-3 border-t border-slate-100 flex gap-2">
-        <input type="text" id="chatInput" placeholder="Ketik pertanyaan atau topik risetmu..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required />
-        <button type="submit" id="btnSendChat" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700">Kirim</button>
+      <form onsubmit="handleSendChat(event)" class="pt-3 border-t flex gap-2" style="border-color: var(--border);">
+        <input type="text" id="chatInput" placeholder="Tanyakan metodologi (misal: RULA/REBA, Lean, Six Sigma, SCM)..." required
+               class="flex-1 px-3.5 py-2 rounded-xl border text-xs outline-hidden"
+               style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
+        <button type="submit" id="btnSendChat" class="px-4 py-2 rounded-xl text-white font-bold text-xs" style="background: var(--accent);">
+          Kirim
+        </button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL: DENAH RAK RUANG BACA -->
+  <div id="modalDenah" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="rounded-3xl max-w-lg w-full p-6 shadow-2xl border relative"
+         style="background: var(--surface); border-color: var(--border); color: var(--text);">
+      <button onclick="closeModalDenah()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      <div class="mb-4">
+        <h3 class="font-extrabold text-sm flex items-center gap-2"><span>📍</span> Denah Lokasi Rak Ruang Baca TI</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Panduan letak fisik naskah & buku</p>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <div class="p-3 rounded-xl border" style="background: var(--canvas); border-color: var(--border);">
+          <div class="font-bold text-amber-600">RAK 1: Arsip Laporan Kerja Praktik (KP)</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Memuat laporan magang mahasiswa di berbagai industri (Semen Indonesia, TPPI, PLN, dll).</div>
+        </div>
+        <div class="p-3 rounded-xl border" style="background: var(--canvas); border-color: var(--border);">
+          <div class="font-bold text-purple-600">RAK 2: Naskah Skripsi &amp; Tugas Akhir Sarjana</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Koleksi skripsi alumni dari tahun ke tahun tersusun berdasarkan nomor kolom &amp; baris.</div>
+        </div>
+        <div class="p-3 rounded-xl border" style="background: var(--canvas); border-color: var(--border);">
+          <div class="font-bold text-blue-600">RAK 3: Buku Literatur &amp; Teks Perkuliahan</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Buku teks wajib kuliah: Riset Operasi, Ergonomi, Statistik Industri, Manajemen Kualitas, Kalkulus.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script is:inline>
-    // Search & Filter Logic
-    const searchInput = document.getElementById('searchInput');
-    const cards = document.querySelectorAll('.book-card');
+    // OPAC Live Search
+    const searchInput = document.getElementById('opacSearch');
+    const bookCards = document.querySelectorAll('.book-item');
 
     searchInput?.addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase().trim();
-      cards.forEach(card => {
-        const text = card.getAttribute('data-search') || '';
-        card.style.display = text.includes(q) ? 'flex' : 'none';
+      bookCards.forEach(c => {
+        const text = c.getAttribute('data-search') || '';
+        c.style.display = text.includes(q) ? 'flex' : 'none';
       });
     });
 
     function filterCategory(kat) {
-      document.querySelectorAll('.cat-btn').forEach(b => {
-        b.className = 'cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all';
+      document.querySelectorAll('.cat-pill').forEach(b => {
+        b.style.background = 'var(--surface)';
+        b.style.color = 'var(--text)';
+        b.style.borderColor = 'var(--border)';
       });
-      event.target.className = 'cat-btn px-4 py-2 rounded-xl bg-indigo-600 text-white transition-all shadow-xs';
+      event.target.style.background = 'var(--accent)';
+      event.target.style.color = 'white';
 
-      cards.forEach(card => {
-        const cardKat = card.getAttribute('data-kategori');
+      bookCards.forEach(c => {
+        const cardKat = c.getAttribute('data-kategori');
         if (kat === 'all' || cardKat === kat) {
-          card.style.display = 'flex';
+          c.style.display = 'flex';
         } else {
-          card.style.display = 'none';
+          c.style.display = 'none';
         }
       });
+    }
+
+    // Cek Pinjaman Mandiri Mahasiswa
+    async function checkMyLoans() {
+      const npm = document.getElementById('studentNpmInput').value.trim();
+      if (!npm) return alert('Silakan masukkan NPM kamu.');
+
+      const box = document.getElementById('studentLoanBox');
+      const btn = document.getElementById('btnCheckLoans');
+      btn.disabled = true;
+      btn.innerText = '...';
+
+      try {
+        const res = await fetch('/api/clearance/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ npm })
+        });
+        const data = await res.json();
+        box.classList.remove('hidden');
+
+        if (data.cleared) {
+          box.innerHTML = `
+            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
+              ✓ <strong>${data.student.nama}</strong>: Tidak ada pinjaman tertunggak (0 pinjaman aktif).
+            </div>
+          `;
+        } else {
+          const loansList = (data.active_loans || []).map(l => `
+            <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] mb-1">
+              <div>Batas Kembali: <strong>${l.batas_kembali}</strong> (Status: ${l.status})</div>
+              ${l.total_denda > 0 ? `<div class="font-bold text-rose-700">Denda: Rp ${l.total_denda.toLocaleString()}</div>` : ''}
+            </div>
+          `).join('');
+
+          box.innerHTML = `
+            <div class="text-rose-600 font-bold mb-1">Ada ${data.active_loans.length} Pinjaman Berjalan:</div>
+            ${loansList}
+          `;
+        }
+      } catch (err) {
+        alert('Gagal mengecek data.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Cek';
+      }
     }
 
     // Modal Clearance
@@ -289,12 +428,12 @@ const { count: activeLoans } = await supabase
 
     async function handleCheckClearance(e) {
       e.preventDefault();
-      const npm = document.getElementById('npmInput').value.trim();
+      const npm = document.getElementById('clearanceNpmInput').value.trim();
       const btn = document.getElementById('btnSubmitClearance');
       const resultBox = document.getElementById('clearanceResult');
 
       btn.disabled = true;
-      btn.innerText = 'Memeriksa ke basis data...';
+      btn.innerText = 'Memeriksa basis data...';
       resultBox.classList.add('hidden');
 
       try {
@@ -304,16 +443,15 @@ const { count: activeLoans } = await supabase
           body: JSON.stringify({ npm })
         });
         const data = await res.json();
-
         resultBox.classList.remove('hidden');
+
         if (data.cleared) {
           resultBox.innerHTML = `
             <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
               <div class="font-bold text-sm mb-1">🎉 Dinyatakan Bebas Tanggungan!</div>
               <p>Mahasiswa: <strong>${data.student.nama}</strong> (${data.student.npm})</p>
-              <p class="mt-2 text-slate-600">Surat Keterangan resmi siap dicetak dengan kode validasi:</p>
-              <div class="font-mono font-bold text-sm my-2 p-2 bg-white rounded border border-emerald-300 text-center">${data.clearance.kode_validasi}</div>
-              <a href="/verify/${data.clearance.kode_validasi}" target="_blank" class="block w-full text-center py-2 bg-emerald-600 text-white rounded-xl font-bold mt-3 hover:bg-emerald-700">
+              <div class="font-mono font-bold text-xs my-2 p-2 bg-white rounded border border-emerald-300 text-center">${data.clearance.kode_validasi}</div>
+              <a href="/verify/${data.clearance.kode_validasi}" target="_blank" class="block w-full text-center py-2 bg-emerald-600 text-white rounded-xl font-bold mt-2 hover:bg-emerald-700">
                 Buka & Cetak Surat Bebas Ruang Baca ↗
               </a>
             </div>
@@ -324,21 +462,22 @@ const { count: activeLoans } = await supabase
               <div class="font-bold text-sm mb-1">⚠️ Masih Memiliki Tanggungan</div>
               <p>Mahasiswa: <strong>${data.student.nama}</strong></p>
               <p class="mt-1">${data.message}</p>
-              <div class="mt-2 text-rose-700 font-semibold">Harap segera mengembalikan buku ke Ruang Baca TI UNIROW untuk memproses bebas pustaka.</div>
             </div>
           `;
         }
       } catch (err) {
-        alert('Terjadi kesalahan koneksi.');
+        alert('Kesalahan jaringan.');
       } finally {
         btn.disabled = false;
-        btn.innerText = 'Periksa Status Sekarang';
+        btn.innerText = 'Periksa Bebas Tanggungan';
       }
     }
 
-    // Modal Chat
+    // Modal Chat & Denah
     function openModalChat() { document.getElementById('modalChat').classList.remove('hidden'); }
     function closeModalChat() { document.getElementById('modalChat').classList.add('hidden'); }
+    function openModalDenah() { document.getElementById('modalDenah').classList.remove('hidden'); }
+    function closeModalDenah() { document.getElementById('modalDenah').classList.add('hidden'); }
 
     async function handleSendChat(e) {
       e.preventDefault();
@@ -349,7 +488,7 @@ const { count: activeLoans } = await supabase
       if (!message) return;
 
       history.innerHTML += `
-        <div class="p-3 rounded-2xl bg-indigo-600 text-white max-w-[85%] ml-auto text-xs font-medium">
+        <div class="p-3 rounded-2xl text-white max-w-[85%] ml-auto text-xs" style="background: var(--accent);">
           ${message}
         </div>
       `;
@@ -364,14 +503,13 @@ const { count: activeLoans } = await supabase
           body: JSON.stringify({ message })
         });
         const data = await res.json();
-        
         history.innerHTML += `
-          <div class="p-3.5 rounded-2xl bg-slate-100 text-slate-800 max-w-[90%] text-xs prose prose-sm">
+          <div class="p-3 rounded-2xl max-w-[90%] text-xs" style="background: var(--canvas); color: var(--text);">
             ${data.reply.replace(/\n/g, '<br/>')}
           </div>
         `;
       } catch (err) {
-        history.innerHTML += `<div class="p-2 text-rose-500 text-xs">Gagal mendapatkan respon AI.</div>`;
+        history.innerHTML += `<div class="p-2 text-rose-500 text-xs">Gagal terhubung ke AI.</div>`;
       } finally {
         btn.disabled = false;
         history.scrollTop = history.scrollHeight;
@@ -379,4 +517,3 @@ const { count: activeLoans } = await supabase
     }
   </script>
 </Layout>
-

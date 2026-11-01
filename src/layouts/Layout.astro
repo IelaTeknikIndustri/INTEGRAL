@@ -3,14 +3,14 @@ import '../styles/global.css';
 
 interface Props {
   title?: string;
-  description?: string;
   admin?: boolean;
+  currentUser?: { nama: string; role: string } | null;
 }
 
 const {
-  title = 'INTEGRAL - Industrial Integrated Library UNIROW',
-  description = 'Sistem Informasi Ruang Baca & Pustaka Terintegrasi Program Studi Teknik Industri UNIROW Tuban',
-  admin = false
+  title = 'INTEGRAL | Pusat Sirkulasi Perpustakaan TI UNIROW',
+  admin = false,
+  currentUser = null
 } = Astro.props;
 ---
 
@@ -18,85 +18,115 @@ const {
 <html lang="id" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="icon" type="image/png" href="/logo-integral-7.png" />
-    <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <meta name="description" content={description} />
-    
-    <!-- Google Fonts: Plus Jakarta Sans & Playfair Display -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
-    <!-- Navigation Bar -->
-    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 border-b border-slate-200/80 shadow-xs">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <!-- Logo Brand -->
+  <body class="min-h-screen flex flex-col">
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 w-full h-16 border-b transition-colors backdrop-blur-md"
+            style="background: var(--surface); border-color: var(--border);">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <!-- Brand Left -->
         <a href={admin ? "/admin" : "/"} class="flex items-center gap-3 group">
-          <img src="/logo-integral-7.png" alt="INTEGRAL Logo" class="h-10 max-h-10 w-auto object-contain transition-transform group-hover:scale-105" />
-          <div class="flex flex-col">
-            <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-600 bg-clip-text text-transparent">
-              INTEGRAL {admin && <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold ml-1">Workspace</span>}
-            </span>
-            <span class="text-[10px] font-medium text-slate-500 tracking-wider uppercase -mt-0.5">
-              Ruang Baca TI UNIROW Tuban
-            </span>
+          <img src="/logo-integral-7.png" alt="INTEGRAL" class="h-9 w-auto object-contain transition-transform group-hover:scale-105" />
+          <div class="hidden sm:block border-l-2 pl-3" style="border-color: var(--border);">
+            <div class="text-[13px] font-extrabold tracking-tight" style="color: var(--text);">
+              {admin ? "Back-Office Ruang Baca" : "Portal Mahasiswa TI"}
+            </div>
+            <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider -mt-0.5">
+              Teknik Industri UNIROW Tuban
+            </div>
           </div>
         </a>
 
-        <!-- Navigation Links -->
-        <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+        <!-- Actions Right -->
+        <div class="flex items-center gap-3">
+          <!-- Theme Switcher Button -->
+          <button
+            type="button"
+            id="themeToggleBtn"
+            onclick="toggleThemeMode()"
+            class="h-9 w-9 rounded-xl border flex items-center justify-center text-sm transition-all hover:scale-105"
+            style="background: var(--canvas); border-color: var(--border); color: var(--text);"
+            title="Ganti Mode Gelap / Terang"
+          >
+            <span id="themeIcon">🌙</span>
+          </button>
+
           {!admin ? (
-            <>
-              <a href="/#katalog" class="hover:text-indigo-600 transition-colors">Katalog Koleksi</a>
-              <a href="/#bebas-pustaka" onclick="openModalClearance()" class="hover:text-indigo-600 transition-colors">Bebas Pustaka</a>
-              <a href="#asisten-ai" onclick="openModalChat()" class="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 px-3 py-1.5 rounded-full border border-indigo-100">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
-                </span>
-                Tanya AI Riset
+            <div class="flex items-center gap-2">
+              <a
+                href="/login"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white transition-all shadow-xs flex items-center gap-1.5"
+                style="background: var(--accent);"
+              >
+                <span>🔑</span>
+                <span>Masuk Staf</span>
               </a>
-              <a href="/login" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm shadow-slate-900/10 hover:shadow-md">
-                Portal Staf
-              </a>
-            </>
+            </div>
           ) : (
-            <>
-              <a href="/admin" class="hover:text-indigo-600 transition-colors">Sirkulasi & Data</a>
-              <a href="/admin/scanner" class="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 font-medium">
-                📷 AI Smart Scanner
-              </a>
-              <a href="/" target="_blank" class="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1">
+            <div class="flex items-center gap-3">
+              <div class="hidden sm:block text-right">
+                <div class="text-xs font-extrabold" style="color: var(--text);">{currentUser?.nama || 'Petugas'}</div>
+                <span class="inline-block px-2 py-0.2 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
+                  {currentUser?.role || 'Staff'}
+                </span>
+              </div>
+              <a
+                href="/"
+                target="_blank"
+                class="text-xs font-bold text-indigo-600 hover:text-indigo-700 hidden md:block"
+              >
                 Lihat Portal Mahasiswa ↗
               </a>
-              <a href="/api/auth/logout" class="text-rose-600 hover:text-rose-700 text-xs font-medium">
-                Keluar
+              <a
+                href="/api/auth/logout"
+                class="h-9 w-9 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center justify-center text-xs font-bold"
+                title="Keluar Akun"
+              >
+                🚪
               </a>
-            </>
+            </div>
           )}
-        </nav>
+        </div>
       </div>
     </header>
 
-    <!-- Main Content Slot -->
+    <!-- Main Content -->
     <main class="flex-1">
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-200 bg-white py-8 mt-16 text-sm text-slate-500">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-          <img src="/logo-student.png" alt="UNIROW" class="h-6 w-auto opacity-75" />
-          <p>© 2026 Program Studi Teknik Industri, Universitas PGRI Ronggolawe Tuban.</p>
-        </div>
-        <p class="text-xs text-slate-400">
-          Powered by Supabase PostgreSQL & Google Gemini AI • Zero Cloud Cost
-        </p>
+    <footer class="border-t py-6 text-center text-xs text-slate-500 transition-colors"
+            style="background: var(--surface); border-color: var(--border);">
+      <div class="max-w-7xl mx-auto px-4">
+        © 2026 Ruang Baca Program Studi Teknik Industri • Universitas PGRI Ronggolawe (UNIROW) Tuban
       </div>
     </footer>
+
+    <script is:inline>
+      function initTheme() {
+        const saved = localStorage.getItem('integral_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.innerText = saved === 'dark' ? '☀️' : '🌙';
+      }
+
+      function toggleThemeMode() {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('integral_theme', next);
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.innerText = next === 'dark' ? '☀️' : '🌙';
+      }
+
+      initTheme();
+    </script>
   </body>
 </html>

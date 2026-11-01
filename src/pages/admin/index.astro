@@ -27,111 +27,132 @@ const { data: loans = [] } = await supabaseAdmin
   .order('created_at', { ascending: false })
   .limit(50);
 
-// Fetch quick counts
-const { count: totalKoleksi } = await supabaseAdmin.from('collections').select('*', { count: 'exact', head: true });
+// Fetch quick counts for the authentic 6 stat cards
+const { count: totalLit } = await supabaseAdmin.from('collections').select('*', { count: 'exact', head: true }).eq('kategori', 'Buku Literatur');
+const { count: totalKp } = await supabaseAdmin.from('collections').select('*', { count: 'exact', head: true }).eq('kategori', 'Laporan KP');
+const { count: totalSkripsi } = await supabaseAdmin.from('collections').select('*', { count: 'exact', head: true }).eq('kategori', 'Skripsi');
+const { count: totalStok } = await supabaseAdmin.from('collections').select('*', { count: 'exact', head: true });
+const { count: totalMhs } = await supabaseAdmin.from('students').select('*', { count: 'exact', head: true });
 const { count: pinjamanAktif } = await supabaseAdmin.from('loans').select('*', { count: 'exact', head: true }).eq('status', 'Dipinjam');
-const { count: pinjamanTerlambat } = await supabaseAdmin.from('loans').select('*', { count: 'exact', head: true }).eq('status', 'Terlambat');
 ---
 
-<Layout title="Staff Dashboard • INTEGRAL UNIROW" admin={true}>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    
-    <!-- Top Greeting & Action Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+<Layout title="Dashboard Staf • INTEGRAL Perpustakaan TI" admin={true} currentUser={currentUser}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- WELCOME BANNER WITH DIGITAL WIB CLOCK (Authentic GAS Header) -->
+    <div class="p-6 rounded-3xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors"
+         style="background: var(--surface); border-color: var(--border);">
       <div>
-        <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Workspace Ruang Baca</div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
-          Selamat Datang, {currentUser.nama}!
+        <h1 class="text-xl sm:text-2xl font-black tracking-tight" style="color: var(--text);">
+          Selamat Datang di INTEGRAL, {currentUser.nama}! 👋
         </h1>
-        <p class="text-xs text-slate-500 mt-1">
-          Role: <span class="font-bold text-slate-700">{currentUser.role}</span> • Sistem sirkulasi siap melayani peminjaman & pengembalian.
+        <p class="text-xs text-slate-400 mt-1">
+          Pusat pengelolaan sirkulasi, otomasi pengingat denda, dan inventaris perpustakaan Teknik Industri.
         </p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <a href="/admin/scanner" class="px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs hover:bg-indigo-100 transition-all flex items-center gap-2">
-          <span>📷</span> Smart AI Vision Scanner
-        </a>
-        <button onclick="openModalPinjam()" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2">
-          <span>+</span> Catat Peminjaman Baru
+      <!-- Real-time WIB Clock Box -->
+      <div class="p-3.5 px-5 rounded-2xl border text-center sm:text-right shrink-0"
+           style="background: var(--canvas); border-color: var(--border);">
+        <div id="liveClockDate" class="text-[11px] font-bold text-slate-400">Memuat tanggal...</div>
+        <div id="liveClockTime" class="text-2xl font-black font-mono tracking-tight text-indigo-600">00:00:00</div>
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Waktu Indonesia Barat (WIB)</div>
+      </div>
+    </div>
+
+    <!-- THE AUTHENTIC 6 STAT CARDS FROM GAS -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #2563EB;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Buku Literatur</div>
+        <div class="text-2xl font-black mt-1 font-mono">{totalLit || 0}</div>
+      </div>
+
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #4F46E5;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Laporan KP</div>
+        <div class="text-2xl font-black mt-1 font-mono">{totalKp || 0}</div>
+      </div>
+
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #9333EA;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Skripsi</div>
+        <div class="text-2xl font-black mt-1 font-mono">{totalSkripsi || 0}</div>
+      </div>
+
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #16A34A;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Total Eksemplar</div>
+        <div class="text-2xl font-black mt-1 font-mono">{totalStok || 0}</div>
+      </div>
+
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #0D9488;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Mahasiswa</div>
+        <div class="text-2xl font-black mt-1 font-mono">{totalMhs || 0}</div>
+      </div>
+
+      <div class="p-4 rounded-2xl text-white shadow-xs" style="background: #EA580C;">
+        <div class="text-[11px] font-bold opacity-80 uppercase tracking-wider">Pinjaman Aktif</div>
+        <div class="text-2xl font-black mt-1 font-mono">{pinjamanAktif || 0}</div>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS ROW -->
+    <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border"
+         style="background: var(--surface); border-color: var(--border);">
+      <div class="text-xs font-bold" style="color: var(--text);">
+        ⚡ Aksi Sirkulasi Cepat:
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openModalTambahBuku()" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-slate-50"
+                style="border-color: var(--border); color: var(--text);">
+          + Tambah Buku Manual
+        </button>
+        <button onclick="openModalPinjam()" class="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all shadow-xs"
+                style="background: var(--accent);">
+          + Catat Peminjaman Baru
         </button>
       </div>
     </div>
 
-    <!-- Circulation Overview Metrics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+    <!-- CIRCULATION TRANSACTIONS TABLE -->
+    <div class="rounded-3xl border shadow-xs overflow-hidden transition-colors"
+         style="background: var(--surface); border-color: var(--border);">
+      <div class="p-5 border-b flex items-center justify-between" style="border-color: var(--border);">
         <div>
-          <div class="text-2xl font-black text-slate-900">{pinjamanAktif || 0}</div>
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Pinjaman Aktif</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">📖</div>
-      </div>
-
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-        <div>
-          <div class="text-2xl font-black text-rose-600">{pinjamanTerlambat || 0}</div>
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Terlambat (Denda)</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">⚠️</div>
-      </div>
-
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-        <div>
-          <div class="text-2xl font-black text-slate-900">{totalKoleksi || 977}</div>
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Total Katalog Buku</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">📚</div>
-      </div>
-
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-        <div>
-          <div class="text-2xl font-black text-emerald-600">Rp 1.000</div>
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Tarif Denda / Hari</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">🪙</div>
-      </div>
-    </div>
-
-    <!-- Active Circulation Table -->
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-extrabold text-slate-900 tracking-tight">Daftar Transaksi Sirkulasi Terbaru</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Pantau status pengembalian buku, denda, dan sirkulasi per-item.</p>
+          <h2 class="text-sm font-extrabold" style="color: var(--text);">📋 Transaksi Peminjaman Berjalan</h2>
+          <p class="text-[11px] text-slate-400">Pelacakan sirkulasi buku, batas waktu pengembalian, dan denda</p>
         </div>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50/80 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-100">
+          <thead class="text-slate-400 font-bold uppercase tracking-wider border-b text-[10.5px]"
+                 style="background: var(--canvas); border-color: var(--border);">
             <tr>
-              <th class="py-3.5 px-6">Mahasiswa</th>
-              <th class="py-3.5 px-6">Buku & Lokasi Rak</th>
-              <th class="py-3.5 px-6">Tgl Pinjam</th>
-              <th class="py-3.5 px-6">Batas Waktu</th>
-              <th class="py-3.5 px-6">Status / Denda</th>
-              <th class="py-3.5 px-6 text-right">Aksi Item</th>
+              <th class="py-3 px-5">Mahasiswa</th>
+              <th class="py-3 px-5">Buku & Lokasi Rak</th>
+              <th class="py-3 px-5">Tgl Pinjam</th>
+              <th class="py-3 px-5">Batas Waktu</th>
+              <th class="py-3 px-5">Status</th>
+              <th class="py-3 px-5 text-right">Aksi Item</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 font-medium">
+          <tbody class="divide-y font-medium text-xs" style="border-color: var(--border);">
             {loans.map((loan) => {
               const studentName = (loan.students as any)?.nama || 'Mahasiswa';
               const isOverdue = loan.status === 'Terlambat';
               const items = loan.loan_items || [];
 
               return (
-                <tr class="hover:bg-slate-50/60 transition-colors">
-                  <td class="py-4 px-6">
-                    <div class="font-bold text-slate-900 text-sm">{studentName}</div>
-                    <div class="font-mono text-[11px] text-slate-500">{loan.student_npm}</div>
+                <tr class="hover:bg-slate-500/5 transition-colors">
+                  <td class="py-3.5 px-5">
+                    <div class="font-bold text-xs" style="color: var(--text);">{studentName}</div>
+                    <div class="font-mono text-[10.5px] text-slate-400">{loan.student_npm}</div>
                   </td>
-                  <td class="py-4 px-6 max-w-xs space-y-2">
+                  <td class="py-3.5 px-5 max-w-xs space-y-1.5">
                     {items.map((item) => (
-                      <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/60 text-[11px] flex items-center justify-between gap-2">
+                      <div class="p-2 rounded-xl border text-[11px] flex items-center justify-between gap-2"
+                           style="background: var(--canvas); border-color: var(--border);">
                         <div class="truncate">
-                          <span class="font-bold text-slate-800">{(item.collections as any)?.judul || 'Buku'}</span>
-                          <div class="text-[10px] text-slate-500">📍 {(item.collections as any)?.rak || '-'}</div>
+                          <span class="font-bold" style="color: var(--text);">{(item.collections as any)?.judul || 'Buku'}</span>
+                          <div class="text-[10px] text-slate-400">📍 {(item.collections as any)?.rak || '-'}</div>
                         </div>
                         <span class={`px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'Dipinjam' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
                           {item.status}
@@ -139,13 +160,13 @@ const { count: pinjamanTerlambat } = await supabaseAdmin.from('loans').select('*
                       </div>
                     ))}
                   </td>
-                  <td class="py-4 px-6 text-slate-600">{formatDateIndo(loan.tgl_pinjam)}</td>
-                  <td class="py-4 px-6">
-                    <div class={`font-bold ${isOverdue ? 'text-rose-600' : 'text-slate-700'}`}>
+                  <td class="py-3.5 px-5 text-slate-400">{formatDateIndo(loan.tgl_pinjam)}</td>
+                  <td class="py-3.5 px-5">
+                    <div class={`font-bold ${isOverdue ? 'text-rose-600' : ''}`} style={!isOverdue ? "color: var(--text);" : ""}>
                       {formatDateIndo(loan.batas_kembali)}
                     </div>
                   </td>
-                  <td class="py-4 px-6">
+                  <td class="py-3.5 px-5">
                     <span class={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                       loan.status === 'Dipinjam' ? 'bg-blue-100 text-blue-700' :
                       loan.status === 'Terlambat' ? 'bg-rose-100 text-rose-700' :
@@ -154,16 +175,16 @@ const { count: pinjamanTerlambat } = await supabaseAdmin.from('loans').select('*
                       {loan.status}
                     </span>
                     {loan.total_denda > 0 && (
-                      <div class="text-xs font-bold text-rose-600 mt-1">{formatRupiah(loan.total_denda)}</div>
+                      <div class="text-[11px] font-bold text-rose-600 mt-1">{formatRupiah(loan.total_denda)}</div>
                     )}
                   </td>
-                  <td class="py-4 px-6 text-right space-y-1">
+                  <td class="py-3.5 px-5 text-right space-y-1">
                     {items.map((item) => item.status === 'Dipinjam' && (
                       <div class="flex justify-end gap-1">
-                        <button onclick={`handleReturnItem('${item.id}', 'kembali')`} class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px]">
+                        <button onclick={`handleReturnItem('${item.id}', 'kembali')`} class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px]">
                           ✓ Kembali
                         </button>
-                        <button onclick={`handleReturnItem('${item.id}', 'rusak')`} class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[11px] border border-rose-200">
+                        <button onclick={`handleReturnItem('${item.id}', 'rusak')`} class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[10.5px] border border-rose-200">
                           Rusak
                         </button>
                       </div>
@@ -178,42 +199,137 @@ const { count: pinjamanTerlambat } = await supabaseAdmin.from('loans').select('*
     </div>
   </div>
 
-  <!-- Modal Peminjaman Baru -->
+  <!-- MODAL CATAT PEMINJAMAN BARU -->
   <div id="modalPinjam" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative">
-      <button onclick="closeModalPinjam()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+    <div class="rounded-3xl max-w-lg w-full p-6 shadow-2xl border relative"
+         style="background: var(--surface); border-color: var(--border); color: var(--text);">
+      <button onclick="closeModalPinjam()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
 
-      <div class="mb-6">
-        <h3 class="text-xl font-extrabold text-slate-900">Catat Peminjaman Baru</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Pilih mahasiswa dan buku yang akan dipinjam.</p>
+      <div class="mb-5">
+        <h3 class="text-base font-extrabold">Catat Peminjaman Buku Baru</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Input transaksi sirkulasi mahasiswa</p>
       </div>
 
-      <form onsubmit="handleCreateLoan(event)" class="space-y-4">
+      <form onsubmit="handleCreateLoan(event)" class="space-y-3.5 text-xs">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">NPM Mahasiswa</label>
-          <input type="text" id="loanNpm" placeholder="Contoh: 1411230105" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono" />
+          <label class="block font-semibold mb-1">NPM Mahasiswa</label>
+          <input type="text" id="loanNpm" placeholder="Contoh: 1411230105" required
+                 class="w-full px-3.5 py-2.5 rounded-xl border font-mono outline-hidden"
+                 style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">ID Buku / Koleksi (pisahkan koma jika > 1)</label>
-          <input type="text" id="loanBookIds" placeholder="Contoh: 1060, 2001" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono" />
+          <label class="block font-semibold mb-1">ID Buku / Koleksi (pisahkan koma jika > 1)</label>
+          <input type="text" id="loanBookIds" placeholder="Contoh: 1060, 2001" required
+                 class="w-full px-3.5 py-2.5 rounded-xl border font-mono outline-hidden"
+                 style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Durasi Peminjaman (Hari)</label>
-          <input type="number" id="loanDuration" value="7" min="1" max="14" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs" />
+          <label class="block font-semibold mb-1">Durasi Peminjaman (Hari)</label>
+          <input type="number" id="loanDuration" value="7" min="1" max="14"
+                 class="w-full px-3.5 py-2 rounded-xl border outline-hidden"
+                 style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
         </div>
 
-        <button type="submit" id="btnSubmitLoan" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 shadow-md shadow-indigo-600/20">
+        <button type="submit" id="btnSubmitLoan" class="w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-xs"
+                style="background: var(--accent);">
           Simpan Transaksi Peminjaman
         </button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL TAMBAH BUKU MANUAL -->
+  <div id="modalTambahBuku" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="rounded-3xl max-w-lg w-full p-6 shadow-2xl border relative"
+         style="background: var(--surface); border-color: var(--border); color: var(--text);">
+      <button onclick="closeModalTambahBuku()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+
+      <div class="mb-5">
+        <h3 class="text-base font-extrabold">Tambah Koleksi Buku Manual</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Input buku literatur, laporan KP, atau skripsi baru</p>
+      </div>
+
+      <form onsubmit="handleSaveManualBook(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1">ID Koleksi / Nomor Induk</label>
+          <input type="text" id="manualBookId" placeholder="Contoh: 1500" required
+                 class="w-full px-3.5 py-2 rounded-xl border font-mono outline-hidden"
+                 style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1">Judul Koleksi</label>
+          <textarea id="manualBookJudul" rows="2" placeholder="Judul buku / laporan..." required
+                    class="w-full px-3.5 py-2 rounded-xl border outline-hidden"
+                    style="background: var(--canvas); border-color: var(--border); color: var(--text);"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">Penulis / Penyusun</label>
+            <input type="text" id="manualBookPenulis" placeholder="Nama penulis"
+                   class="w-full px-3.5 py-2 rounded-xl border outline-hidden"
+                   style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Tahun Terbit</label>
+            <input type="text" id="manualBookTahun" placeholder="2026"
+                   class="w-full px-3.5 py-2 rounded-xl border outline-hidden"
+                   style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">Kategori</label>
+            <select id="manualBookKategori" class="w-full px-3.5 py-2 rounded-xl border outline-hidden"
+                    style="background: var(--canvas); border-color: var(--border); color: var(--text);">
+              <option value="Buku Literatur">Buku Literatur</option>
+              <option value="Laporan KP">Laporan KP</option>
+              <option value="Skripsi">Skripsi</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Nomor Rak</label>
+            <input type="text" id="manualBookRak" placeholder="RAK 3 BARIS 1" required
+                   class="w-full px-3.5 py-2 rounded-xl border font-mono outline-hidden"
+                   style="background: var(--canvas); border-color: var(--border); color: var(--text);" />
+          </div>
+        </div>
+
+        <button type="submit" id="btnSubmitManualBook" class="w-full py-2.5 rounded-xl text-white font-bold text-xs bg-emerald-600 hover:bg-emerald-700 shadow-xs">
+          Simpan ke Database Supabase
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script is:inline>
+    // Live WIB Clock
+    function updateWibClock() {
+      const now = new Date();
+      // Format Jam WIB
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeElem = document.getElementById('liveClockTime');
+      if (timeElem) timeElem.innerText = `${hours}:${minutes}:${seconds}`;
+
+      // Format Tanggal
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateElem = document.getElementById('liveClockDate');
+      if (dateElem) dateElem.innerText = now.toLocaleDateString('id-ID', options);
+    }
+    setInterval(updateWibClock, 1000);
+    updateWibClock();
+
+    // Modal Handlers
     function openModalPinjam() { document.getElementById('modalPinjam').classList.remove('hidden'); }
     function closeModalPinjam() { document.getElementById('modalPinjam').classList.add('hidden'); }
+    function openModalTambahBuku() { document.getElementById('modalTambahBuku').classList.remove('hidden'); }
+    function closeModalTambahBuku() { document.getElementById('modalTambahBuku').classList.add('hidden'); }
 
     async function handleReturnItem(itemId, aksi) {
       if (!confirm(`Konfirmasi pengembalian item ini (Aksi: ${aksi})?`)) return;
@@ -261,12 +377,45 @@ const { count: pinjamanTerlambat } = await supabaseAdmin.from('loans').select('*
           alert('Gagal: ' + data.message);
         }
       } catch (err) {
-        alert('Kesalahan koneksi.');
+        alert('Kesalahan jaringan.');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Simpan Transaksi Peminjaman';
       }
     }
+
+    async function handleSaveManualBook(e) {
+      e.preventDefault();
+      const id = document.getElementById('manualBookId').value.trim();
+      const judul = document.getElementById('manualBookJudul').value.trim();
+      const penulis = document.getElementById('manualBookPenulis').value.trim();
+      const tahun_terbit = document.getElementById('manualBookTahun').value.trim();
+      const kategori = document.getElementById('manualBookKategori').value;
+      const rak = document.getElementById('manualBookRak').value.trim();
+
+      const btn = document.getElementById('btnSubmitManualBook');
+      btn.disabled = true;
+      btn.innerText = 'Menyimpan...';
+
+      try {
+        const res = await fetch('/api/collections/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, judul, penulis, tahun_terbit, kategori, rak, stok: 1 })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Koleksi baru berhasil ditambahkan!');
+          window.location.reload();
+        } else {
+          alert('Gagal: ' + data.message);
+        }
+      } catch (err) {
+        alert('Gagal menghubungi server.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Simpan ke Database Supabase';
+      }
+    }
   </script>
 </Layout>
-
