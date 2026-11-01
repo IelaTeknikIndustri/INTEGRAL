@@ -293,10 +293,127 @@
 
         .actions-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+        }
+
+        .dashboard-welcome {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 22px;
+            padding: 24px 28px;
+            border-radius: 18px;
+            background: linear-gradient(115deg, #4338CA, #7C3AED);
+            color: #FFFFFF;
+        }
+
+        .dashboard-welcome-copy {
+            min-width: 0;
+        }
+
+        .dashboard-welcome h1 {
+            margin: 0 0 6px;
+            font-size: clamp(22px, 3vw, 30px);
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+        .dashboard-welcome p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        .dashboard-clock {
+            flex: 0 0 auto;
+            text-align: right;
+        }
+
+        .dashboard-clock-date {
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .dashboard-clock-time {
+            font-size: clamp(24px, 3vw, 32px);
+            line-height: 1.1;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.02em;
+        }
+
+        .dashboard-clock-zone {
+            margin-top: 3px;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .actions-menu {
+            position: relative;
+        }
+
+        .actions-menu summary {
+            list-style: none;
+        }
+
+        .actions-menu summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .actions-menu summary:focus-visible,
+        .action-menu-item:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .actions-menu-caret {
+            transition: transform 0.2s ease;
+        }
+
+        .actions-menu[open] .actions-menu-caret {
+            transform: rotate(180deg);
+        }
+
+        .actions-menu-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            z-index: 100;
+            width: min(320px, calc(100vw - 28px));
+            padding: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .action-menu-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .action-menu-item:hover {
+            background: var(--input-bg);
+        }
+
+        .action-menu-item-danger {
+            color: #DC2626;
         }
 
         .btn {
@@ -887,6 +1004,17 @@
                 padding: 14px;
             }
 
+            .dashboard-welcome {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 16px;
+                padding: 20px;
+            }
+
+            .dashboard-clock {
+                text-align: left;
+            }
+
             .grid-stats {
                 grid-template-columns: 1fr 1fr;
             }
@@ -1031,21 +1159,40 @@
 
                 <!-- DASHBOARD TAB -->
                 <div id="page-dashboard">
-                    <div class="actions-bar">
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button class="btn btn-info" onclick="window.openBebasPustaka()">📜 Bebas Pustaka</button>
-                            <button class="btn" id="btn-template-surat" style="background:#7C3AED;"
-                                onclick="window.openEditorTemplateSurat()">⚙️ Desain Template Surat</button>
-                            <button class="btn btn-warning" onclick="window.syncDenda()">🔄 Update Denda</button>
-                            <button class="btn btn-success" onclick="window.eksekusiBotReminder()">📧 Bot
-                                Reminder</button>
-                            <button class="btn" id="btn-auto-trigger" style="background:#0D9488;"
-                                onclick="window.openModalAutoTrigger()">⏰ Otomatisasi (08:00)</button>
-                            <button class="btn" id="btn-import-dash" style="background:#EA580C;"
-                                onclick="window.openModalImport()">📤 Import Data</button>
+                    <section class="dashboard-welcome" aria-labelledby="dashboard-welcome-title">
+                        <div class="dashboard-welcome-copy">
+                            <h1 id="dashboard-welcome-title">Selamat Datang di INTEGRAL</h1>
+                            <p>Pusat pengelolaan sirkulasi, otomasi pengingat, dan koleksi perpustakaan.</p>
                         </div>
-                        <button class="btn btn-danger" id="btn-clean-dup" onclick="window.cleanDuplicates()">🧹
-                            Bersihkan Data Ganda</button>
+                        <div class="dashboard-clock" aria-label="Waktu saat ini">
+                            <div class="dashboard-clock-date" id="dashboard-clock-date"></div>
+                            <time class="dashboard-clock-time" id="dashboard-clock-time" aria-live="off"></time>
+                            <div class="dashboard-clock-zone">Waktu Indonesia Barat (WIB)</div>
+                        </div>
+                    </section>
+                    <div class="actions-bar">
+                        <details class="actions-menu">
+                            <summary class="btn btn-primary" aria-controls="dashboard-action-options">
+                                ⚙️ Aksi Dashboard <span class="actions-menu-caret" aria-hidden="true">▾</span>
+                            </summary>
+                            <div class="actions-menu-panel" id="dashboard-action-options"
+                                aria-label="Pilihan aksi dashboard">
+                                <button type="button" class="action-menu-item"
+                                    onclick="window.openBebasPustaka()">📜 Bebas Pustaka</button>
+                                <button type="button" class="action-menu-item" id="btn-template-surat"
+                                    onclick="window.openEditorTemplateSurat()">⚙️ Desain Template Surat</button>
+                                <button type="button" class="action-menu-item"
+                                    onclick="window.syncDenda()">🔄 Update Denda</button>
+                                <button type="button" class="action-menu-item"
+                                    onclick="window.eksekusiBotReminder()">📧 Bot Reminder</button>
+                                <button type="button" class="action-menu-item" id="btn-auto-trigger"
+                                    onclick="window.openModalAutoTrigger()">⏰ Otomatisasi (08:00)</button>
+                                <button type="button" class="action-menu-item" id="btn-import-dash"
+                                    onclick="window.openModalImport()">📤 Import Data</button>
+                                <button type="button" class="action-menu-item action-menu-item-danger"
+                                    id="btn-clean-dup" onclick="window.cleanDuplicates()">🧹 Bersihkan Data Ganda</button>
+                            </div>
+                        </details>
                     </div>
                     <div class="grid-stats">
                         <div class="stat-card" style="background:#2563EB;">
@@ -1197,7 +1344,7 @@
                         </div>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <input type="text" id="cari-mhs-inp" class="inp" placeholder="Cari Nama / NPM..."
-                                style="margin-bottom:0; max-width:220px;" oninput="window.renderTabelMhs()">
+                                style="margin-bottom:0; width:320px; max-width:100%;" oninput="window.renderTabelMhs()">
                             <button class="btn btn-info" onclick="window.openModalTambahMhsManual()">➕ Tambah Mahasiswa</button>
                             <button class="btn" id="btn-import-mhs" style="background:#EA580C;"
                                 onclick="window.openModalImport()">📤 Import</button>
@@ -2048,7 +2195,7 @@
 
         var filterAngkatanMhs = "SEMUA", filterStatusMhs = "SEMUA", pageMhs = 1;
         var curKatPinjam = "SEMUA", selectedBukuIds = [];
-        var filterStRiwayat = "SEMUA", pageRiwayat = 1, activeTrxId = null;
+        var filterStRiwayat = "SEMUA", pageRiwayat = 1, activeTrxId = null, activeTrxMhs = "";
         var confirmCallback = null;
         var lastBebasData = null;
 
@@ -2070,10 +2217,10 @@
             }
 
             var btnClean = document.getElementById("btn-clean-dup");
-            if (btnClean) btnClean.style.display = isSuperadmin ? "inline-flex" : "none";
+            if (btnClean) btnClean.style.display = isSuperadmin ? "flex" : "none";
 
             var btnImportDash = document.getElementById("btn-import-dash");
-            if (btnImportDash) btnImportDash.style.display = isSuperadmin ? "inline-flex" : "none";
+            if (btnImportDash) btnImportDash.style.display = isSuperadmin ? "flex" : "none";
 
             var btnImportMhs = document.getElementById("btn-import-mhs");
             if (btnImportMhs) btnImportMhs.style.display = isSuperadmin ? "inline-flex" : "none";
@@ -2082,10 +2229,10 @@
             if (btnHapusBuku) btnHapusBuku.style.display = isSuperadmin ? "inline-flex" : "none";
 
             var btnTpl = document.getElementById("btn-template-surat");
-            if (btnTpl) btnTpl.style.display = isSuperadmin ? "inline-flex" : "none";
+            if (btnTpl) btnTpl.style.display = isSuperadmin ? "flex" : "none";
 
             var btnAuto = document.getElementById("btn-auto-trigger");
-            if (btnAuto) btnAuto.style.display = isSuperadmin ? "inline-flex" : "none";
+            if (btnAuto) btnAuto.style.display = isSuperadmin ? "flex" : "none";
         };
 
         window.toggleSidebar = function (open) {
@@ -2965,6 +3112,7 @@
             var r = state.riwayat.find(function (x) { return String(x.idTransaksi) === String(idTrx); });
             if (!r) return;
             activeTrxId = idTrx;
+            activeTrxMhs = r.mahasiswa || "";
 
             document.getElementById("mdl-mhs").innerText = r.mahasiswa;
             document.getElementById("mdl-pinjam").innerText = r.tglPinjam;
@@ -3039,7 +3187,7 @@
                         }).withFailureHandler(function (err) {
                             window.showLoading(false);
                             window.showToast("Gagal: " + (err.message || err), "error");
-                        }).aksiBukuIndividual(activeTrxId, idxBuku, aksi);
+                        }).aksiBukuIndividual(activeTrxId, idxBuku, aksi, activeTrxMhs);
                 } else {
                     setTimeout(function () {
                         window.showLoading(false);
@@ -3063,7 +3211,7 @@
                         }).withFailureHandler(function (err) {
                             window.showLoading(false);
                             window.showToast("Gagal: " + (err.message || err), "error");
-                        }).kembalikanBukuRow(activeTrxId);
+                        }).kembalikanBukuRow(activeTrxId, activeTrxMhs);
                 } else {
                     setTimeout(function () {
                         window.showLoading(false);
@@ -3825,6 +3973,48 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             window.initTheme();
+            var clockDate = document.getElementById("dashboard-clock-date");
+            var clockTime = document.getElementById("dashboard-clock-time");
+            if (clockDate && clockTime) {
+                var dateFormatter = new Intl.DateTimeFormat("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                });
+                var timeFormatter = new Intl.DateTimeFormat("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hourCycle: "h23"
+                });
+                var updateDashboardClock = function () {
+                    var now = new Date();
+                    clockDate.textContent = dateFormatter.format(now);
+                    clockTime.textContent = timeFormatter.format(now);
+                    clockTime.dateTime = now.toISOString();
+                };
+                updateDashboardClock();
+                window.setInterval(updateDashboardClock, 1000);
+            }
+            var actionsMenu = document.querySelector(".actions-menu");
+            if (actionsMenu) {
+                document.addEventListener("click", function (event) {
+                    if (!actionsMenu.contains(event.target)) {
+                        actionsMenu.open = false;
+                    } else if (event.target.closest(".action-menu-item")) {
+                        actionsMenu.open = false;
+                    }
+                });
+                document.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape" && actionsMenu.open) {
+                        actionsMenu.open = false;
+                        actionsMenu.querySelector("summary").focus();
+                    }
+                });
+            }
             try {
                 var saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {

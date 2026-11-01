@@ -1,0 +1,382 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { supabase } from '@/lib/supabase';
+import { formatDateIndo } from '@/lib/utils';
+
+// Fetch Initial Catalog Data and Stats directly via Supabase SSR
+const { data: collections = [] } = await supabase
+  .from('collections')
+  .select('*')
+  .order('created_at', { ascending: false })
+  .limit(100);
+
+const { count: totalCollections } = await supabase
+  .from('collections')
+  .select('*', { count: 'exact', head: true });
+
+const { count: totalStudents } = await supabase
+  .from('students')
+  .select('*', { count: 'exact', head: true });
+
+const { count: activeLoans } = await supabase
+  .from('loans')
+  .select('*', { count: 'exact', head: true })
+  .in('status', ['Dipinjam', 'Terlambat']);
+---
+
+<Layout title="INTEGRAL - Industrial Integrated Library UNIROW">
+  <!-- Hero Section with Modern Bento Grid -->
+  <section class="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50 to-slate-100/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- Hero Left Pitch -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold tracking-wide">
+            <span class="flex h-2 w-2 rounded-full bg-blue-600"></span>
+            Edisi Cloud 2.0 • Teknik Industri UNIROW
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
+            Akses Referensi Ilmiah <br />
+            <span class="bg-gradient-to-r from-blue-700 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Cepat, Cerdas & Terintegrasi
+            </span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed">
+            Katalog sirkulasi pustaka, arsip Laporan Kerja Praktik (KP), dan naskah Skripsi sarjana terintegrasi kecerdasan buatan <strong>Google Gemini AI</strong>.
+          </p>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <a href="#katalog" class="px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              Cari Katalog Sekarang
+            </a>
+            <button onclick="openModalClearance()" class="px-5 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all shadow-xs flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              Cek Bebas Pustaka
+            </button>
+          </div>
+        </div>
+
+        <!-- Hero Right: Bento Metrics Cards -->
+        <div class="lg:col-span-5 grid grid-cols-2 gap-4">
+          <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            <div class="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg mb-4">
+              📚
+            </div>
+            <div>
+              <div class="text-3xl font-extrabold text-slate-900 tracking-tight">{totalCollections || 977}</div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Total Koleksi</div>
+            </div>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg mb-4">
+              🎓
+            </div>
+            <div>
+              <div class="text-3xl font-extrabold text-slate-900 tracking-tight">{totalStudents || 443}</div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Mahasiswa Terdaftar</div>
+            </div>
+          </div>
+
+          <div class="col-span-2 p-5 rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 text-white shadow-md relative overflow-hidden">
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-md">
+                  ✨ Gemini AI Research Assistant
+                </span>
+                <span class="text-xs text-blue-200 font-medium">Aktif 24/7</span>
+              </div>
+              <h3 class="font-bold text-lg leading-snug">Bingung mencari topik KP atau metode Skripsi?</h3>
+              <p class="text-xs text-indigo-100/80 mt-1 mb-4 leading-relaxed">
+                Tanyakan metode (Lean, Six Sigma, Ergonomi, Supply Chain) dan dapatkan rekomendasi buku & naskah nyata yang tersedia di rak.
+              </p>
+              <button onclick="openModalChat()" class="w-full py-2.5 px-4 rounded-xl bg-white text-indigo-900 font-bold text-xs hover:bg-indigo-50 transition-colors shadow-sm flex items-center justify-center gap-2">
+                💬 Mulai Konsultasi AI Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Katalog Pencarian Buku -->
+  <section id="katalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-editorial">
+          Eksplorasi Katalog Koleksi
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">
+          Cari buku literatur kuliah, laporan kerja praktik di industri, dan naskah skripsi.
+        </p>
+      </div>
+
+      <!-- Live Search Input -->
+      <div class="relative w-full md:w-80">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Cari judul, penulis, metode..."
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm bg-white shadow-xs"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 text-xs font-semibold">
+      <button onclick="filterCategory('all')" id="btn-all" class="cat-btn px-4 py-2 rounded-xl bg-indigo-600 text-white transition-all shadow-xs">
+        Semua Koleksi ({totalCollections})
+      </button>
+      <button onclick="filterCategory('Buku Literatur')" id="btn-lit" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+        📖 Buku Literatur (228)
+      </button>
+      <button onclick="filterCategory('Laporan KP')" id="btn-kp" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+        🏭 Laporan KP (480)
+      </button>
+      <button onclick="filterCategory('Skripsi')" id="btn-skripsi" class="cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+        📜 Skripsi Sarjana (272)
+      </button>
+    </div>
+
+    <!-- Catalog Grid -->
+    <div id="catalogGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {collections.map((item) => {
+        const isAvailable = item.stok > 0;
+        const katBadgeColor = 
+          item.kategori === 'Buku Literatur' ? 'bg-blue-50 text-blue-700 border-blue-200/60' :
+          item.kategori === 'Laporan KP' ? 'bg-amber-50 text-amber-700 border-amber-200/60' :
+          'bg-purple-50 text-purple-700 border-purple-200/60';
+
+        return (
+          <div class="book-card p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all hover:shadow-md flex flex-col justify-between"
+               data-kategori={item.kategori}
+               data-search={`${item.judul} ${item.penulis} ${item.rak}`.toLowerCase()}>
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${katBadgeColor}`}>
+                  {item.kategori}
+                </span>
+                <span class={`text-xs font-semibold flex items-center gap-1 ${isAvailable ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  <span class={`h-1.5 w-1.5 rounded-full ${isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                  {isAvailable ? `Stok: ${item.stok}` : 'Dipinjam'}
+                </span>
+              </div>
+
+              <h3 class="font-bold text-slate-900 text-sm line-clamp-2 leading-snug group-hover:text-indigo-600">
+                {item.judul}
+              </h3>
+              
+              <div class="mt-3 text-xs text-slate-500 space-y-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-400">Penulis:</span>
+                  <span class="font-medium text-slate-700 truncate">{item.penulis || '-'}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-400">Tahun:</span>
+                  <span class="font-medium text-slate-700">{item.tahun_terbit || '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <span class="px-2 py-1 rounded-md bg-slate-100 font-mono text-slate-600 font-medium">
+                📍 {item.rak}
+              </span>
+              <span class="text-slate-400 font-mono">ID: #{item.id}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Modal: Cek Bebas Pustaka Mandiri -->
+  <div id="modalClearance" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
+      <button onclick="closeModalClearance()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+
+      <div class="text-center mb-6">
+        <div class="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center text-2xl mb-3">
+          📜
+        </div>
+        <h3 class="text-xl font-extrabold text-slate-900">Cek Status Bebas Ruang Baca</h3>
+        <p class="text-xs text-slate-500 mt-1">Masukkan Nomor Pokok Mahasiswa (NPM) untuk verifikasi kelulusan & syarat yudisium.</p>
+      </div>
+
+      <form id="formClearance" onsubmit="handleCheckClearance(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Pokok Mahasiswa (NPM)</label>
+          <input type="text" id="npmInput" placeholder="Contoh: 1411230105" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-mono" />
+        </div>
+
+        <button type="submit" id="btnSubmitClearance" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20">
+          Periksa Status Sekarang
+        </button>
+      </form>
+
+      <!-- Result Container -->
+      <div id="clearanceResult" class="mt-6 hidden"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Asisten AI Riset TI -->
+  <div id="modalChat" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">🤖</div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-sm">INTEGRAL AI • Asisten Riset TI</h3>
+            <p class="text-[10px] text-slate-400">Konsultasi metode riset & referensi skripsi prodi</p>
+          </div>
+        </div>
+        <button onclick="closeModalChat()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      </div>
+
+      <!-- Chat History -->
+      <div id="chatHistory" class="flex-1 overflow-y-auto py-4 space-y-3 text-xs leading-relaxed">
+        <div class="p-3.5 rounded-2xl bg-slate-100 text-slate-700 max-w-[85%]">
+          Halo! Saya INTEGRAL AI. Kamu sedang merencanakan Kerja Praktik atau Skripsi tentang apa? (Misal: <em>"Rekomendasi metode penataan layout pabrik"</em> atau <em>"Analisis postur ergonomi pekerja"</em>).
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <form onsubmit="handleSendChat(event)" class="pt-3 border-t border-slate-100 flex gap-2">
+        <input type="text" id="chatInput" placeholder="Ketik pertanyaan atau topik risetmu..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required />
+        <button type="submit" id="btnSendChat" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700">Kirim</button>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Search & Filter Logic
+    const searchInput = document.getElementById('searchInput');
+    const cards = document.querySelectorAll('.book-card');
+
+    searchInput?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      cards.forEach(card => {
+        const text = card.getAttribute('data-search') || '';
+        card.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    });
+
+    function filterCategory(kat) {
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.className = 'cat-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all';
+      });
+      event.target.className = 'cat-btn px-4 py-2 rounded-xl bg-indigo-600 text-white transition-all shadow-xs';
+
+      cards.forEach(card => {
+        const cardKat = card.getAttribute('data-kategori');
+        if (kat === 'all' || cardKat === kat) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Modal Clearance
+    function openModalClearance() { document.getElementById('modalClearance').classList.remove('hidden'); }
+    function closeModalClearance() { document.getElementById('modalClearance').classList.add('hidden'); }
+
+    async function handleCheckClearance(e) {
+      e.preventDefault();
+      const npm = document.getElementById('npmInput').value.trim();
+      const btn = document.getElementById('btnSubmitClearance');
+      const resultBox = document.getElementById('clearanceResult');
+
+      btn.disabled = true;
+      btn.innerText = 'Memeriksa ke basis data...';
+      resultBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/clearance/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ npm })
+        });
+        const data = await res.json();
+
+        resultBox.classList.remove('hidden');
+        if (data.cleared) {
+          resultBox.innerHTML = `
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+              <div class="font-bold text-sm mb-1">🎉 Dinyatakan Bebas Tanggungan!</div>
+              <p>Mahasiswa: <strong>${data.student.nama}</strong> (${data.student.npm})</p>
+              <p class="mt-2 text-slate-600">Surat Keterangan resmi siap dicetak dengan kode validasi:</p>
+              <div class="font-mono font-bold text-sm my-2 p-2 bg-white rounded border border-emerald-300 text-center">${data.clearance.kode_validasi}</div>
+              <a href="/verify/${data.clearance.kode_validasi}" target="_blank" class="block w-full text-center py-2 bg-emerald-600 text-white rounded-xl font-bold mt-3 hover:bg-emerald-700">
+                Buka & Cetak Surat Bebas Ruang Baca ↗
+              </a>
+            </div>
+          `;
+        } else {
+          resultBox.innerHTML = `
+            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs">
+              <div class="font-bold text-sm mb-1">⚠️ Masih Memiliki Tanggungan</div>
+              <p>Mahasiswa: <strong>${data.student.nama}</strong></p>
+              <p class="mt-1">${data.message}</p>
+              <div class="mt-2 text-rose-700 font-semibold">Harap segera mengembalikan buku ke Ruang Baca TI UNIROW untuk memproses bebas pustaka.</div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan koneksi.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Periksa Status Sekarang';
+      }
+    }
+
+    // Modal Chat
+    function openModalChat() { document.getElementById('modalChat').classList.remove('hidden'); }
+    function closeModalChat() { document.getElementById('modalChat').classList.add('hidden'); }
+
+    async function handleSendChat(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const history = document.getElementById('chatHistory');
+      const btn = document.getElementById('btnSendChat');
+      const message = input.value.trim();
+      if (!message) return;
+
+      history.innerHTML += `
+        <div class="p-3 rounded-2xl bg-indigo-600 text-white max-w-[85%] ml-auto text-xs font-medium">
+          ${message}
+        </div>
+      `;
+      input.value = '';
+      btn.disabled = true;
+      history.scrollTop = history.scrollHeight;
+
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        
+        history.innerHTML += `
+          <div class="p-3.5 rounded-2xl bg-slate-100 text-slate-800 max-w-[90%] text-xs prose prose-sm">
+            ${data.reply.replace(/\n/g, '<br/>')}
+          </div>
+        `;
+      } catch (err) {
+        history.innerHTML += `<div class="p-2 text-rose-500 text-xs">Gagal mendapatkan respon AI.</div>`;
+      } finally {
+        btn.disabled = false;
+        history.scrollTop = history.scrollHeight;
+      }
+    }
+  </script>
+</Layout>
+

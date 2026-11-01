@@ -344,6 +344,7 @@ function bacaDataRiwayat(ss) {
   var mhsList = bacaDataMahasiswa(ss);
 
   var list = [];
+  var seenIds = {};
   for (var i = 1; i < raw.length; i++) {
     var mhs = idxMhs > -1 ? raw[i][idxMhs] : raw[i][1];
     if (!mhs || mhs.trim() === "") continue;
@@ -355,7 +356,11 @@ function bacaDataRiwayat(ss) {
       mhs = matchMhs.nama.toUpperCase();
     }
 
-    var idTrx = idxId > -1 ? raw[i][idxId] : String(i);
+    var rawValId = idxId > -1 ? String(raw[i][idxId]).trim() : "";
+    // Pastikan ID transaksi unik: jika kosong/duplikat, buat ID unik berbasis baris sheet
+    var idTrx = (rawValId && rawValId !== "-" && !seenIds[rawValId]) ? rawValId : ("TRX-" + (i + 1));
+    seenIds[idTrx] = true;
+
     var tglPinjamRaw = idxTglPinjam > -1 ? raw[i][idxTglPinjam] : "-";
     var batasRaw = idxBatas > -1 ? raw[i][idxBatas] : "-";
 
@@ -371,6 +376,7 @@ function bacaDataRiwayat(ss) {
 
     list.push({
       idTransaksi: idTrx,
+      sheetRow: i + 1,
       mahasiswa: mhs,
       tglPinjam: tglPinjam,
       batasKembali: batasKembali,
@@ -389,6 +395,7 @@ function bacaDataRiwayat(ss) {
     return {
       noUrut: idx + 1,
       idTransaksi: item.idTransaksi,
+      sheetRow: item.sheetRow,
       mahasiswa: item.mahasiswa,
       tglPinjam: item.tglPinjam,
       batasKembali: item.batasKembali,
@@ -437,7 +444,19 @@ function simpanPeminjamanBaru(npmOrNama, listBukuIds) {
     var batasPinjamHari = Number(getConfigValue("BATAS_PINJAM_HARI", 7)) || 7;
     batas.setDate(now.getDate() + batasPinjamHari);
 
-    var nextNo = shPinjam.getLastRow();
+    var rawExisting = shPinjam.getDataRange().getDisplayValues();
+    var hExisting = rawExisting[0].map(function(h) { return String(h).trim().toLowerCase(); });
+    var idxExistingNo = hExisting.indexOf("no");
+    var maxExistingNo = 0;
+    for (var er = 1; er < rawExisting.length; er++) {
+      var valStr = idxExistingNo > -1 ? String(rawExisting[er][idxExistingNo]) : "";
+      var numMatch = valStr.match(/\d+/);
+      if (numMatch) {
+        var numVal = parseInt(numMatch[0], 10);
+        if (!isNaN(numVal) && numVal > maxExistingNo) maxExistingNo = numVal;
+      }
+    }
+    var nextNo = maxExistingNo + 1;
     shPinjam.appendRow([
       nextNo,
       namaMahasiswa,
@@ -462,7 +481,7 @@ function simpanPeminjamanBaru(npmOrNama, listBukuIds) {
   }
 }
 
-function aksiBukuIndividual(idTransaksi, idxBuku, aksi) {
+function aksiBukuIndividual(idTransaksi, idxBuku, aksi, namaMhsOptional) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Peminjaman");
@@ -477,14 +496,58 @@ function aksiBukuIndividual(idTransaksi, idxBuku, aksi) {
     var idxBatas = headers.indexOf("batas kembali");
     var idxTglKembali = headers.indexOf("tgl kembali");
 
+    var targetMhs = namaMhsOptional ? String(namaMhsOptional).trim().toLowerCase() : "";
+    var targetId = String(idTransaksi || "").trim();
+
     var rowIndex = -1;
-    for (var i = 1; i < raw.length; i++) {
-      if (String(raw[i][idxNo]).trim() === String(idTransaksi).trim()) {
-        rowIndex = i + 1;
-        break;
+
+    // Strategi 1: Cocokkan ID Transaksi DAN Nama Mahasiswa (Tingkat akurasi 100%)
+    if (targetMhs && idxMhs > -1) {
+      for (var i = 1; i < raw.length; i++) {
+        var rowId = idxNo > -1 ? String(raw[i][idxNo]).trim() : "";
+        var rowMhs = String(raw[i][idxMhs]).trim().toLowerCase();
+        var matchMhs = rowMhs.indexOf(targetMhs) > -1 || targetMhs.indexOf(rowMhs) > -1;
+
+        if (matchMhs && (rowId === targetId || targetId === ("TRX-" + (i + 1)))) {
+          rowIndex = i + 1;
+          break;
+        }
       }
     }
-    if (rowIndex === -1) throw new Error("Transaksi #" + idTransaksi + " tidak ditemukan!");
+
+    // Strategi 2: Jika belum ketemu dan ada targetMhs, cari baris aktif/terlambat milik mahasiswa tsb
+    if (rowIndex === -1 && targetMhs && idxMhs > -1) {
+      for (var i = 1; i < raw.length; i++) {
+        var rowMhs = String(raw[i][idxMhs]).trim().toLowerCase();
+        var rowSt = idxStatus > -1 ? String(raw[i][idxStatus]).trim().toLowerCase() : "";
+        var matchMhs = rowMhs.indexOf(targetMhs) > -1 || targetMhs.indexOf(rowMhs) > -1;
+        if (matchMhs && rowSt !== "dikembalikan") {
+          rowIndex = i + 1;
+          break;
+        }
+      }
+    }
+
+    // Strategi 3: Cocokkan ID Transaksi saja
+    if (rowIndex === -1 && targetId) {
+      for (var i = 1; i < raw.length; i++) {
+        var rowId = idxNo > -1 ? String(raw[i][idxNo]).trim() : "";
+        if (rowId === targetId || targetId === ("TRX-" + (i + 1))) {
+          rowIndex = i + 1;
+          break;
+        }
+      }
+    }
+
+    // Strategi 4: Jika targetId format "TRX-<nomor_baris>"
+    if (rowIndex === -1 && targetId.indexOf("TRX-") === 0) {
+      var rowFromId = parseInt(targetId.replace("TRX-", ""), 10);
+      if (!isNaN(rowFromId) && rowFromId >= 2 && rowFromId <= raw.length) {
+        rowIndex = rowFromId;
+      }
+    }
+
+    if (rowIndex === -1) throw new Error("Transaksi #" + idTransaksi + " (" + (namaMhsOptional || "") + ") tidak ditemukan!");
 
     var bukuArr = String(sheet.getRange(rowIndex, idxDetail + 1).getValue()).split(" || ");
     var namaMahasiswa = String(sheet.getRange(rowIndex, idxMhs + 1).getValue()).trim();
@@ -538,7 +601,16 @@ function aksiBukuIndividual(idTransaksi, idxBuku, aksi) {
 
         var newBatas = new Date();
         newBatas.setDate(today.getDate() + 7);
-        var nextNo = sheet.getLastRow();
+        var maxNoAppend = 0;
+        for (var er = 1; er < raw.length; er++) {
+          var valStr = idxNo > -1 ? String(raw[er][idxNo]) : "";
+          var numMatch = valStr.match(/\d+/);
+          if (numMatch) {
+            var numVal = parseInt(numMatch[0], 10);
+            if (!isNaN(numVal) && numVal > maxNoAppend) maxNoAppend = numVal;
+          }
+        }
+        var nextNo = maxNoAppend + 1;
         sheet.appendRow([
           nextNo,
           namaMahasiswa,
@@ -554,13 +626,13 @@ function aksiBukuIndividual(idTransaksi, idxBuku, aksi) {
 
         return {
           success: true,
-          message: "Buku telah melewati batas. Transaksi lama ditutup dan transaksi baru (7 hari ke depan) berhasil dibuat!",
+          message: "Buku telah melewati batas. Transaksi lama ditutup dan transaksi baru untuk " + namaMahasiswa + " (7 hari ke depan) berhasil dibuat!",
           allReturned: allReturned
         };
       } else {
         curBatas.setDate(curBatas.getDate() + 7);
         sheet.getRange(rowIndex, idxBatas + 1).setValue(formatTglSimpan(curBatas));
-        return { success: true, message: "Masa pinjam berhasil diperpanjang 7 hari!", allReturned: false };
+        return { success: true, message: "Masa pinjam untuk " + namaMahasiswa + " berhasil diperpanjang 7 hari!", allReturned: false };
       }
     } else if (aksi === "rusak") {
       if (bukuArr[idxBuku].indexOf("[RUSAK]") === -1) {
@@ -573,16 +645,14 @@ function aksiBukuIndividual(idTransaksi, idxBuku, aksi) {
         var cleanJudul = bukuArr[idxBuku].replace("[RUSAK]", "").replace("[DIKEMBALIKAN]", "").split(" | RAK: ")[0].trim();
         shRusak.appendRow([shRusak.getLastRow(), cleanJudul, "-", "-", 1, "Ruang Baca TI", "Kerusakan dari Transaksi #" + idTransaksi]);
       }
-      return { success: true, message: "Buku ditandai rusak dan dicatat ke data buku rusak!", allReturned: false };
+      return { success: true, message: "Buku berhasil dicatat sebagai rusak/hilang!" };
     }
-
-    return { success: true, message: "Status buku berhasil diperbarui!" };
   } catch (err) {
     return { success: false, message: err.toString() };
   }
 }
 
-function kembalikanBukuRow(idTransaksi) {
+function kembalikanBukuRow(idTransaksi, namaMhsOptional) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Peminjaman");
@@ -590,31 +660,64 @@ function kembalikanBukuRow(idTransaksi) {
     var headers = raw[0].map(function(h) { return String(h).trim().toLowerCase(); });
 
     var idxNo = headers.indexOf("no");
+    var idxMhs = headers.indexOf("mahasiswa");
     var idxDetail = headers.indexOf("detail buku");
     var idxStatus = headers.indexOf("status");
     var idxDenda = headers.indexOf("denda");
     var idxTglKembali = headers.indexOf("tgl kembali");
 
-    for (var i = 1; i < raw.length; i++) {
-      if (String(raw[i][idxNo]).trim() === String(idTransaksi).trim()) {
-        var row = i + 1;
-        var booksRaw = String(raw[i][idxDetail]).split(" || ");
-        var books = booksRaw.map(function(b) {
-          // Hanya kembalikan stok untuk buku yang belum ditandai dikembalikan/rusak
-          if (b.indexOf("[DIKEMBALIKAN]") === -1 && b.indexOf("[RUSAK]") === -1) {
-            kembalikanStokDariDetail(ss, b);
-            return b + " [DIKEMBALIKAN]";
-          }
-          return b;
-        });
-        sheet.getRange(row, idxDetail + 1).setValue(books.join(" || "));
-        sheet.getRange(row, idxStatus + 1).setValue("dikembalikan");
-        sheet.getRange(row, idxDenda + 1).setValue("-");
-        sheet.getRange(row, idxTglKembali + 1).setValue(formatTglSimpan(new Date()));
-        return { success: true, message: "Seluruh buku transaksi #" + idTransaksi + " berhasil dikembalikan!" };
+    var targetMhs = namaMhsOptional ? String(namaMhsOptional).trim().toLowerCase() : "";
+    var targetId = String(idTransaksi || "").trim();
+
+    var row = -1;
+
+    // Strategi 1: Cocokkan ID Transaksi DAN Nama Mahasiswa
+    if (targetMhs && idxMhs > -1) {
+      for (var i = 1; i < raw.length; i++) {
+        var rowId = idxNo > -1 ? String(raw[i][idxNo]).trim() : "";
+        var rowMhs = String(raw[i][idxMhs]).trim().toLowerCase();
+        var matchMhs = rowMhs.indexOf(targetMhs) > -1 || targetMhs.indexOf(rowMhs) > -1;
+        if (matchMhs && (rowId === targetId || targetId === ("TRX-" + (i + 1)))) {
+          row = i + 1;
+          break;
+        }
       }
     }
-    throw new Error("Transaksi tidak ditemukan!");
+
+    // Strategi 2: Cocokkan ID Transaksi saja
+    if (row === -1 && targetId) {
+      for (var i = 1; i < raw.length; i++) {
+        var rowId = idxNo > -1 ? String(raw[i][idxNo]).trim() : "";
+        if (rowId === targetId || targetId === ("TRX-" + (i + 1))) {
+          row = i + 1;
+          break;
+        }
+      }
+    }
+
+    // Strategi 3: Format TRX-<baris>
+    if (row === -1 && targetId.indexOf("TRX-") === 0) {
+      var rowFromId = parseInt(targetId.replace("TRX-", ""), 10);
+      if (!isNaN(rowFromId) && rowFromId >= 2 && rowFromId <= raw.length) {
+        row = rowFromId;
+      }
+    }
+
+    if (row === -1) throw new Error("Transaksi #" + idTransaksi + " (" + (namaMhsOptional || "") + ") tidak ditemukan!");
+
+    var booksRaw = String(raw[row - 1][idxDetail]).split(" || ");
+    var books = booksRaw.map(function(b) {
+      if (b.indexOf("[DIKEMBALIKAN]") === -1 && b.indexOf("[RUSAK]") === -1) {
+        kembalikanStokDariDetail(ss, b);
+        return b + " [DIKEMBALIKAN]";
+      }
+      return b;
+    });
+    sheet.getRange(row, idxDetail + 1).setValue(books.join(" || "));
+    sheet.getRange(row, idxStatus + 1).setValue("dikembalikan");
+    sheet.getRange(row, idxDenda + 1).setValue("-");
+    sheet.getRange(row, idxTglKembali + 1).setValue(formatTglSimpan(new Date()));
+    return { success: true, message: "Seluruh buku transaksi #" + idTransaksi + " berhasil dikembalikan!" };
   } catch (err) {
     return { success: false, message: err.toString() };
   }
@@ -983,16 +1086,41 @@ function importDataCsvDatabase(tipe, csvText) {
     if (tipe === "mahasiswa") {
       sheet = ss.getSheetByName("Mahasiswa");
       if (!sheet) throw new Error("Sheet Mahasiswa tidak ditemukan!");
-      for (var i = 1; i < lines.length; i++) {
+
+      var headerCols = parseCsvLine(lines[0]).map(function(h) { return h.toLowerCase().trim(); });
+      var idxNama = headerCols.indexOf("nama");
+      var idxNpm = headerCols.indexOf("npm");
+      var idxAngkatan = headerCols.indexOf("angkatan");
+      var idxStatus = headerCols.indexOf("status");
+      var idxEmail = headerCols.indexOf("email");
+      var idxHp = headerCols.indexOf("no_hp") > -1 ? headerCols.indexOf("no_hp") : (headerCols.indexOf("no hp") > -1 ? headerCols.indexOf("no hp") : headerCols.indexOf("nohp"));
+
+      var hasHeader = (idxNama > -1 || idxNpm > -1);
+      var startIdx = hasHeader ? 1 : 0;
+
+      for (var i = startIdx; i < lines.length; i++) {
         var cols = parseCsvLine(lines[i]);
         if (cols.length >= 2) {
-          var nama = cols[1] && isNaN(cols[0]) ? cols[0] : (cols[1] || cols[0]);
-          var npm = cols[2] && isNaN(cols[0]) ? cols[1] : (cols[2] || cols[1]);
-          var email = cols[3] || "-";
-          var angkatan = cols[4] || (npm && npm.length >= 6 ? "20" + npm.substring(4, 6) : "2023");
-          var status = cols[5] || "Aktif";
-          var noHp = cols[6] || "-";
-          sheet.appendRow([nama.toUpperCase(), String(npm).replace(/^'/, ''), angkatan, status, email, String(noHp).replace(/^'/, '')]);
+          var nama = hasHeader && idxNama > -1 ? cols[idxNama] : cols[0];
+          var npm = hasHeader && idxNpm > -1 ? cols[idxNpm] : cols[1];
+          if (!nama && !npm) continue;
+
+          var angkatan = hasHeader && idxAngkatan > -1 ? cols[idxAngkatan] : (cols[2] || "");
+          if (!angkatan && npm && npm.length >= 6) {
+            angkatan = "20" + npm.substring(4, 6);
+          }
+          var status = hasHeader && idxStatus > -1 ? (cols[idxStatus] || "Aktif") : (cols[3] || "Aktif");
+          var email = hasHeader && idxEmail > -1 ? (cols[idxEmail] || "-") : (cols[4] || "-");
+          var noHp = hasHeader && idxHp > -1 ? (cols[idxHp] || "-") : (cols[5] || "-");
+
+          sheet.appendRow([
+            (nama || "").toUpperCase(),
+            String(npm || "").replace(/^'/, ''),
+            angkatan || "2023",
+            status || "Aktif",
+            email || "-",
+            String(noHp || "-").replace(/^'/, '')
+          ]);
           count++;
         }
       }
@@ -1000,16 +1128,31 @@ function importDataCsvDatabase(tipe, csvText) {
       var sheetName = tipe || "Buku Literatur";
       sheet = ss.getSheetByName(sheetName);
       if (!sheet) throw new Error("Sheet " + sheetName + " tidak ditemukan!");
-      for (var j = 1; j < lines.length; j++) {
+
+      var bHeaderCols = parseCsvLine(lines[0]).map(function(h) { return h.toLowerCase().trim(); });
+      var bIdxId = bHeaderCols.indexOf("id");
+      var bIdxJudul = bHeaderCols.indexOf("judul");
+      var bIdxPenulis = bHeaderCols.indexOf("penulis");
+      var bIdxTahun = bHeaderCols.indexOf("tahun_terbit") > -1 ? bHeaderCols.indexOf("tahun_terbit") : bHeaderCols.indexOf("tahun");
+      var bIdxStok = bHeaderCols.indexOf("stok");
+      var bIdxRak = bHeaderCols.indexOf("rak");
+
+      var bHasHeader = (bIdxJudul > -1 || bIdxId > -1);
+      var bStartIdx = bHasHeader ? 1 : 0;
+
+      for (var j = bStartIdx; j < lines.length; j++) {
         var bCols = parseCsvLine(lines[j]);
         if (bCols.length >= 2) {
-          var id = bCols[0] || String(sheet.getLastRow() + 1000);
-          var judul = bCols[1] || bCols[0];
-          var penulis = bCols[2] || "-";
-          var tahun = bCols[3] || String(new Date().getFullYear());
-          var stok = Number(bCols[4]) || 1;
-          var rak = bCols[5] || "Ruang Baca TI";
-          sheet.appendRow([id, judul, penulis, tahun, stok, rak]);
+          var bJudul = bHasHeader && bIdxJudul > -1 ? bCols[bIdxJudul] : bCols[1];
+          if (!bJudul || bJudul.trim() === "") continue;
+
+          var bId = bHasHeader && bIdxId > -1 ? bCols[bIdxId] : (bCols[0] || String(sheet.getLastRow() + 1000));
+          var bPenulis = bHasHeader && bIdxPenulis > -1 ? bCols[bIdxPenulis] : (bCols[2] || "-");
+          var bTahun = bHasHeader && bIdxTahun > -1 ? bCols[bIdxTahun] : (bCols[3] || String(new Date().getFullYear()));
+          var bStok = bHasHeader && bIdxStok > -1 ? (Number(bCols[bIdxStok]) || 1) : (Number(bCols[4]) || 1);
+          var bRak = bHasHeader && bIdxRak > -1 ? bCols[bIdxRak] : (bCols[5] || "Ruang Baca TI");
+
+          sheet.appendRow([bId, bJudul, bPenulis, bTahun, bStok, bRak]);
           count++;
         }
       }

@@ -1,0 +1,159 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { supabase } from '@/lib/supabase';
+import { formatDateIndo } from '@/lib/utils';
+import QRCode from 'qrcode';
+
+const { code } = Astro.params;
+
+// Query Clearance details from Supabase
+const { data: clearance } = await supabase
+  .from('clearances')
+  .select(`
+    id,
+    nomor_surat,
+    kode_validasi,
+    issued_at,
+    petugas_nama,
+    students(npm, nama, angkatan, status)
+  `)
+  .eq('kode_validasi', code)
+  .single();
+
+let qrDataUrl = '';
+if (clearance) {
+  qrDataUrl = await QRCode.toDataURL(`https://integral-library.vercel.app/verify/${clearance.kode_validasi}`, {
+    margin: 1,
+    width: 140
+  });
+}
+---
+
+<Layout title={`Verifikasi Surat Bebas Ruang Baca • ${code}`}>
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    
+    <!-- Action bar (Hidden when printing) -->
+    <div class="mb-6 flex items-center justify-between no-print">
+      <a href="/" class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
+        ← Kembali ke Beranda
+      </a>
+      <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all shadow-md shadow-slate-900/10 flex items-center gap-2">
+        🖨️ Cetak / Unduh PDF Surat
+      </button>
+    </div>
+
+    {!clearance ? (
+      <div class="bg-white p-8 rounded-3xl border border-rose-200 text-center space-y-3">
+        <div class="text-4xl">❌</div>
+        <h2 class="text-xl font-bold text-slate-900">Kode Validasi Tidak Ditemukan</h2>
+        <p class="text-xs text-slate-500">
+          Surat Keterangan Bebas Ruang Baca dengan kode <strong>{code}</strong> tidak terdaftar dalam sistem basis data INTEGRAL UNIROW.
+        </p>
+      </div>
+    ) : (
+      <!-- Official Certificate Container -->
+      <div class="bg-white p-8 sm:p-12 rounded-3xl border border-slate-300/80 shadow-lg text-slate-900 print:shadow-none print:border-none print:p-0">
+        
+        <!-- Kop Surat Resmi -->
+        <div class="border-b-4 border-double border-slate-900 pb-4 mb-6">
+          <div class="flex items-center justify-between gap-4">
+            <img src="https://i.ibb.co/kskd8DBN/1.png" alt="UNIROW" class="h-16 w-auto object-contain" />
+            <div class="text-center flex-1">
+              <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide leading-tight">UNIVERSITAS PGRI RONGGOLAWE (UNIROW) TUBAN</h3>
+              <h4 class="text-xs sm:text-sm font-bold uppercase mt-0.5">PROGRAM STUDI TEKNIK INDUSTRI</h4>
+              <h5 class="text-xs font-semibold uppercase text-slate-700">RUANG BACA & PUSTAKA INTEGRAL</h5>
+              <p class="text-[9px] text-slate-500 italic mt-0.5">Jl. Manunggal No. 61 Tuban, Jawa Timur 62319 • Email: industri@unirow.ac.id</p>
+            </div>
+            <img src="https://i.ibb.co/xqkdqtmp/2-1.png" alt="INTEGRAL" class="h-14 w-auto object-contain" />
+          </div>
+        </div>
+
+        <!-- Title of Certificate -->
+        <div class="text-center mb-8">
+          <h2 class="text-base sm:text-lg font-black uppercase underline tracking-wide">SURAT KETERANGAN BEBAS RUANG BACA</h2>
+          <div class="text-xs text-slate-600 mt-1">Nomor: {clearance.nomor_surat}</div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="text-xs sm:text-sm space-y-4 leading-relaxed">
+          <p>
+            Koordinator Ruang Baca Program Studi Teknik Industri Universitas PGRI Ronggolawe (UNIROW) Tuban dengan ini menerangkan bahwa:
+          </p>
+
+          <table class="w-full text-xs sm:text-sm my-3 border-collapse">
+            <tbody>
+              <tr>
+                <td class="w-48 py-1 text-slate-500">Nama Mahasiswa</td>
+                <td class="w-4 py-1">:</td>
+                <td class="py-1 font-bold">{(clearance.students as any)?.nama}</td>
+              </tr>
+              <tr>
+                <td class="py-1 text-slate-500">Nomor Pokok Mahasiswa (NPM)</td>
+                <td class="py-1">:</td>
+                <td class="py-1 font-mono font-bold">{(clearance.students as any)?.npm}</td>
+              </tr>
+              <tr>
+                <td class="py-1 text-slate-500">Program Studi</td>
+                <td class="py-1">:</td>
+                <td class="py-1">Teknik Industri (S-1)</td>
+              </tr>
+              <tr>
+                <td class="py-1 text-slate-500">Angkatan / Status</td>
+                <td class="py-1">:</td>
+                <td class="py-1">{(clearance.students as any)?.angkatan} / {(clearance.students as any)?.status}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            Berdasarkan pemeriksaan basis data sistem terintegrasi (INTEGRAL), mahasiswa yang bersangkutan dinyatakan <strong>TELAH BEBAS DARI SEGALA TANGGUNGAN</strong>, meliputi:
+          </p>
+
+          <ol class="list-decimal ml-6 space-y-1 text-xs">
+            <li>Peminjaman buku literatur dan referensi teks kuliah.</li>
+            <li>Peminjaman naskah Laporan Kerja Praktik (KP).</li>
+            <li>Peminjaman naskah Tugas Akhir / Skripsi sarjana.</li>
+            <li>Tunggakan denda keterlambatan pengembalian buku (Rp 0 / Lunas).</li>
+          </ol>
+
+          <p class="pt-2">
+            Surat keterangan ini diterbitkan secara sah oleh sistem untuk dipergunakan sebagai persyaratan pendaftaran <strong>Yudisium, Bebas Pustaka Fakultas, dan Pengambilan Ijazah Wisuda</strong>.
+          </p>
+        </div>
+
+        <!-- Digital Verification & Signature -->
+        <div class="mt-10 pt-6 flex items-end justify-between text-xs">
+          <!-- QR Code Validator Box -->
+          <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50 text-center flex flex-col items-center">
+            {qrDataUrl && <img src={qrDataUrl} alt="QR Code" class="h-24 w-24 object-contain" />}
+            <div class="text-[9px] text-slate-500 font-semibold mt-1">VERIFIKASI INTEGRAL DIGITAL</div>
+            <div class="font-mono font-extrabold text-[10px] text-indigo-700 tracking-wider">{clearance.kode_validasi}</div>
+          </div>
+
+          <!-- Official Signatory -->
+          <div class="text-center w-56">
+            <div>Tuban, {formatDateIndo(clearance.issued_at)}</div>
+            <div class="font-semibold text-slate-700 mt-1">Petugas Ruang Baca TI,</div>
+            <div class="h-16"></div>
+            <div class="font-bold underline text-slate-900">{clearance.petugas_nama}</div>
+            <div class="text-[10px] text-slate-500">NIP/NIDN. 0715088901</div>
+          </div>
+        </div>
+
+      </div>
+    )}
+
+  </div>
+</Layout>
+
+<style>
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background: white !important;
+    }
+  }
+</style>
+
