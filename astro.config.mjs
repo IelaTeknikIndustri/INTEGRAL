@@ -8,10 +8,5 @@ export default defineConfig({
   adapter: vercel({
     webAnalytics: { enabled: true }
   }),
-  integrations: [
-    tailwind({
-      applyBaseStyles: false
-    })
-  ]
+  integrations: [tailwind()]
 });
-

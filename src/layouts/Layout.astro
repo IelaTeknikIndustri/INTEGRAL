@@ -1,4 +1,6 @@
 ---
+import '../styles/global.css';
+
 interface Props {
   title?: string;
   description?: string;
@@ -29,11 +31,11 @@ const {
   </head>
   <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
     <!-- Navigation Bar -->
-    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/85 border-b border-slate-200/80 shadow-xs">
+    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 border-b border-slate-200/80 shadow-xs">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <!-- Logo Brand -->
         <a href={admin ? "/admin" : "/"} class="flex items-center gap-3 group">
-          <img src="/logo-integral-7.png" alt="INTEGRAL Logo" class="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+          <img src="/logo-integral-7.png" alt="INTEGRAL Logo" class="h-10 max-h-10 w-auto object-contain transition-transform group-hover:scale-105" />
           <div class="flex flex-col">
             <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-600 bg-clip-text text-transparent">
               INTEGRAL {admin && <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold ml-1">Workspace</span>}
@@ -49,8 +51,8 @@ const {
           {!admin ? (
             <>
               <a href="/#katalog" class="hover:text-indigo-600 transition-colors">Katalog Koleksi</a>
-              <a href="/#bebas-pustaka" class="hover:text-indigo-600 transition-colors">Bebas Pustaka</a>
-              <a href="/#asisten-ai" class="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 px-3 py-1.5 rounded-full border border-indigo-100">
+              <a href="/#bebas-pustaka" onclick="openModalClearance()" class="hover:text-indigo-600 transition-colors">Bebas Pustaka</a>
+              <a href="#asisten-ai" onclick="openModalChat()" class="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 px-3 py-1.5 rounded-full border border-indigo-100">
                 <span class="relative flex h-2 w-2">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
@@ -98,13 +100,3 @@ const {
     </footer>
   </body>
 </html>
-
-<style is:global>
-  body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  }
-  .font-editorial {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
-</style>
-
