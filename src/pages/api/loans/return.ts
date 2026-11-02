@@ -3,20 +3,72 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { loan_item_id, aksi = 'kembali', keterangan = '' } = await request.json();
+    const body = await request.json();
+    const trxId = body.idTransaksi || body.activeTrxId || body.trxId || body.loan_id;
+    const loanItemId = body.loan_item_id;
 
-    if (!loan_item_id) {
-      return new Response(JSON.stringify({ success: false, message: 'ID item peminjaman wajib diisi' }), {
+    if (!trxId && !loanItemId) {
+      return new Response(JSON.stringify({ success: false, message: 'ID transaksi atau ID item wajib diisi' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 1. Ambil detail item peminjaman
+    const today = new Date().toISOString().split('T')[0];
+
+    // Jika mengembalikan seluruh transaksi (trxId)
+    if (trxId) {
+      // 1. Ambil items terkait transaksi jika ada di Supabase
+      const { data: items } = await supabaseAdmin
+        .from('loan_items')
+        .select('id, collection_id, status')
+        .eq('loan_id', trxId);
+
+      if (items && items.length > 0) {
+        for (const item of items) {
+          if (item.status === 'Dipinjam') {
+            await supabaseAdmin
+              .from('loan_items')
+              .update({ status: 'Dikembalikan', tgl_kembali: today })
+              .eq('id', item.id);
+
+            // Tambah stok koleksi
+            const { data: col } = await supabaseAdmin
+              .from('collections')
+              .select('stok')
+              .eq('id', item.collection_id)
+              .single();
+
+            if (col) {
+              await supabaseAdmin
+                .from('collections')
+                .update({ stok: (col.stok || 0) + 1 })
+                .eq('id', item.collection_id);
+            }
+          }
+        }
+      }
+
+      // Update status loan di Supabase
+      await supabaseAdmin
+        .from('loans')
+        .update({ status: 'Selesai', tgl_kembali: today })
+        .eq('id', trxId);
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Seluruh buku pada transaksi berhasil ditandai telah dikembalikan!'
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Jika mengembalikan item individual (loanItemId)
     const { data: item, error: itemErr } = await supabaseAdmin
       .from('loan_items')
       .select('id, loan_id, collection_id, status, collections(id, judul, stok)')
-      .eq('id', loan_item_id)
+      .eq('id', loanItemId)
       .single();
 
     if (itemErr || !item) {
@@ -26,61 +78,20 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    if (item.status !== 'Dipinjam') {
-      return new Response(JSON.stringify({ success: false, message: `Buku ini sudah berstatus ${item.status}` }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const now = new Date().toISOString();
-
-    if (aksi === 'rusak') {
-      // Tandai rusak dan catat ke damaged_books
-      await supabaseAdmin
-        .from('loan_items')
-        .update({ status: 'Rusak', tgl_kembali: now, keterangan: keterangan || 'Buku dilaporkan rusak/hilang' })
-        .eq('id', loan_item_id);
-
-      await supabaseAdmin.from('damaged_books').insert({
-        collection_id: item.collection_id,
-        judul: (item.collections as any)?.judul || 'Tidak diketahui',
-        keterangan: keterangan || 'Dilaporkan rusak saat peminjaman'
-      });
-    } else {
-      // Kembalikan normal: update item + tambah stok buku +1
-      await supabaseAdmin
-        .from('loan_items')
-        .update({ status: 'Dikembalikan', tgl_kembali: now })
-        .eq('id', loan_item_id);
-
-      const currentStock = (item.collections as any)?.stok || 0;
-      await supabaseAdmin
-        .from('collections')
-        .update({ stok: currentStock + 1 })
-        .eq('id', item.collection_id);
-    }
-
-    // 2. Periksa apakah semua item di transaksi ini sudah selesai
-    const { data: remainingItems } = await supabaseAdmin
+    await supabaseAdmin
       .from('loan_items')
-      .select('id')
-      .eq('loan_id', item.loan_id)
-      .eq('status', 'Dipinjam');
+      .update({ status: 'Dikembalikan', tgl_kembali: today })
+      .eq('id', loanItemId);
 
-    if (!remainingItems || remainingItems.length === 0) {
-      await supabaseAdmin
-        .from('loans')
-        .update({
-          status: 'Selesai',
-          tgl_kembali: new Date().toISOString().split('T')[0]
-        })
-        .eq('id', item.loan_id);
-    }
+    const currentStock = (item.collections as any)?.stok || 0;
+    await supabaseAdmin
+      .from('collections')
+      .update({ stok: currentStock + 1 })
+      .eq('id', item.collection_id);
 
     return new Response(JSON.stringify({
       success: true,
-      message: aksi === 'rusak' ? 'Buku berhasil dicatat rusak/hilang.' : 'Buku berhasil dikembalikan dan stok diperbarui!'
+      message: 'Buku berhasil dikembalikan!'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -92,4 +103,3 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 };
-

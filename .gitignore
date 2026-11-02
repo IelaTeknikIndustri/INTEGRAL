@@ -16,3 +16,4 @@ export_*.py
 .continue/
 .taste-skill/
 .agents/
+scratch/

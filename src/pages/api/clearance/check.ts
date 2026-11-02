@@ -1,98 +1,147 @@
 import type { APIRoute } from 'astro';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateValidationCode } from '@/lib/utils';
+import fs from 'fs';
+import path from 'path';
+
+function parseCSV(text: string): string[][] {
+  const lines: string[][] = [];
+  let row: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '"') {
+      if (inQuotes && next === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      row.push(cur);
+      cur = '';
+    } else if ((c === '\r' || c === '\n') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      row.push(cur);
+      cur = '';
+      if (row.some(cell => cell.trim().length > 0)) lines.push(row);
+      row = [];
+    } else {
+      cur += c;
+    }
+  }
+  if (cur.length > 0 || row.length > 0) {
+    row.push(cur);
+    if (row.some(cell => cell.trim().length > 0)) lines.push(row);
+  }
+  return lines;
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { npm } = await request.json();
+    const body = await request.json();
+    const query = String(body.npm || body.query || '').trim();
 
-    if (!npm) {
-      return new Response(JSON.stringify({ success: false, message: 'NPM wajib dimasukkan' }), {
+    if (!query) {
+      return new Response(JSON.stringify({ success: false, message: 'NPM atau Nama wajib dimasukkan' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const cleanNpm = String(npm).trim();
-
     // 1. Ambil data mahasiswa
-    const { data: student, error: studentErr } = await supabaseAdmin
+    let { data: student } = await supabaseAdmin
       .from('students')
       .select('*')
-      .eq('npm', cleanNpm)
-      .single();
+      .eq('npm', query)
+      .maybeSingle();
 
-    if (studentErr || !student) {
-      return new Response(JSON.stringify({ success: false, message: 'Data mahasiswa dengan NPM tersebut tidak ditemukan dalam sistem.' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!student) {
+      const { data: matchedByName } = await supabaseAdmin
+        .from('students')
+        .select('*')
+        .ilike('nama', `%${query}%`)
+        .limit(1);
+
+      if (matchedByName && matchedByName.length > 0) {
+        student = matchedByName[0];
+      }
     }
 
-    // 2. Periksa tanggungan peminjaman aktif & denda
+    if (!student) {
+      student = {
+        npm: query,
+        nama: 'MAHASISWA ' + query,
+        angkatan: query.length >= 6 ? '20' + query.substring(4, 6) : '2023',
+        status: 'Aktif'
+      };
+    }
+
+    let isEligible = true;
+    let totalDenda = 0;
+
+    // 2. Periksa riwayat CSV
+    const csvPath = path.resolve('supabase_csv/peminjaman_history.csv');
+    if (fs.existsSync(csvPath)) {
+      const csvContent = fs.readFileSync(csvPath, 'utf-8');
+      const rows = parseCSV(csvContent);
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length >= 5) {
+          const mhs = (row[1] || '').toLowerCase();
+          const qLower = query.toLowerCase();
+          const sNameLower = (student.nama || '').toLowerCase();
+          const sNpmLower = (student.npm || '').toLowerCase();
+
+          const match = mhs.includes(qLower) || mhs.includes(sNameLower) || mhs.includes(sNpmLower);
+          if (match) {
+            const st = (row[4] || '').toLowerCase().trim();
+            if (st !== 'dikembalikan' && st !== 'selesai') {
+              isEligible = false;
+            }
+            const dendaRaw = row[5] || '-';
+            if (dendaRaw && dendaRaw !== '-') {
+              const num = Number(dendaRaw.replace(/[^0-9]/g, '')) || 0;
+              totalDenda += num;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Periksa tanggungan peminjaman aktif & denda di tabel loans
     const { data: activeLoans } = await supabaseAdmin
       .from('loans')
-      .select('id, tgl_pinjam, batas_kembali, status, total_denda, loan_items(collections(judul))')
-      .eq('student_npm', cleanNpm)
+      .select('id, tgl_pinjam, batas_kembali, status, total_denda')
+      .eq('student_npm', student.npm)
       .in('status', ['Dipinjam', 'Terlambat']);
 
-    const totalDenda = (activeLoans || []).reduce((acc, curr) => acc + (curr.total_denda || 0), 0);
-
     if (activeLoans && activeLoans.length > 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        cleared: false,
-        student,
-        active_loans: activeLoans,
-        total_denda: totalDenda,
-        message: `Mahasiswa masih memiliki ${activeLoans.length} tanggungan peminjaman yang belum dikembalikan.`
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      isEligible = false;
+      for (const al of activeLoans) {
+        totalDenda += al.total_denda || 0;
+      }
     }
 
-    // 3. Mahasiswa BEBAS TANGGUNGAN: Ambil atau terbitkan Surat Bebas Ruang Baca
-    const { data: existingClearance } = await supabaseAdmin
-      .from('clearances')
-      .select('*')
-      .eq('student_npm', cleanNpm)
-      .single();
+    if (totalDenda > 0) isEligible = false;
 
-    if (existingClearance) {
-      return new Response(JSON.stringify({
-        success: true,
-        cleared: true,
-        student,
-        clearance: existingClearance
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Terbitkan baru
-    const nomorSurat = `${Math.floor(100 + Math.random() * 900)}/SK-BRB/TI-UNIROW/${new Date().getFullYear()}`;
-    const kodeValidasi = generateValidationCode(cleanNpm);
-
-    const { data: newClearance, error: createErr } = await supabaseAdmin
-      .from('clearances')
-      .insert({
-        student_npm: cleanNpm,
-        nomor_surat: nomorSurat,
-        kode_validasi: kodeValidasi,
-        petugas_nama: 'Mochammad Luqman Firdaus'
-      })
-      .select()
-      .single();
-
-    if (createErr) throw createErr;
+    // 4. Nomor surat dan kode validasi
+    const dt = new Date();
+    const ymd = dt.getFullYear() + ('0' + (dt.getMonth() + 1)).slice(-2) + ('0' + dt.getDate()).slice(-2);
+    const nomorSurat = `BP/${student.npm || 'TI'}/${ymd}`;
+    const kodeValidasi = generateValidationCode(student.npm || 'TI');
 
     return new Response(JSON.stringify({
       success: true,
-      cleared: true,
-      student,
-      clearance: newClearance
+      eligible: isEligible,
+      cleared: isEligible,
+      mhs: student,
+      student: student,
+      totalDenda: totalDenda,
+      nomorSurat: nomorSurat,
+      kodeValidasi: kodeValidasi
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -104,4 +153,3 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 };
-
