@@ -395,91 +395,97 @@ export const prerender = false;
 
     .sidebar-user-box {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
         gap: 8px;
+        width: 100%;
     }
 
     .sidebar-user-pill {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 6px 8px;
+        gap: 10px;
+        padding: 8px 10px;
         border-radius: var(--radius-sm);
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        flex: 1;
-        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .sidebar-user-pill .user-avatar {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        background: var(--brand-700, #4F46E5);
+        background: linear-gradient(135deg, #038d88, #4F46E5);
         color: #FFFFFF;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 13.5px;
         flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
     .sidebar-user-pill .user-info {
         display: flex;
         flex-direction: column;
-        line-height: 1.25;
+        line-height: 1.3;
         min-width: 0;
-        overflow: hidden;
+        flex: 1;
     }
 
     .sidebar-user-pill .user-name {
-        font-size: 11.5px;
+        font-size: 12.5px;
         font-weight: 700;
         color: #F8FAFC;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: block;
     }
 
     .sidebar-user-pill .user-role-tag {
-        font-size: 9.5px;
+        font-size: 10.5px;
         font-weight: 700;
-        padding: 1px 5px;
+        padding: 2px 8px;
         border-radius: 4px;
         width: fit-content;
-        margin-top: 2px;
+        margin-top: 3px;
         letter-spacing: 0.02em;
+        display: inline-block;
+        white-space: nowrap;
     }
 
     .sidebar-btn-logout {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
-        padding: 6px 10px;
-        height: 38px;
+        gap: 7px;
+        padding: 8px 12px;
+        height: 36px;
+        width: 100%;
         border-radius: var(--radius-sm);
         background: rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.22);
         color: #FCA5A5;
-        font-size: 11.5px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
-        flex-shrink: 0;
         transition: all 0.15s ease;
+        box-sizing: border-box;
     }
 
     .sidebar-btn-logout:hover {
-        background: rgba(239, 68, 68, 0.25);
+        background: rgba(239, 68, 68, 0.22);
         border-color: #EF4444;
         color: #FFFFFF;
+        transform: translateY(-1px);
     }
 
     .sidebar-copyright {
         font-size: 11px;
-        color: #A78BFA;
+        color: #038d88;
         text-align: center;
         line-height: 1.45;
     }
@@ -743,6 +749,9 @@ export const prerender = false;
 
     .btn-success { background: #10B981; color: white; }
     .btn-success:hover { background: #059669; }
+
+    .btn-warning { background: #F59E0B; color: white; border: 1px solid #D97706; }
+    .btn-warning:hover { background: #D97706; }
 
     .btn-info { background: #0284C7; color: white; }
     .btn-info:hover { background: #0369A1; }
@@ -1963,6 +1972,188 @@ export const prerender = false;
         box-shadow: var(--shadow-xs);
     }
 
+    /* === LAB ACCESS & CIRCULATION STYLES === */
+    .lab-grid-status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .lab-status-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-xs);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .lab-status-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-strong);
+    }
+
+    .lab-status-card.in-use {
+        border-color: rgba(245, 158, 11, 0.4);
+        background: linear-gradient(to bottom right, var(--surface), rgba(245, 158, 11, 0.03));
+    }
+
+    .lab-status-card.available {
+        border-color: rgba(16, 185, 129, 0.3);
+        background: linear-gradient(to bottom right, var(--surface), rgba(16, 185, 129, 0.02));
+    }
+
+    .lab-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .lab-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .lab-icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .lab-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .lab-type-desc {
+        font-size: 11.5px;
+        color: var(--text-muted);
+    }
+
+    .lab-badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .lab-badge-available {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10B981;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .lab-badge-inuse {
+        background: rgba(245, 158, 11, 0.12);
+        color: #F59E0B;
+        border: 1px solid rgba(245, 158, 11, 0.28);
+    }
+
+    .lab-current-info {
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border-subtle);
+        margin: 12px 0 14px 0;
+        font-size: 12px;
+    }
+
+    .lab-current-peminjam {
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 3px;
+    }
+
+    .lab-current-keperluan {
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    .lab-current-aslab {
+        font-size: 11px;
+        color: var(--accent);
+        font-weight: 600;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Checkout buttons & Lab capacity styling */
+    .btn-checkout-lab {
+        background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid #D97706 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3) !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        cursor: pointer;
+    }
+    .btn-checkout-lab:hover {
+        background: linear-gradient(135deg, #D97706 0%, #C2410C 100%) !important;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.45) !important;
+        transform: translateY(-1px);
+    }
+    .btn-checkout-lab:active {
+        transform: translateY(0);
+    }
+
+    .btn-table-checkout {
+        background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid #D97706 !important;
+        font-weight: 700 !important;
+        padding: 6px 13px !important;
+        border-radius: var(--radius-sm) !important;
+        font-size: 11.5px !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        box-shadow: 0 2px 5px rgba(234, 88, 12, 0.25) !important;
+        transition: all 0.15s ease !important;
+        line-height: 1 !important;
+    }
+    .btn-table-checkout:hover {
+        background: linear-gradient(135deg, #D97706 0%, #C2410C 100%) !important;
+        box-shadow: 0 3px 10px rgba(234, 88, 12, 0.4) !important;
+        transform: translateY(-1px);
+    }
+
+    .lab-badge-usercount {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: var(--surface-subtle);
+        border: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
 </style>
 </head>
 
@@ -2030,6 +2221,10 @@ export const prerender = false;
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
                         <span>Peminjaman</span>
                     </button>
+                    <button class="nav-item" id="btn-lab" onclick="window.navTo('lab')">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.35 19.5A2 2 0 0 0 6.09 22h11.82a2 2 0 0 0 1.74-2.5L14 9.31V2"></path><path d="M8.5 2h7"></path><path d="M7 16h10"></path></svg>
+                        <span>Akses Lab</span>
+                    </button>
                 </nav>
             </div>
             <div class="sidebar-bottom">
@@ -2043,7 +2238,7 @@ export const prerender = false;
                     </div>
                     <button onclick="window.handleLogout()" class="sidebar-btn-logout" title="Keluar Akun">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        <span>Keluar</span>
+                        <span>Logout Akun</span>
                     </button>
                 </div>
                 <div class="sidebar-copyright">
@@ -2448,6 +2643,112 @@ export const prerender = false;
                     </div>
                 </div>
 
+                <!-- LABORATORY ACCESS & LOG TAB -->
+                <div id="page-lab" style="display:none;">
+                    <div class="toolbar-box" style="margin-bottom:18px;">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:22px;">🏢</span>
+                                <h2 style="font-size:18px; font-weight:800; color:var(--text); margin:0;">Peminjaman Akses Laboratorium TI</h2>
+                            </div>
+                            <div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
+                                Log sirkulasi &amp; serah terima 3 laboratorium: Lab Komputer, Lab Ergonomi, dan Lab Manufaktur.
+                            </div>
+                        </div>
+                        <div class="search-actions-group">
+                            <button class="btn btn-outline" onclick="window.loadLabLogs(true)" title="Sinkronkan data lab">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <span>Refresh</span>
+                            </button>
+                            <button class="btn btn-outline" id="btn-rekap-lab" onclick="window.exportExcelLab()" title="Unduh rekapitulasi data peminjaman ke format Excel (.xls) rapi, bergaris &amp; berwarna (Hanya Admin)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <span>Rekap Excel (.xls)</span>
+                            </button>
+                            <button class="btn btn-outline" id="btn-rekap-csv" onclick="window.exportCsvLab()" title="Unduh ke format CSV kompatibel Excel Semicolon (Hanya Admin)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span>CSV</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="window.openModalCheckinLab()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Catat Check-In Lab</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3 LAB LIVE STATUS CARDS -->
+                    <div class="lab-grid-status" id="lab-live-cards">
+                        <!-- Dynamic via JS: Lab Komputer, Lab Ergonomi, Lab Manufaktur -->
+                    </div>
+
+                    <!-- SEGMENTED TABS: SESI AKTIF vs RIWAYAT -->
+                    <div class="segmented-tabs" style="margin-bottom:16px;">
+                        <button class="tab-btn active" id="tab-lab-aktif" onclick="window.switchTabLab('aktif')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>Sesi Aktif Digunakan</span>
+                            <span class="pill pill-aktif" id="badge-lab-aktif-count" style="margin-left:6px; font-size:10px; padding:1px 6px;">0</span>
+                        </button>
+                        <button class="tab-btn" id="tab-lab-riwayat" onclick="window.switchTabLab('riwayat')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span>Riwayat Penggunaan Lab</span>
+                            <span class="pill" id="badge-lab-riwayat-count" style="margin-left:6px; font-size:10px; padding:1px 6px; background:var(--surface-subtle); color:var(--text-muted); border:1px solid var(--border);">0</span>
+                        </button>
+                    </div>
+
+                    <!-- FILTER & SEARCH -->
+                    <div class="toolbar-box" style="margin-bottom:14px;">
+                        <div class="filter-group">
+                            <select id="sel-filter-lab" class="select-clean" onchange="window.filterLabPage()">
+                                <option value="SEMUA">Semua Laboratorium</option>
+                                <option value="Lab Komputer">💻 Lab Komputer</option>
+                                <option value="Lab Ergonomi">📐 Lab Ergonomi</option>
+                                <option value="Lab Manufaktur">⚙️ Lab Manufaktur</option>
+                            </select>
+                        </div>
+                        <div class="search-actions-group">
+                            <input type="text" id="inp-search-lab" class="search-inp" placeholder="Cari peminjam, keperluan, atau aslab..." oninput="window.filterLabPage()">
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: SESI AKTIF TABLE -->
+                    <div id="sub-lab-aktif" class="table-box">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th style="width:160px;">Laboratorium</th>
+                                    <th>Peminjam &amp; Identitas</th>
+                                    <th>Keperluan / Aktivitas</th>
+                                    <th style="width:140px; text-align:center;">Keterangan / Kapasitas</th>
+                                    <th style="width:170px;">Mulai Check-In</th>
+                                    <th style="width:160px;">Aslab Bertugas</th>
+                                    <th style="width:140px; text-align:center;">Aksi Check-Out</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-lab-aktif">
+                                <tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">Memuat sesi aktif...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- TAB 2: RIWAYAT TABLE -->
+                    <div id="sub-lab-riwayat" class="table-box" style="display:none;">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th style="width:140px;">ID Log</th>
+                                    <th style="width:160px;">Laboratorium</th>
+                                    <th>Peminjam &amp; Keperluan</th>
+                                    <th style="width:170px;">Waktu Check-In &amp; Aslab</th>
+                                    <th style="width:170px;">Waktu Check-Out &amp; Aslab</th>
+                                    <th style="width:180px;">Kondisi &amp; Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-lab-riwayat">
+                                <tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted);">Memuat riwayat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 </main>
         </div>
     </div>
@@ -2803,6 +3104,99 @@ export const prerender = false;
                     style="justify-content:center;">Batal</button>
                 <button class="btn btn-primary" onclick="window.closeConfirm(true)"
                     style="justify-content:center;">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHECK-IN LAB -->
+    <div class="modal-overlay" id="modalCheckinLab" style="display:none;">
+        <div class="modal-card" style="max-width:540px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">🔑</span>
+                    <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text);">Check-In Peminjaman Laboratorium</h3>
+                </div>
+                <button onclick="window.closeModalCheckinLab()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">
+                Pencatatan serah terima kunci dan fasilitas laboratorium Teknik Industri UNIROW.
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Pilih Laboratorium *</label>
+                <select id="inp-checkin-lab" class="inp" style="margin-bottom:0;">
+                    <option value="Lab Komputer">💻 Lab Komputer (CAD, Simulasi, Komputasi)</option>
+                    <option value="Lab Ergonomi">📐 Lab Ergonomi (Antropometri, Biomekanika, APK)</option>
+                    <option value="Lab Manufaktur">⚙️ Lab Manufaktur (Fabrikasi, Pemotongan, Studio Produksi)</option>
+                </select>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Nama Peminjam / PJ *</label>
+                    <input type="text" id="inp-checkin-peminjam" class="inp" placeholder="Nama peminjam / koordinator..." style="margin-bottom:0;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">NPM / Kelas / Instansi</label>
+                    <input type="text" id="inp-checkin-identitas" class="inp" placeholder="Contoh: 1411220015 / TI-5A" style="margin-bottom:0;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Keperluan / Digunakan Untuk Apa? *</label>
+                <textarea id="inp-checkin-keperluan" class="inp" rows="2" placeholder="Jelaskan tujuan pemakaian lab (praktikum, riset TA, kegiatan himpunan)..." style="margin-bottom:0; resize:vertical; font-family:inherit;"></textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Keterangan Pengguna / Kapasitas</label>
+                    <input type="text" id="inp-checkin-jumlah" class="inp" placeholder="Contoh: 1 Kelas (32 Mhs), Kelompok 4, 1 Orang..." style="margin-bottom:0;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Aslab Petugas Check-In *</label>
+                    <input type="text" id="inp-checkin-aslab" class="inp" placeholder="Nama aslab bertugas..." style="margin-bottom:0;">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-outline" onclick="window.closeModalCheckinLab()">Batal</button>
+                <button class="btn btn-primary" onclick="window.submitCheckinLab()">
+                    <span>Konfirmasi Check-In</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHECK-OUT LAB -->
+    <div class="modal-overlay" id="modalCheckoutLab" style="display:none;">
+        <div class="modal-card" style="max-width:480px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">🏁</span>
+                    <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text);">Check-Out &amp; Serah Terima Lab</h3>
+                </div>
+                <button onclick="window.closeModalCheckoutLab()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+
+            <div id="checkout-lab-summary" style="background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; margin-bottom:16px; font-size:12.5px;">
+                <!-- Filled via JS -->
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Aslab Petugas Check-Out *</label>
+                <input type="text" id="inp-checkout-aslab" class="inp" placeholder="Nama aslab yang menerima serah terima..." style="margin-bottom:0;">
+            </div>
+
+            <div style="margin-bottom:18px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:var(--text);">Kondisi Fasilitas &amp; Catatan Selesai</label>
+                <input type="text" id="inp-checkout-kondisi" class="inp" value="Alat &amp; ruangan rapi, PC/mesin dimatikan aman" placeholder="Catatan kondisi fasilitas lab..." style="margin-bottom:0;">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-outline" onclick="window.closeModalCheckoutLab()">Batal</button>
+                <button class="btn btn-checkout-lab" style="padding:9px 18px; font-size:13px;" onclick="window.submitCheckoutLab()">
+                    <span>🏁 Check-Out &amp; Selesai</span>
+                </button>
             </div>
         </div>
     </div>
@@ -3434,7 +3828,7 @@ export const prerender = false;
             '</div>'
         ].join('\n');
 
-        var state = { user: null, stats: {}, mahasiswa: [], bukuPinjam: [], riwayat: [], bukuRusak: [] };
+        var state = { user: null, stats: {}, mahasiswa: [], bukuPinjam: [], riwayat: [], bukuRusak: [], labLogs: [] };
         var curKatBuku = "Buku Literatur", pageBuku = 1;
         var filterRakBukuVal = "SEMUA", sortBukuVal = "ID_ASC";
         var selectedBookDetail = null;
@@ -3452,12 +3846,14 @@ export const prerender = false;
             var roleBadge = document.getElementById("user-role-badge");
             if (roleBadge && state.user) {
                 if (isSuperadmin) {
-                    roleBadge.style.background = "#EEF2FF";
-                    roleBadge.style.color = "#4338CA";
+                    roleBadge.style.background = "rgba(99, 102, 241, 0.25)";
+                    roleBadge.style.color = "#C7D2FE";
+                    roleBadge.style.border = "1px solid rgba(165, 180, 252, 0.35)";
                     roleBadge.innerText = "👑 Superadmin";
                 } else {
-                    roleBadge.style.background = "#E0F2FE";
-                    roleBadge.style.color = "#0369A1";
+                    roleBadge.style.background = "rgba(3, 141, 136, 0.25)";
+                    roleBadge.style.color = "#5EEAD4";
+                    roleBadge.style.border = "1px solid rgba(94, 234, 212, 0.35)";
                     roleBadge.innerText = "🎓 Aslab";
                 }
             }
@@ -3479,6 +3875,12 @@ export const prerender = false;
 
             var btnAuto = document.getElementById("btn-auto-trigger");
             if (btnAuto) btnAuto.style.display = isSuperadmin ? "flex" : "none";
+
+            var btnRekapLab = document.getElementById("btn-rekap-lab");
+            if (btnRekapLab) btnRekapLab.style.display = isSuperadmin ? "inline-flex" : "none";
+
+            var btnRekapCsv = document.getElementById("btn-rekap-csv");
+            if (btnRekapCsv) btnRekapCsv.style.display = isSuperadmin ? "inline-flex" : "none";
         };
 
         window.toggleSidebar = function (open) {
@@ -3588,8 +3990,9 @@ export const prerender = false;
         };
 
         window.handleLogout = function () {
+        alert("Sampai jumpa lagi, Terimakasih!");
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
-            state.user = null;
+            state.user = null
             document.getElementById("main-view").style.display = "none";
             document.getElementById("student-view").style.display = "none";
             document.getElementById("login-view").style.display = "flex";
@@ -3896,7 +4299,8 @@ export const prerender = false;
                     "buku": "/ Koleksi Buku & Naskah",
                     "peminjaman": "/ Layanan Sirkulasi & Peminjaman",
                     "mahasiswa": "/ Database Anggota & Mahasiswa",
-                    "rekap": "/ Rekapitulasi & Statistik"
+                    "rekap": "/ Rekapitulasi & Statistik",
+                    "lab": "/ Peminjaman Akses Laboratorium TI"
                 };
                 subTitle.style.opacity = "0.2";
                 setTimeout(function () {
@@ -3907,6 +4311,9 @@ export const prerender = false;
 
             if (page === "buku") {
                 window.kembaliKePilihanKategori();
+            }
+            if (page === "lab") {
+                window.loadLabLogs(false);
             }
         };
 
@@ -5340,6 +5747,534 @@ export const prerender = false;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        };
+
+        /* === SISTEM SIRKULASI & AKSES LABORATORIUM TI === */
+        var activeCheckoutId = null;
+        var curLabTab = "aktif";
+
+        var formatJumlah = function (val) {
+            if (!val) return "1 Orang";
+            var str = String(val).trim();
+            if (/^\d+$/.test(str)) return str + " Orang";
+            return str;
+        };
+
+        window.loadLabLogs = function (showToastFlag) {
+            if (showToastFlag) window.showLoading(true);
+            fetch('/api/lab/logs')
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (showToastFlag) window.showLoading(false);
+                    if (res.success && res.logs) {
+                        state.labLogs = res.logs;
+                        window.renderLabPage();
+                        if (showToastFlag) window.showToast("Data log laboratorium berhasil diperbarui!", "success");
+                    }
+                })
+                .catch(function (err) {
+                    if (showToastFlag) window.showLoading(false);
+                    console.error("Gagal load lab logs:", err);
+                });
+        };
+
+        window.renderLabPage = function () {
+            var logs = state.labLogs || [];
+            var labNames = [
+                { name: "Lab Komputer", icon: "💻", desc: "Praktikum CAD, Komputasi & Simulasi Sistem" },
+                { name: "Lab Ergonomi", icon: "📐", desc: "Antropometri, Biomekanika & APK" },
+                { name: "Lab Manufaktur", icon: "⚙️", desc: "Fabrikasi, Pemotongan & Studio Produksi" }
+            ];
+
+            // 1. Render 3 Live Status Cards
+            var cardsHtml = labNames.map(function (item) {
+                var activeLog = logs.find(function (l) { return l.lab === item.name && l.status === "AKTIF"; });
+                var isUsed = !!activeLog;
+
+                return '<div class="lab-status-card ' + (isUsed ? 'in-use' : 'available') + '">' +
+                    '<div>' +
+                        '<div class="lab-card-top">' +
+                            '<div class="lab-title-wrap">' +
+                                '<div class="lab-icon-box">' + item.icon + '</div>' +
+                                '<div>' +
+                                    '<div class="lab-name">' + item.name + '</div>' +
+                                    '<div class="lab-type-desc">' + item.desc + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<span class="lab-badge-status ' + (isUsed ? 'lab-badge-inuse' : 'lab-badge-available') + '">' +
+                                '<span class="pulse-dot" style="background:' + (isUsed ? '#F59E0B' : '#10B981') + ';"></span>' +
+                                (isUsed ? 'Sedang Digunakan' : 'Tersedia') +
+                            '</span>' +
+                        '</div>' +
+                        (isUsed ? (
+                            '<div class="lab-current-info">' +
+                                '<div class="lab-current-peminjam">👤 ' + activeLog.peminjam + (activeLog.identitas && activeLog.identitas !== '-' ? ' <span style="font-weight:normal; color:var(--text-muted);">(' + activeLog.identitas + ')</span>' : '') + '</div>' +
+                                '<div class="lab-current-keperluan">🎯 ' + activeLog.keperluan + '</div>' +
+                                '<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">⏱️ Mulai: ' + activeLog.checkin_time + ' &bull; 👥 ' + formatJumlah(activeLog.jumlah_orang) + '</div>' +
+                                '<div class="lab-current-aslab">🔑 Aslab PJ: ' + activeLog.aslab_checkin + '</div>' +
+                            '</div>'
+                        ) : (
+                            '<div class="lab-current-info" style="color:var(--text-muted); font-style:italic;">' +
+                                'Ruangan siap digunakan untuk praktikum, riset, atau kegiatan akademik.' +
+                            '</div>'
+                        )) +
+                    '</div>' +
+                    '<div style="margin-top:14px; display:flex; gap:8px;">' +
+                        (isUsed ? (
+                            '<button class="btn btn-checkout-lab" style="width:100%; justify-content:center; padding:9px 12px; font-size:12.5px;" onclick="window.openModalCheckoutLab(\'' + activeLog.id + '\')">' +
+                                '<span>🏁 Check-Out &amp; Selesai</span>' +
+                            '</button>'
+                        ) : (
+                            '<button class="btn btn-primary" style="width:100%; justify-content:center; padding:8px 12px; font-size:12px;" onclick="window.openModalCheckinLab(\'' + item.name + '\')">' +
+                                '<span>🔑 Check-In Pakai Lab</span>' +
+                            '</button>'
+                        )) +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            var cardsEl = document.getElementById("lab-live-cards");
+            if (cardsEl) cardsEl.innerHTML = cardsHtml;
+
+            // 2. Filter data
+            var selLab = document.getElementById("sel-filter-lab") ? document.getElementById("sel-filter-lab").value : "SEMUA";
+            var query = (document.getElementById("inp-search-lab") ? document.getElementById("inp-search-lab").value : "").toLowerCase().trim();
+
+            var aktifLogs = logs.filter(function (l) { return l.status === "AKTIF"; });
+            var riwayatLogs = logs.filter(function (l) { return l.status === "SELESAI"; });
+
+            // Update tab badges
+            var bAktif = document.getElementById("badge-lab-aktif-count");
+            var bRiwayat = document.getElementById("badge-lab-riwayat-count");
+            if (bAktif) bAktif.innerText = aktifLogs.length;
+            if (bRiwayat) bRiwayat.innerText = riwayatLogs.length;
+
+            var matchFilter = function (l) {
+                if (selLab !== "SEMUA" && l.lab !== selLab) return false;
+                if (!query) return true;
+                return (l.peminjam && l.peminjam.toLowerCase().indexOf(query) > -1) ||
+                       (l.keperluan && l.keperluan.toLowerCase().indexOf(query) > -1) ||
+                       (l.identitas && l.identitas.toLowerCase().indexOf(query) > -1) ||
+                       (l.aslab_checkin && l.aslab_checkin.toLowerCase().indexOf(query) > -1) ||
+                       (l.aslab_checkout && l.aslab_checkout.toLowerCase().indexOf(query) > -1);
+            };
+
+            var filteredAktif = aktifLogs.filter(matchFilter);
+            var filteredRiwayat = riwayatLogs.filter(matchFilter);
+
+            // 3. Render Tabel Sesi Aktif
+            var tbodyAktif = document.getElementById("tbody-lab-aktif");
+            if (tbodyAktif) {
+                if (filteredAktif.length === 0) {
+                    tbodyAktif.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:36px; color:var(--text-muted); font-size:13px;">' +
+                        '✨ Tidak ada lab yang sedang aktif digunakan saat ini. Semua ruangan berstatus tersedia.' +
+                        '</td></tr>';
+                } else {
+                    tbodyAktif.innerHTML = filteredAktif.map(function (item) {
+                        return '<tr>' +
+                            '<td>' +
+                                '<strong style="color:var(--text); font-size:13px;">' + item.lab + '</strong>' +
+                                '<div style="font-size:11px; color:var(--text-muted); font-weight:600;">' + item.id + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<strong style="color:var(--text);">' + item.peminjam + '</strong>' +
+                                '<div style="font-size:11.5px; color:var(--text-muted);">' + (item.identitas || '-') + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<div style="font-size:12.5px; line-height:1.4;">' + item.keperluan + '</div>' +
+                            '</td>' +
+                            '<td style="text-align:center;">' +
+                                '<span class="lab-badge-usercount">👥 ' + formatJumlah(item.jumlah_orang) + '</span>' +
+                            '</td>' +
+                            '<td>' +
+                                '<div style="font-size:12px; font-weight:600; color:var(--text);">' + item.checkin_time + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<span class="user-role-tag" style="background:var(--accent-subtle); color:var(--accent); font-size:10px; padding:2px 6px; border-radius:4px;">🔑 ' + item.aslab_checkin + '</span>' +
+                            '</td>' +
+                            '<td style="text-align:center;">' +
+                                '<button class="btn-table-checkout" onclick="window.openModalCheckoutLab(\'' + item.id + '\')">' +
+                                    '<span>🏁 Check-Out</span>' +
+                                '</button>' +
+                            '</td>' +
+                        '</tr>';
+                    }).join('');
+                }
+            }
+
+            // 4. Render Tabel Riwayat
+            var tbodyRiwayat = document.getElementById("tbody-lab-riwayat");
+            if (tbodyRiwayat) {
+                if (filteredRiwayat.length === 0) {
+                    tbodyRiwayat.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:36px; color:var(--text-muted); font-size:13px;">' +
+                        'Belum ada riwayat peminjaman laboratorium yang cocok dengan filter.' +
+                        '</td></tr>';
+                } else {
+                    tbodyRiwayat.innerHTML = filteredRiwayat.map(function (item) {
+                        return '<tr>' +
+                            '<td><code style="font-size:11px; color:var(--text-muted); font-weight:700;">' + item.id + '</code></td>' +
+                            '<td><strong>' + item.lab + '</strong></td>' +
+                            '<td>' +
+                                '<div style="font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                                    item.peminjam +
+                                    (item.jumlah_orang ? ' <span class="lab-badge-usercount" style="font-size:10px; padding:1px 6px;">👥 ' + formatJumlah(item.jumlah_orang) + '</span>' : '') +
+                                '</div>' +
+                                (item.identitas && item.identitas !== '-' ? '<div style="font-size:11px; color:var(--text-muted);">' + item.identitas + '</div>' : '') +
+                                '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">🎯 ' + item.keperluan + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<div style="font-size:11.5px; font-weight:600;">' + item.checkin_time + '</div>' +
+                                '<div style="font-size:11px; color:var(--accent);">Aslab: ' + (item.aslab_checkin || '-') + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<div style="font-size:11.5px; font-weight:600; color:#10B981;">' + (item.checkout_time || '-') + '</div>' +
+                                '<div style="font-size:11px; color:var(--accent);">Aslab: ' + (item.aslab_checkout || '-') + '</div>' +
+                            '</td>' +
+                            '<td>' +
+                                '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">' + (item.kondisi_selesai || 'Kondisi rapi & baik') + '</div>' +
+                            '</td>' +
+                        '</tr>';
+                    }).join('');
+                }
+            }
+        };
+
+        window.openModalCheckinLab = function (preselectedLab) {
+            var sel = document.getElementById("inp-checkin-lab");
+            if (sel && preselectedLab) sel.value = preselectedLab;
+
+            document.getElementById("inp-checkin-peminjam").value = "";
+            document.getElementById("inp-checkin-identitas").value = "";
+            document.getElementById("inp-checkin-keperluan").value = "";
+            document.getElementById("inp-checkin-jumlah").value = "";
+
+            var currentUser = (state.user && state.user.nama) || "Petugas Aslab";
+            document.getElementById("inp-checkin-aslab").value = currentUser;
+
+            document.getElementById("modalCheckinLab").style.display = "flex";
+        };
+
+        window.closeModalCheckinLab = function () {
+            document.getElementById("modalCheckinLab").style.display = "none";
+        };
+
+        window.submitCheckinLab = function () {
+            var lab = document.getElementById("inp-checkin-lab").value;
+            var peminjam = (document.getElementById("inp-checkin-peminjam").value || "").trim();
+            var identitas = (document.getElementById("inp-checkin-identitas").value || "").trim();
+            var keperluan = (document.getElementById("inp-checkin-keperluan").value || "").trim();
+            var jumlah = (document.getElementById("inp-checkin-jumlah").value || "").trim() || "1 Orang";
+            var aslab = (document.getElementById("inp-checkin-aslab").value || "").trim();
+
+            if (!peminjam) { window.showToast("Nama peminjam wajib diisi!", "error"); return; }
+            if (!keperluan) { window.showToast("Keperluan penggunaan lab wajib diisi!", "error"); return; }
+            if (!aslab) { window.showToast("Nama Aslab penanggung jawab check-in wajib diisi!", "error"); return; }
+
+            window.showLoading(true);
+            fetch('/api/lab/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'checkin',
+                    lab: lab,
+                    peminjam: peminjam,
+                    identitas: identitas,
+                    keperluan: keperluan,
+                    jumlah_orang: jumlah,
+                    aslab_checkin: aslab
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                window.showLoading(false);
+                if (res.success) {
+                    window.closeModalCheckinLab();
+                    window.showToast(res.message, "success");
+                    window.loadLabLogs(false);
+                } else {
+                    window.showToast("Gagal: " + (res.message || "Terjadi kesalahan"), "error");
+                }
+            })
+            .catch(function (err) {
+                window.showLoading(false);
+                window.showToast("Kesalahan koneksi ke server", "error");
+            });
+        };
+
+        window.openModalCheckoutLab = function (id) {
+            var log = (state.labLogs || []).find(function (l) { return l.id === id; });
+            if (!log) return;
+
+            activeCheckoutId = id;
+            var sumEl = document.getElementById("checkout-lab-summary");
+            if (sumEl) {
+                sumEl.innerHTML = '<strong>' + log.lab + '</strong> &bull; ' + log.peminjam +
+                    '<div style="color:var(--text-muted); margin-top:3px;">Keperluan: ' + log.keperluan + '</div>' +
+                    '<div style="color:var(--text-muted); margin-top:2px;">Check-In: ' + log.checkin_time + ' (Aslab: ' + log.aslab_checkin + ')</div>';
+            }
+
+            var currentUser = (state.user && state.user.nama) || "Petugas Aslab";
+            document.getElementById("inp-checkout-aslab").value = currentUser;
+            document.getElementById("inp-checkout-kondisi").value = "Alat & ruangan rapi, PC/mesin dimatikan aman";
+
+            document.getElementById("modalCheckoutLab").style.display = "flex";
+        };
+
+        window.closeModalCheckoutLab = function () {
+            document.getElementById("modalCheckoutLab").style.display = "none";
+            activeCheckoutId = null;
+        };
+
+        window.submitCheckoutLab = function () {
+            if (!activeCheckoutId) return;
+
+            var aslab = (document.getElementById("inp-checkout-aslab").value || "").trim();
+            var kondisi = (document.getElementById("inp-checkout-kondisi").value || "").trim();
+
+            if (!aslab) { window.showToast("Nama Aslab check-out wajib diisi!", "error"); return; }
+
+            window.showLoading(true);
+            fetch('/api/lab/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'checkout',
+                    id: activeCheckoutId,
+                    aslab_checkout: aslab,
+                    kondisi_selesai: kondisi
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                window.showLoading(false);
+                if (res.success) {
+                    window.closeModalCheckoutLab();
+                    window.showToast(res.message, "success");
+                    window.loadLabLogs(false);
+                } else {
+                    window.showToast("Gagal: " + (res.message || "Terjadi kesalahan"), "error");
+                }
+            })
+            .catch(function (err) {
+                window.showLoading(false);
+                window.showToast("Kesalahan koneksi ke server", "error");
+            });
+        };
+
+        window.switchTabLab = function (tab) {
+            curLabTab = tab;
+            var elAktif = document.getElementById("sub-lab-aktif");
+            var elRiwayat = document.getElementById("sub-lab-riwayat");
+            var btnAktif = document.getElementById("tab-lab-aktif");
+            var btnRiwayat = document.getElementById("tab-lab-riwayat");
+
+            if (tab === "aktif") {
+                elAktif.style.display = "block";
+                elRiwayat.style.display = "none";
+                btnAktif.classList.add("active");
+                btnRiwayat.classList.remove("active");
+            } else {
+                elAktif.style.display = "none";
+                elRiwayat.style.display = "block";
+                btnAktif.classList.remove("active");
+                btnRiwayat.classList.add("active");
+            }
+        };
+
+        window.filterLabPage = function () {
+            window.renderLabPage();
+        };
+
+        window.exportExcelLab = function () {
+            var isSuperadmin = state.user && state.user.peran === "Superadmin";
+            if (!isSuperadmin) {
+                window.showToast("Akses Ditolak: Fitur rekap data hanya dapat diakses oleh Administrator!", "error");
+                return;
+            }
+
+            var logs = state.labLogs || [];
+            if (logs.length === 0) {
+                window.showToast("Belum ada data peminjaman lab untuk direkap.", "info");
+                return;
+            }
+
+            var now = new Date();
+            var dateStr = now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+            var timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+            var adminName = (state.user && state.user.nama) || "Administrator";
+
+            var rowsHtml = logs.map(function (l, idx) {
+                var isAktif = l.status === "AKTIF";
+                var userDesc = formatJumlah(l.jumlah_orang);
+                var checkOutTime = isAktif ? "Masih Digunakan" : (l.checkout_time || "-");
+                var aslabOut = isAktif ? "Belum Selesai" : (l.aslab_checkout || "-");
+                var statusBg = isAktif ? "#FEF3C7" : "#D1FAE5";
+                var statusColor = isAktif ? "#B45309" : "#065F46";
+                var statusText = isAktif ? "SEDANG BERLANGSUNG" : "SELESAI";
+                var kondisiText = isAktif ? "Sesi Masih Berlangsung" : (l.kondisi_selesai || "Kondisi rapi & baik");
+                var rowBg = idx % 2 === 1 ? "#F8FAFC" : "#FFFFFF";
+
+                return '<tr style="background-color:' + rowBg + ';">' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:8px 6px;">' + (idx + 1) + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:8px; font-family:Consolas, monospace;">' + l.id + '</td>' +
+                    '<td style="font-weight:bold; border:1px solid #CBD5E1; padding:8px 10px;">' + l.lab + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:8px 10px; font-weight:600;">' + l.peminjam + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:8px; mso-number-format:\'\\@\';">' + (l.identitas && l.identitas !== "-" ? l.identitas : "-") + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:8px 10px;">' + l.keperluan + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:8px 10px; font-weight:600;">' + userDesc + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:8px;">' + l.checkin_time + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:8px 10px;">' + l.aslab_checkin + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:8px;">' + checkOutTime + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:8px 10px;">' + aslabOut + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; background-color:' + statusBg + '; color:' + statusColor + '; border:1px solid #CBD5E1; padding:8px;">' + statusText + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:8px 10px; font-style:italic;">' + kondisiText + '</td>' +
+                '</tr>';
+            }).join('');
+
+            var tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+                '<head>' +
+                    '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />' +
+                    '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
+                    '<x:Name>Rekap Lab TI UNIROW</x:Name>' +
+                    '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>' +
+                    '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
+                    '<style>' +
+                        'body { font-family: Calibri, \'Segoe UI\', Arial, sans-serif; font-size: 11pt; color: #1E293B; }' +
+                        'table { border-collapse: collapse; width: 100%; }' +
+                        'th { background-color: #038d88; color: #FFFFFF; font-weight: bold; border: 1px solid #026662; padding: 11px 8px; text-align: center; }' +
+                        'td { font-size: 10.5pt; vertical-align: middle; }' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<table style="margin-bottom:12px; border:none;">' +
+                        '<tr><td colspan="13" style="font-size:15pt; font-weight:bold; color:#038d88; border:none; padding:4px 0;">REKAPITULASI PEMINJAMAN &amp; AKSES LABORATORIUM TEKNIK INDUSTRI</td></tr>' +
+                        '<tr><td colspan="13" style="font-size:11.5pt; font-weight:bold; color:#475569; border:none; padding:2px 0;">UNIVERSITAS PGRI RONGGOLAWE TUBAN (UNIROW)</td></tr>' +
+                        '<tr><td colspan="13" style="font-size:9.5pt; color:#64748B; border:none; padding:2px 0;">Waktu Ekspor: ' + dateStr + ', ' + timeStr + ' &bull; Oleh: ' + adminName + ' &bull; Total: ' + logs.length + ' Sesi Log</td></tr>' +
+                        '<tr><td colspan="13" style="border:none; height:10px;"></td></tr>' +
+                    '</table>' +
+                    '<table>' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th style="width:45px;">No</th>' +
+                                '<th style="width:145px;">ID Sesi Log</th>' +
+                                '<th style="width:140px;">Laboratorium</th>' +
+                                '<th style="width:190px;">Nama Peminjam / Koordinator</th>' +
+                                '<th style="width:150px;">NPM / Identitas / Kelas</th>' +
+                                '<th style="width:230px;">Keperluan / Aktivitas</th>' +
+                                '<th style="width:150px;">Kapasitas / Pengguna</th>' +
+                                '<th style="width:160px;">Waktu Check-In</th>' +
+                                '<th style="width:160px;">Petugas Aslab Check-In</th>' +
+                                '<th style="width:160px;">Waktu Check-Out</th>' +
+                                '<th style="width:160px;">Petugas Aslab Check-Out</th>' +
+                                '<th style="width:140px;">Status Sesi</th>' +
+                                '<th style="width:220px;">Kondisi Fasilitas &amp; Catatan</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            rowsHtml +
+                        '</tbody>' +
+                    '</table>' +
+                '</body>' +
+                '</html>';
+
+            var blob = new Blob(["\uFEFF", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            var nowFile = new Date();
+            var datePart = nowFile.getFullYear() +
+                String(nowFile.getMonth() + 1).padStart(2, '0') +
+                String(nowFile.getDate()).padStart(2, '0');
+            var timePart = String(nowFile.getHours()).padStart(2, '0') +
+                String(nowFile.getMinutes()).padStart(2, '0');
+            link.href = url;
+            link.download = "Rekap_Peminjaman_Lab_TI_UNIROW_" + datePart + "_" + timePart + ".xls";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            window.showToast("Rekapitulasi Excel (" + logs.length + " data) berhasil diunduh!", "success");
+        };
+
+        window.exportCsvLab = function () {
+            var isSuperadmin = state.user && state.user.peran === "Superadmin";
+            if (!isSuperadmin) {
+                window.showToast("Akses Ditolak: Fitur rekap data hanya dapat diakses oleh Administrator!", "error");
+                return;
+            }
+
+            var logs = state.labLogs || [];
+            if (logs.length === 0) {
+                window.showToast("Belum ada data peminjaman lab untuk direkap.", "info");
+                return;
+            }
+
+            var escCsv = function (val) {
+                if (val === null || val === undefined) return '""';
+                var str = String(val).replace(/[\r\n]+/g, ' ').trim();
+                return '"' + str.replace(/"/g, '""') + '"';
+            };
+
+            var headers = [
+                "No",
+                "ID Sesi Log",
+                "Laboratorium",
+                "Nama Peminjam / Koordinator",
+                "NPM / Identitas / Kelas",
+                "Keperluan / Kegiatan",
+                "Kapasitas / Keterangan Pengguna",
+                "Waktu Check-In",
+                "Petugas Aslab Check-In",
+                "Waktu Check-Out",
+                "Petugas Aslab Check-Out",
+                "Status Sesi",
+                "Kondisi Fasilitas & Catatan Selesai"
+            ];
+
+            var rows = logs.map(function (l, idx) {
+                var isAktif = l.status === "AKTIF";
+                var userDesc = formatJumlah(l.jumlah_orang);
+                var checkOutTime = isAktif ? "Masih Digunakan" : (l.checkout_time || "-");
+                var aslabOut = isAktif ? "Belum Selesai" : (l.aslab_checkout || "-");
+                var statusText = isAktif ? "SEDANG BERLANGSUNG" : "SELESAI";
+                var kondisiText = isAktif ? "Sesi Masih Berlangsung" : (l.kondisi_selesai || "Kondisi rapi & baik");
+
+                return [
+                    idx + 1,
+                    escCsv(l.id),
+                    escCsv(l.lab),
+                    escCsv(l.peminjam),
+                    escCsv(l.identitas && l.identitas !== "-" ? l.identitas : "-"),
+                    escCsv(l.keperluan),
+                    escCsv(userDesc),
+                    escCsv(l.checkin_time),
+                    escCsv(l.aslab_checkin),
+                    escCsv(checkOutTime),
+                    escCsv(aslabOut),
+                    escCsv(statusText),
+                    escCsv(kondisiText)
+                ].join(';');
+            });
+
+            // Gunakan sep=;\r\n dan pemisah titik-koma (;) agar Microsoft Excel Indonesia otomatis membagi kolom A, B, C, D...
+            var csvContent = "sep=;\r\n" + headers.map(escCsv).join(';') + "\r\n" + rows.join('\r\n');
+            var blob = new Blob(["\uFEFF", csvContent], { type: "text/csv;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            var now = new Date();
+            var datePart = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0');
+            var timePart = String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0');
+            link.href = url;
+            link.download = "Rekap_Peminjaman_Lab_TI_UNIROW_" + datePart + "_" + timePart + ".csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            window.showToast("Rekapitulasi CSV (" + logs.length + " data) berhasil diunduh!", "success");
         };
 
         // UI feedback helpers showLoading & showToast initialized at top of script
