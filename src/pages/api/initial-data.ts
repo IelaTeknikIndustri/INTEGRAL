@@ -76,10 +76,51 @@ export const GET: APIRoute = async () => {
       studentMap.set(cleanNpm + '.0', s.nama.toUpperCase());
     }
 
-    // 3. Ambil riwayat peminjaman dari peminjaman_history.csv
-    const csvPath = path.resolve('supabase_csv/peminjaman_history.csv');
-    let riwayat: any[] = [];
+    // 3. Ambil riwayat peminjaman dari tabel loans Supabase (sumber utama)
+    const { data: dbLoans = [] } = await supabaseAdmin
+      .from('loans')
+      .select(`
+        id, student_npm, tgl_pinjam, batas_kembali, status, total_denda, hari_terlambat, tgl_kembali, created_at,
+        students(nama),
+        loan_items(collections(judul, rak))
+      `)
+      .order('tgl_pinjam', { ascending: false });
 
+    let riwayat: any[] = [];
+    const seenMap = new Set<string>();
+
+    if (dbLoans && dbLoans.length > 0) {
+      for (let i = 0; i < dbLoans.length; i++) {
+        const nl = dbLoans[i];
+        const mhsNama = (nl.students as any)?.nama || studentMap.get(nl.student_npm) || nl.student_npm;
+        const details = (nl.loan_items as any[])?.map(li => `${li.collections?.judul || 'Buku'} | RAK: ${li.collections?.rak || '-'}`).join(' || ') || '';
+        const rawSt = (nl.status || 'aktif').toLowerCase();
+        const st = (rawSt === 'selesai' || rawSt === 'kembali') ? 'dikembalikan' : rawSt;
+
+        const signature = `${nl.student_npm}_${nl.tgl_pinjam}`;
+        seenMap.add(signature);
+        seenMap.add(`${mhsNama.toUpperCase()}_${nl.tgl_pinjam}`);
+
+        riwayat.push({
+          noUrut: i + 1,
+          id: nl.id,
+          idTransaksi: nl.id,
+          sheetRow: i + 2,
+          mahasiswa: mhsNama,
+          tglPinjam: formatTglIndo(nl.tgl_pinjam),
+          batasKembali: formatTglIndo(nl.batas_kembali),
+          status: st,
+          denda: nl.total_denda > 0 ? `Rp ${Number(nl.total_denda).toLocaleString('id-ID')}` : '-',
+          hariTerlambat: String(nl.hari_terlambat || 0),
+          lastReminder: '-',
+          detailBuku: details,
+          tglKembali: formatTglIndo(nl.tgl_kembali || '-')
+        });
+      }
+    }
+
+    // Fallback: Jika ada data di CSV yang belum ada di Supabase, tambahkan tanpa duplikasi
+    const csvPath = path.resolve('supabase_csv/peminjaman_history.csv');
     if (fs.existsSync(csvPath)) {
       const csvContent = fs.readFileSync(csvPath, 'utf-8');
       const rows = parseCSV(csvContent);
@@ -90,7 +131,6 @@ export const GET: APIRoute = async () => {
           const rawId = row[0]?.trim() || `TRX-${i}`;
           let mhs = row[1]?.trim() || '-';
           
-          // Resolve NPM to Student Name if it was stored as NPM
           if (studentMap.has(mhs)) {
             mhs = studentMap.get(mhs)!;
           } else {
@@ -101,6 +141,11 @@ export const GET: APIRoute = async () => {
           }
 
           const tglPinjamRaw = row[2]?.trim() || '-';
+          const tglClean = tglPinjamRaw.split(' ')[0];
+          const signature = `${mhs.toUpperCase()}_${tglClean}`;
+
+          if (seenMap.has(signature)) continue;
+
           const batasKembaliRaw = row[3]?.trim() || '-';
           const rawStatus = (row[4]?.trim() || 'dikembalikan').toLowerCase();
           const denda = row[5]?.trim() || '-';
@@ -112,10 +157,10 @@ export const GET: APIRoute = async () => {
           const status = (rawStatus === 'selesai' || rawStatus === 'kembali') ? 'dikembalikan' : rawStatus;
 
           riwayat.push({
-            noUrut: i,
+            noUrut: riwayat.length + 1,
             id: rawId,
             idTransaksi: rawId,
-            sheetRow: i + 1,
+            sheetRow: riwayat.length + 2,
             mahasiswa: mhs,
             tglPinjam: formatTglIndo(tglPinjamRaw),
             batasKembali: formatTglIndo(batasKembaliRaw),
@@ -127,41 +172,6 @@ export const GET: APIRoute = async () => {
             tglKembali: formatTglIndo(tglKembali)
           });
         }
-      }
-    }
-
-    // Ambil juga transaksi baru dari tabel loans Supabase jika ada
-    const { data: newLoans = [] } = await supabaseAdmin
-      .from('loans')
-      .select(`
-        id, student_npm, tgl_pinjam, batas_kembali, status, total_denda, hari_terlambat, tgl_kembali,
-        students(nama),
-        loan_items(collections(judul, rak))
-      `);
-
-    if (newLoans && newLoans.length > 0) {
-      for (let i = 0; i < newLoans.length; i++) {
-        const nl = newLoans[i];
-        const mhsNama = (nl.students as any)?.nama || studentMap.get(nl.student_npm) || nl.student_npm;
-        const details = (nl.loan_items as any[])?.map(li => `${li.collections?.judul || 'Buku'} | RAK: ${li.collections?.rak || '-'}`).join(' || ') || '';
-        const rawSt = (nl.status || 'aktif').toLowerCase();
-        const st = (rawSt === 'selesai' || rawSt === 'kembali') ? 'dikembalikan' : rawSt;
-
-        riwayat.unshift({
-          noUrut: riwayat.length + 1,
-          id: nl.id,
-          idTransaksi: nl.id,
-          sheetRow: riwayat.length + 2,
-          mahasiswa: mhsNama,
-          tglPinjam: formatTglIndo(nl.tgl_pinjam),
-          batasKembali: formatTglIndo(nl.batas_kembali),
-          status: st,
-          denda: nl.total_denda > 0 ? `Rp ${nl.total_denda.toLocaleString('id-ID')}` : '-',
-          hariTerlambat: String(nl.hari_terlambat || 0),
-          lastReminder: '-',
-          detailBuku: details,
-          tglKembali: formatTglIndo(nl.tgl_kembali || '-')
-        });
       }
     }
 
