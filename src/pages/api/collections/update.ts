@@ -3,7 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { id, judul, penulis, tahun, rak, kategori } = await request.json();
+    const body = await request.json();
+    const { id, judul, penulis, tahun, tahun_terbit, rak, kategori, stok } = body;
 
     if (!id || !judul) {
       return new Response(JSON.stringify({ success: false, message: 'ID dan Judul wajib diisi' }), {
@@ -18,8 +19,12 @@ export const POST: APIRoute = async ({ request }) => {
       rak: String(rak || 'Ruang Baca TI').trim()
     };
 
-    if (tahun) updatePayload.tahun_terbit = String(tahun).trim();
+    const th = tahun_terbit ?? tahun;
+    if (th !== undefined && th !== null) updatePayload.tahun_terbit = String(th).trim();
     if (kategori) updatePayload.kategori = String(kategori).trim();
+    if (stok !== undefined && stok !== null && !isNaN(Number(stok))) {
+      updatePayload.stok = Math.max(0, parseInt(String(stok), 10));
+    }
 
     const { error } = await supabaseAdmin
       .from('collections')
@@ -28,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true, message: 'Data buku berhasil diperbarui!' }), {
+    return new Response(JSON.stringify({ success: true, message: 'Data koleksi buku berhasil diperbarui!' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -39,4 +44,3 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 };
-

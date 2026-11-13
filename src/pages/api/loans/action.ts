@@ -12,33 +12,113 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Cek apakah ada di tabel loans Supabase
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. Cek apakah ada di tabel loans Supabase
     const { data: loan } = await supabaseAdmin
       .from('loans')
-      .select('id, status, batas_kembali')
+      .select('id, student_npm, status, batas_kembali')
       .eq('id', idTransaksi)
-      .single();
+      .maybeSingle();
 
-    if (loan) {
-      if (aksi === 'kembali') {
+    // 2. Ambil daftar loan_items untuk transaksi ini
+    const { data: items = [] } = await supabaseAdmin
+      .from('loan_items')
+      .select('id, collection_id, status, tgl_kembali, collections(id, judul, stok)')
+      .eq('loan_id', idTransaksi)
+      .order('id', { ascending: true });
+
+    const idx = typeof idxBuku === 'number' ? idxBuku : parseInt(String(idxBuku || '0'), 10);
+    const targetItem = (items && items[idx]) ? items[idx] : (items && items.find(it => it.status === 'Dipinjam'));
+
+    let message = 'Status buku berhasil diperbarui!';
+
+    if (aksi === 'kembali') {
+      if (targetItem && targetItem.status !== 'Dikembalikan') {
+        await supabaseAdmin
+          .from('loan_items')
+          .update({ status: 'Dikembalikan', tgl_kembali: today })
+          .eq('id', targetItem.id);
+
+        // Kembalikan stok koleksi +1
+        if (targetItem.collection_id) {
+          const curStok = Number((targetItem.collections as any)?.stok ?? 0);
+          await supabaseAdmin
+            .from('collections')
+            .update({ stok: curStok + 1 })
+            .eq('id', targetItem.collection_id);
+        }
+      }
+
+      // Cek apakah semua buku dalam transaksi ini sudah dikembalikan/selesai
+      const remainingActive = (items || []).filter((it, i) => {
+        if (targetItem && it.id === targetItem.id) return false;
+        if (i === idx) return false;
+        const st = String(it.status || '').toLowerCase();
+        return st !== 'dikembalikan' && st !== 'rusak' && st !== 'selesai';
+      });
+
+      if (loan && remainingActive.length === 0) {
         await supabaseAdmin
           .from('loans')
-          .update({ status: 'Selesai', tgl_kembali: new Date().toISOString().split('T')[0] })
+          .update({ status: 'Selesai', tgl_kembali: today })
           .eq('id', idTransaksi);
-      } else if (aksi === 'perpanjang') {
-        const curDate = new Date(loan.batas_kembali || new Date());
-        curDate.setDate(curDate.getDate() + 7);
+        message = 'Buku berhasil dikembalikan dan seluruh transaksi dinyatakan selesai!';
+      } else {
+        const judulBuku = (targetItem?.collections as any)?.judul || 'Buku';
+        message = `"${judulBuku}" berhasil dikembalikan ke rak! (${remainingActive.length} buku lain masih dipinjam)`;
+      }
+    } else if (aksi === 'perpanjang') {
+      if (loan) {
+        const now = new Date();
+        const curDue = loan.batas_kembali ? new Date(loan.batas_kembali) : now;
+        const baseDate = curDue > now ? curDue : now;
+        baseDate.setDate(baseDate.getDate() + 7);
+        const newBatas = baseDate.toISOString().split('T')[0];
+
         await supabaseAdmin
           .from('loans')
-          .update({ batas_kembali: curDate.toISOString().split('T')[0] })
+          .update({
+            batas_kembali: newBatas,
+            status: 'Dipinjam',
+            hari_terlambat: 0,
+            total_denda: 0
+          })
           .eq('id', idTransaksi);
       }
-    }
+      message = 'Masa pinjam berhasil diperpanjang selama 7 hari ke depan!';
+    } else if (aksi === 'rusak') {
+      if (targetItem) {
+        await supabaseAdmin
+          .from('loan_items')
+          .update({ status: 'Rusak', tgl_kembali: today })
+          .eq('id', targetItem.id);
 
-    let message = 'Status buku diperbarui!';
-    if (aksi === 'kembali') message = 'Buku berhasil ditandai telah dikembalikan ke rak!';
-    else if (aksi === 'perpanjang') message = 'Masa pinjam berhasil diperpanjang selama 7 hari!';
-    else if (aksi === 'rusak') message = 'Buku berhasil dicatat sebagai rusak/hilang!';
+        if (targetItem.collection_id) {
+          await supabaseAdmin.from('damaged_books').insert({
+            collection_id: String(targetItem.collection_id),
+            keterangan: `Rusak/hilang saat dipinjam oleh ${namaMhs || loan?.student_npm || 'Mahasiswa'}`,
+            jumlah: 1
+          });
+        }
+      }
+
+      const remainingActive = (items || []).filter((it, i) => {
+        if (targetItem && it.id === targetItem.id) return false;
+        if (i === idx) return false;
+        const st = String(it.status || '').toLowerCase();
+        return st !== 'dikembalikan' && st !== 'rusak' && st !== 'selesai';
+      });
+
+      if (loan && remainingActive.length === 0) {
+        await supabaseAdmin
+          .from('loans')
+          .update({ status: 'Selesai', tgl_kembali: today })
+          .eq('id', idTransaksi);
+      }
+      const judulBuku = (targetItem?.collections as any)?.judul || 'Buku';
+      message = `"${judulBuku}" telah dicatat ke daftar Buku Rusak/Hilang!`;
+    }
 
     return new Response(JSON.stringify({ success: true, message }), {
       status: 200,
@@ -51,4 +131,3 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 };
-

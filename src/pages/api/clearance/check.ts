@@ -1,43 +1,6 @@
 import type { APIRoute } from 'astro';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateValidationCode } from '@/lib/utils';
-import fs from 'fs';
-import path from 'path';
-
-function parseCSV(text: string): string[][] {
-  const lines: string[][] = [];
-  let row: string[] = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    const next = text[i + 1];
-    if (c === '"') {
-      if (inQuotes && next === '"') {
-        cur += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (c === ',' && !inQuotes) {
-      row.push(cur);
-      cur = '';
-    } else if ((c === '\r' || c === '\n') && !inQuotes) {
-      if (c === '\r' && next === '\n') i++;
-      row.push(cur);
-      cur = '';
-      if (row.some(cell => cell.trim().length > 0)) lines.push(row);
-      row = [];
-    } else {
-      cur += c;
-    }
-  }
-  if (cur.length > 0 || row.length > 0) {
-    row.push(cur);
-    if (row.some(cell => cell.trim().length > 0)) lines.push(row);
-  }
-  return lines;
-}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -82,52 +45,46 @@ export const POST: APIRoute = async ({ request }) => {
     let isEligible = true;
     let totalDenda = 0;
 
-    // 2. Periksa riwayat CSV
-    const csvPath = path.resolve('supabase_csv/peminjaman_history.csv');
-    if (fs.existsSync(csvPath)) {
-      const csvContent = fs.readFileSync(csvPath, 'utf-8');
-      const rows = parseCSV(csvContent);
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.length >= 5) {
-          const mhs = (row[1] || '').toLowerCase();
-          const qLower = query.toLowerCase();
-          const sNameLower = (student.nama || '').toLowerCase();
-          const sNpmLower = (student.npm || '').toLowerCase();
-
-          const match = mhs.includes(qLower) || mhs.includes(sNameLower) || mhs.includes(sNpmLower);
-          if (match) {
-            const st = (row[4] || '').toLowerCase().trim();
-            if (st !== 'dikembalikan' && st !== 'selesai') {
-              isEligible = false;
-            }
-            const dendaRaw = row[5] || '-';
-            if (dendaRaw && dendaRaw !== '-') {
-              const num = Number(dendaRaw.replace(/[^0-9]/g, '')) || 0;
-              totalDenda += num;
-            }
-          }
-        }
-      }
-    }
-
-    // 3. Periksa tanggungan peminjaman aktif & denda di tabel loans
+    // 2. Periksa tanggungan peminjaman aktif & denda di tabel loans Supabase
     const { data: activeLoans } = await supabaseAdmin
       .from('loans')
       .select('id, tgl_pinjam, batas_kembali, status, total_denda')
       .eq('student_npm', student.npm)
-      .in('status', ['Dipinjam', 'Terlambat']);
+      .neq('status', 'Selesai');
+
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const TARIF_DENDA_PER_HARI = 1000;
 
     if (activeLoans && activeLoans.length > 0) {
-      isEligible = false;
       for (const al of activeLoans) {
-        totalDenda += al.total_denda || 0;
+        const st = String(al.status || '').toLowerCase();
+        if (st === 'selesai' || st === 'dikembalikan' || st === 'kembali') continue;
+
+        isEligible = false;
+        let loanFine = Number(al.total_denda || 0);
+
+        if (al.batas_kembali) {
+          const dueParts = String(al.batas_kembali).split('T')[0].split('-');
+          if (dueParts.length === 3) {
+            const dueMidnight = new Date(
+              parseInt(dueParts[0], 10),
+              parseInt(dueParts[1], 10) - 1,
+              parseInt(dueParts[2], 10)
+            ).getTime();
+            const diffDays = Math.round((todayMidnight - dueMidnight) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) {
+              loanFine = Math.max(loanFine, diffDays * TARIF_DENDA_PER_HARI);
+            }
+          }
+        }
+        totalDenda += loanFine;
       }
     }
 
     if (totalDenda > 0) isEligible = false;
 
-    // 4. Nomor surat dan kode validasi
+    // 3. Nomor surat dan kode validasi
     const dt = new Date();
     const ymd = dt.getFullYear() + ('0' + (dt.getMonth() + 1)).slice(-2) + ('0' + dt.getDate()).slice(-2);
     const nomorSurat = `BP/${student.npm || 'TI'}/${ymd}`;

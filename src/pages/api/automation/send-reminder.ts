@@ -52,7 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
       try {
         const { data: overdueLoans } = await supabaseAdmin
           .from('loans')
-          .select('id, student_npm, batas_kembali, hari_terlambat, total_denda, loan_items(book_title)')
+          .select('id, student_npm, batas_kembali, hari_terlambat, total_denda, loan_items(collections(judul))')
           .neq('status', 'Selesai')
           .limit(1);
 
@@ -67,7 +67,7 @@ export const POST: APIRoute = async ({ request }) => {
             batasKembali = `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
           }
           if (l.loan_items && l.loan_items.length > 0) {
-            bukuList = l.loan_items.map((it: any) => it.book_title || 'Buku Ruang Baca TI');
+            bukuList = l.loan_items.map((it: any) => it.collections?.judul || 'Buku Ruang Baca TI');
           }
 
           const { data: student } = await supabaseAdmin

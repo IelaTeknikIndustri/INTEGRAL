@@ -30,7 +30,7 @@ export const POST: APIRoute = async () => {
           hari_terlambat, 
           last_reminder_sent,
           students (nama, email, npm),
-          loan_items (book_title)
+          loan_items (status, collections(judul))
         `)
         .neq('status', 'Selesai');
 
@@ -41,7 +41,7 @@ export const POST: APIRoute = async () => {
           if (!loan.batas_kembali) continue;
 
           // Hitung selisih hari kalender murni
-          const dueParts = loan.batas_kembali.split('-');
+          const dueParts = String(loan.batas_kembali).split('T')[0].split('-');
           const dueYear = parseInt(dueParts[0], 10);
           const dueMonth = parseInt(dueParts[1], 10) - 1;
           const dueDay = parseInt(dueParts[2], 10);
@@ -58,7 +58,7 @@ export const POST: APIRoute = async () => {
           let studentNpm = (loan.students as any)?.npm || loan.student_npm;
 
           const bukuList = (loan.loan_items && (loan.loan_items as any[]).length > 0)
-            ? (loan.loan_items as any[]).map((it: any) => it.book_title || 'Buku Ruang Baca TI')
+            ? (loan.loan_items as any[]).map((it: any) => it.collections?.judul || 'Buku Ruang Baca TI')
             : ['Buku Literatur Ruang Baca TI UNIROW'];
 
           const formattedBatas = `${dueDay} ${bln[dueMonth]} ${dueYear}`;
@@ -99,6 +99,11 @@ export const POST: APIRoute = async () => {
                 total_denda: denda
               })
               .eq('id', loan.id);
+          } else if (diffDays < -1 && loan.status === 'Terlambat') {
+            await supabaseAdmin
+              .from('loans')
+              .update({ status: 'Dipinjam', hari_terlambat: 0, total_denda: 0 })
+              .eq('id', loan.id);
           }
 
           // Kirim email pengingat jika ada email dan belum dikirim hari ini
@@ -117,7 +122,6 @@ export const POST: APIRoute = async () => {
 
               if (resMail.success) {
                 emailsSent++;
-                // Update catatan last reminder sent
                 await supabaseAdmin
                   .from('loans')
                   .update({ last_reminder_sent: todayStr })
@@ -149,12 +153,16 @@ export const POST: APIRoute = async () => {
       // Fallback
     }
 
+    const msgSummary = overdueCount > 0
+      ? `Denda berhasil disinkronkan! (${overdueCount} transaksi terlambat, total Rp ${totalFine.toLocaleString('id-ID')})`
+      : `Kalkulasi denda disinkronkan! (${checkedCount} transaksi aktif diperiksa, 0 terlambat)`;
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'Siklus otomatisasi sirkulasi harian selesai diproses!',
+      message: msgSummary,
       timestamp: timeFormatted,
       stats: {
-        checked: checkedCount || 80,
+        checked: checkedCount,
         hMinusOne: hMinusOneCount,
         dueToday: dueTodayCount,
         overdue: overdueCount,

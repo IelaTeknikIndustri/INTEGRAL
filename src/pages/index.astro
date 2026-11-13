@@ -2425,6 +2425,7 @@ export const prerender = false;
                                     <span>Pilihan Kategori</span>
                                 </button>
                                 <div style="display:flex; align-items:center; gap:8px; margin-left:6px;">
+                                    <span id="kat-active-icon" style="font-size:18px;">📚</span>
                                     <h3 style="font-size:16px; font-weight:700; color:var(--text); margin:0;" id="kat-active-title">Buku Literatur</h3>
                                     <span style="font-size:12px; color:var(--text-muted); font-weight:500;" id="kat-active-subtitle">(0 buku)</span>
                                 </div>
@@ -2434,9 +2435,13 @@ export const prerender = false;
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                                     <span>Refresh</span>
                                 </button>
-                                <button class="btn btn-outline" onclick="window.exportCsvBuku()" title="Ekspor daftar buku ke CSV">
+                                <button class="btn btn-outline" onclick="window.exportExcelBuku()" title="Ekspor daftar buku ke Excel (.xls) rapi &amp; bergaris">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <span>Export Excel (.xls)</span>
+                                </button>
+                                <button class="btn btn-outline" onclick="window.exportCsvBuku()" title="Ekspor daftar buku ke CSV (Semicolon Excel)">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                    <span>Export CSV</span>
+                                    <span>CSV</span>
                                 </button>
                                 <button class="btn btn-primary" onclick="window.openModalTambahBukuManual()">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -2507,13 +2512,17 @@ export const prerender = false;
                                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 <input type="text" id="cari-mhs-inp" class="search-inp" placeholder="Cari nama atau NPM..." oninput="window.renderTabelMhs()">
                             </div>
-                            <button class="btn btn-outline" onclick="window.openModalImport()" title="Import Data Mahasiswa">
+                            <button class="btn btn-outline" id="btn-import-mhs" onclick="window.openModalImport()" title="Import Data Mahasiswa">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                 <span>Import</span>
                             </button>
-                            <button class="btn btn-outline" onclick="window.exportCsvMhs()" title="Ekspor Data ke CSV">
+                            <button class="btn btn-outline" onclick="window.exportExcelMhs()" title="Ekspor Data Mahasiswa ke Excel (.xls) rapi &amp; bergaris">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <span>Export Excel (.xls)</span>
+                            </button>
+                            <button class="btn btn-outline" onclick="window.exportCsvMhs()" title="Ekspor Data ke CSV (Semicolon Excel)">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                <span>Export</span>
+                                <span>CSV</span>
                             </button>
                             <button class="btn btn-outline" onclick="window.print()" title="Cetak Data Mahasiswa">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -2613,9 +2622,13 @@ export const prerender = false;
                                     <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                     <input type="text" id="cari-riwayat-inp" class="search-inp" placeholder="Cari nama peminjam / judul..." oninput="window.renderTabelRiwayat()">
                                 </div>
-                                <button class="btn btn-outline" onclick="window.exportCsvRiwayat()" title="Ekspor ke CSV">
+                                <button class="btn btn-outline" onclick="window.exportExcelRiwayat()" title="Ekspor Riwayat Peminjaman ke Excel (.xls) rapi &amp; bergaris">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <span>Rekap Excel (.xls)</span>
+                                </button>
+                                <button class="btn btn-outline" onclick="window.exportCsvRiwayat()" title="Ekspor ke CSV (Semicolon Excel)">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                    <span>Export CSV</span>
+                                    <span>CSV</span>
                                 </button>
                             </div>
                         </div>
@@ -3601,11 +3614,26 @@ export const prerender = false;
                     editBukuRow: function (id, judul, penulis, tahun, kat, rak) {
                         return this._call('/api/collections/update', 'POST', { id: id, judul: judul, penulis: penulis, tahun: tahun, kategori: kat, rak: rak });
                     },
+                    editBukuKatalog: function (kat, id, updatedData) {
+                        var payload = Object.assign({ id: id, kategori: kat }, updatedData || {});
+                        return this._call('/api/collections/update', 'POST', payload);
+                    },
                     hapusBukuItem: function (id, judul) {
                         return this._call('/api/collections/delete', 'POST', { id: id, judul: judul });
                     },
+                    hapusBukuKatalog: function (kat, id) {
+                        return this._call('/api/collections/delete', 'POST', { id: id, kategori: kat });
+                    },
                     catatBukuRusak: function (id, judul, kat, catatan) {
                         return this._call('/api/collections/report-damage', 'POST', { id: id, judul: judul, kategori: kat, catatan: catatan });
+                    },
+                    catatBukuRusakDatabase: function (bukuObj, alasan) {
+                        return this._call('/api/collections/report-damage', 'POST', {
+                            id: bukuObj && bukuObj.id,
+                            judul: bukuObj && bukuObj.judul,
+                            kategori: bukuObj && bukuObj.kategori,
+                            catatan: alasan
+                        });
                     },
                     tambahMahasiswaBaru: function (mhsData) {
                         return this._call('/api/students/create', 'POST', mhsData);
@@ -3617,52 +3645,28 @@ export const prerender = false;
                         return this._call('/api/clearance/template', 'POST', { template: tpl });
                     },
                     perbaruiDendaOtomatis: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Kalkulasi denda selesai disinkronkan!" });
-                        }, 400);
+                        return this._call('/api/automation/run', 'POST', {});
                     },
                     bersihkanDataGandaSemua: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Integritas basis data terverifikasi rapi!" });
-                        }, 400);
+                        return this._call('/api/admin/clean-duplicates', 'POST', {});
                     },
                     kirimNotifikasiOtomatis: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Notifikasi pengingat via email berhasil dikirim!" });
-                        }, 500);
+                        return this._call('/api/automation/run', 'POST', {});
                     },
                     cekStatusTriggerOtomatis: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, aktif: true });
-                        }, 200);
+                        return this._call('/api/automation/status', 'GET');
                     },
                     aktifkanTriggerOtomatis: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Otomatisasi pengingat jam 08:00 WIB aktif!" });
-                        }, 200);
+                        return this._call('/api/automation/status', 'POST', { active: true });
                     },
                     nonaktifkanTriggerOtomatis: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Otomatisasi pengingat dinonaktifkan." });
-                        }, 200);
+                        return this._call('/api/automation/status', 'POST', { active: false });
                     },
                     eksekusiManualTrigger: function () {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Siklus pengingat berhasil dijalankan!" });
-                        }, 500);
+                        return this._call('/api/automation/run', 'POST', {});
                     },
                     importDataCsvDatabase: function (targetSheet, txt) {
-                        var self = this;
-                        setTimeout(function () {
-                            if (self._success) self._success({ success: true, message: "Data master berhasil diimpor!" });
-                        }, 400);
+                        return this._call('/api/admin/import-csv', 'POST', { targetSheet: targetSheet, txt: txt });
                     }
                 }
             }
@@ -4333,11 +4337,13 @@ export const prerender = false;
             var iconEl = document.getElementById("kat-active-icon");
             var titEl = document.getElementById("kat-active-title");
 
-            titEl.innerText = kat;
-            if (kat === "Buku Literatur") iconEl.innerText = "📚";
-            else if (kat === "Laporan KP") iconEl.innerText = "📝";
-            else if (kat === "Skripsi") iconEl.innerText = "🎓";
-            else iconEl.innerText = "⚠️";
+            if (titEl) titEl.innerText = kat;
+            if (iconEl) {
+                if (kat === "Buku Literatur") iconEl.innerText = "📚";
+                else if (kat === "Laporan KP") iconEl.innerText = "📝";
+                else if (kat === "Skripsi") iconEl.innerText = "🎓";
+                else iconEl.innerText = "⚠️";
+            }
 
             window.buildRakDropdown();
             window.renderTabelBuku();
@@ -4466,12 +4472,17 @@ export const prerender = false;
             var newPenulis = prompt("Ubah Penulis / Penyusun:", b.penulis) || "-";
             var newTahun = prompt("Ubah Tahun Terbit:", b.tahun) || String(new Date().getFullYear());
             var newRak = prompt("Ubah Lokasi Rak:", b.rak) || "Ruang Baca TI";
+            var newStokRaw = prompt("Ubah Jumlah Stok Tersedia:", String(b.stok !== undefined ? b.stok : 1));
+            var newStok = (newStokRaw !== null && newStokRaw.trim() !== "" && !isNaN(Number(newStokRaw)))
+                ? Math.max(0, parseInt(newStokRaw, 10))
+                : (Number(b.stok) || 1);
 
             var updatedData = {
                 judul: newJudul,
                 penulis: newPenulis,
                 tahun: newTahun,
-                rak: newRak
+                rak: newRak,
+                stok: newStok
             };
 
             window.showLoading(true);
@@ -4484,10 +4495,12 @@ export const prerender = false;
                             b.penulis = newPenulis;
                             b.tahun = newTahun;
                             b.rak = newRak;
+                            b.stok = newStok;
                             window.showToast(res.message, "success");
                             document.getElementById("modalDetailBuku").style.display = "none";
                             window.renderTabelBuku();
                             window.renderBookGrid();
+                            window.renderStats();
                         } else {
                             window.showToast("Gagal: " + res.message, "error");
                         }
@@ -4502,6 +4515,7 @@ export const prerender = false;
                     b.penulis = newPenulis;
                     b.tahun = newTahun;
                     b.rak = newRak;
+                    b.stok = newStok;
                     window.showToast("Data buku berhasil diperbarui!", "success");
                     document.getElementById("modalDetailBuku").style.display = "none";
                     window.renderTabelBuku();
@@ -5266,21 +5280,26 @@ export const prerender = false;
                     var timeStr = res.timestamp || (now.getDate() + " Nov " + now.getFullYear() + " " + String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0') + " WIB");
                     localStorage.setItem("INTEGRAL_AUTO_LAST_RUN", timeStr + " (Manual)");
 
+                    var st = res.stats || {};
+                    var checkedVal = st.checked !== undefined ? st.checked : state.riwayat.filter(function(x){ return x.status !== 'dikembalikan'; }).length;
+                    var overdueVal = st.overdue !== undefined ? st.overdue : overdueCount;
+                    var fineVal = st.totalFine !== undefined ? st.totalFine : totalDendaCalculated;
+                    var mailVal = st.emailsSent !== undefined ? st.emailsSent : overdueVal;
+
                     var resBox = document.getElementById("auto-trigger-run-result");
                     var resDesc = document.getElementById("auto-run-result-desc");
                     if (resBox && resDesc) {
                         resBox.style.display = "block";
                         resDesc.innerHTML = 
-                            "• <strong>" + (state.riwayat.length || 80) + " Peminjaman Aktif</strong> diperiksa menyeluruh.<br>" +
-                            "• <strong>" + (overdueCount || 2) + " Transaksi Terlambat</strong> terdeteksi.<br>" +
-                            "• Akumulasi Denda Baru: <strong>Rp " + ((totalDendaCalculated || 14000)).toLocaleString('id-ID') + "</strong>.<br>" +
-                            "• Antrean Notifikasi Bot Reminder: <strong>" + (overdueCount || 2) + " Mahasiswa</strong>.";
+                            "• <strong>" + checkedVal + " Peminjaman Aktif</strong> diperiksa menyeluruh.<br>" +
+                            "• <strong>" + overdueVal + " Transaksi Terlambat</strong> terdeteksi.<br>" +
+                            "• Akumulasi Denda Berjalan: <strong>Rp " + Number(fineVal || 0).toLocaleString('id-ID') + "</strong>.<br>" +
+                            "• Email Pengingat Terkirim: <strong>" + mailVal + " Mahasiswa</strong>.";
                     }
 
                     window.muatStatusAutoTrigger();
-                    window.renderTabelRiwayat();
-                    window.renderStats();
-                    window.showToast("Siklus otomatisasi berhasil dieksekusi!", "success");
+                    window.loadServerData();
+                    window.showToast(res.message || "Siklus otomatisasi berhasil dieksekusi!", "success");
                 })
                 .catch(function () {
                     window.showLoading(false);
@@ -5715,38 +5734,250 @@ export const prerender = false;
             }
         };
 
+        window.unduhExcelHtml = function (sheetName, docTitle, subTitle, headersHtml, rowsHtml, totalLabel, filePrefix) {
+            var now = new Date();
+            var dateStr = now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+            var timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+            var adminName = (state.user && state.user.nama) || "Petugas Ruang Baca";
+            var colSpan = (headersHtml.match(/<th/g) || []).length || 7;
+
+            var tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+                '<head>' +
+                    '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />' +
+                    '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
+                    '<x:Name>' + sheetName + '</x:Name>' +
+                    '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>' +
+                    '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
+                    '<style>' +
+                        'body { font-family: Calibri, \'Segoe UI\', Arial, sans-serif; font-size: 11pt; color: #1E293B; }' +
+                        'table { border-collapse: collapse; width: 100%; }' +
+                        'th { background-color: #038d88; color: #FFFFFF; font-weight: bold; border: 1px solid #026662; padding: 10px 8px; text-align: center; }' +
+                        'td { font-size: 10.5pt; vertical-align: middle; }' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<table style="margin-bottom:12px; border:none;">' +
+                        '<tr><td colspan="' + colSpan + '" style="font-size:15pt; font-weight:bold; color:#038d88; border:none; padding:4px 0;">' + docTitle + '</td></tr>' +
+                        '<tr><td colspan="' + colSpan + '" style="font-size:11.5pt; font-weight:bold; color:#475569; border:none; padding:2px 0;">' + subTitle + '</td></tr>' +
+                        '<tr><td colspan="' + colSpan + '" style="font-size:9.5pt; color:#64748B; border:none; padding:2px 0;">Waktu Ekspor: ' + dateStr + ', ' + timeStr + ' &bull; Oleh: ' + adminName + ' &bull; Total: ' + totalLabel + '</td></tr>' +
+                        '<tr><td colspan="' + colSpan + '" style="border:none; height:10px;"></td></tr>' +
+                    '</table>' +
+                    '<table>' +
+                        '<thead><tr>' + headersHtml + '</tr></thead>' +
+                        '<tbody>' + rowsHtml + '</tbody>' +
+                    '</table>' +
+                '</body>' +
+                '</html>';
+
+            var blob = new Blob(["\uFEFF", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            var datePart = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0');
+            var timePart = String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0');
+            link.href = url;
+            link.download = filePrefix + "_" + datePart + "_" + timePart + ".xls";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        };
+
+        window.exportExcelBuku = function () {
+            var source = curKatBuku === "Buku Rusak"
+                ? (state.bukuRusak || [])
+                : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
+
+            if (source.length === 0) {
+                window.showToast("Tidak ada data buku pada kategori ini untuk diekspor.", "info");
+                return;
+            }
+
+            var headersHtml =
+                '<th style="width:45px;">No</th>' +
+                '<th style="width:90px;">ID Koleksi</th>' +
+                '<th style="width:360px;">Judul Koleksi</th>' +
+                '<th style="width:220px;">Penulis / Penyusun</th>' +
+                '<th style="width:90px;">Tahun</th>' +
+                '<th style="width:110px;">Stok</th>' +
+                '<th style="width:160px;">Lokasi Rak</th>' +
+                '<th style="width:150px;">Kategori</th>';
+
+            var rowsHtml = source.map(function (b, idx) {
+                var rowBg = idx % 2 === 1 ? "#F8FAFC" : "#FFFFFF";
+                var stokNum = Number(b.stok) || 0;
+                var stokBg = stokNum > 0 ? "#D1FAE5" : "#FEE2E2";
+                var stokColor = stokNum > 0 ? "#065F46" : "#991B1B";
+                var stokLabel = stokNum > 0 ? (stokNum + " Eksemplar") : "Habis (0)";
+
+                return '<tr style="background-color:' + rowBg + ';">' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 6px;">' + (idx + 1) + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">#' + b.id + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px; font-weight:600;">' + (b.judul || '-') + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px;">' + (b.penulis || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (b.tahun || '-') + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; background-color:' + stokBg + '; color:' + stokColor + '; border:1px solid #CBD5E1; padding:7px 8px;">' + stokLabel + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 10px;">' + (b.rak || 'Ruang Baca TI') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 10px;">' + (b.kategori || curKatBuku) + '</td>' +
+                '</tr>';
+            }).join('');
+
+            var cleanKat = curKatBuku.replace(/\s+/g, "_");
+            window.unduhExcelHtml(
+                ("Katalog " + curKatBuku).substring(0, 31),
+                "KATALOG KOLEKSI RUANG BACA TEKNIK INDUSTRI (" + curKatBuku.toUpperCase() + ")",
+                "UNIVERSITAS PGRI RONGGOLAWE TUBAN (UNIROW)",
+                headersHtml,
+                rowsHtml,
+                source.length + " Judul Koleksi",
+                "Katalog_" + cleanKat + "_INTEGRAL"
+            );
+            window.showToast("Katalog Excel " + curKatBuku + " (" + source.length + " judul) berhasil diunduh!", "success");
+        };
+
         window.exportCsvBuku = function () {
             var rows = [["ID", "Judul", "Penulis", "Tahun", "Stok", "Rak", "Kategori"]];
             var source = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
             source.forEach(function (b) {
-                rows.push([b.id, '"' + b.judul.replace(/"/g, '""') + '"', '"' + b.penulis.replace(/"/g, '""') + '"', b.tahun, b.stok, '"' + b.rak.replace(/"/g, '""') + '"', b.kategori || curKatBuku]);
+                rows.push([b.id, b.judul || "-", b.penulis || "-", b.tahun || "-", b.stok || 0, b.rak || "-", b.kategori || curKatBuku]);
             });
             window.unduhCsv(rows, "Katalog_" + curKatBuku.replace(/\s+/g, "_") + ".csv");
+            window.showToast("Katalog CSV " + curKatBuku + " berhasil diunduh!", "success");
+        };
+
+        window.exportExcelMhs = function () {
+            var list = state.mahasiswa || [];
+            if (list.length === 0) {
+                window.showToast("Belum ada data mahasiswa untuk diekspor.", "info");
+                return;
+            }
+
+            var headersHtml =
+                '<th style="width:45px;">No</th>' +
+                '<th style="width:260px;">Nama Lengkap Mahasiswa</th>' +
+                '<th style="width:140px;">NPM</th>' +
+                '<th style="width:220px;">Email Akademik</th>' +
+                '<th style="width:100px;">Angkatan</th>' +
+                '<th style="width:110px;">Status</th>' +
+                '<th style="width:150px;">No. HP / WhatsApp</th>';
+
+            var rowsHtml = list.map(function (m, idx) {
+                var rowBg = idx % 2 === 1 ? "#F8FAFC" : "#FFFFFF";
+                var isAktif = String(m.status || "Aktif").toLowerCase() === "aktif";
+                var stBg = isAktif ? "#D1FAE5" : "#E2E8F0";
+                var stColor = isAktif ? "#065F46" : "#475569";
+
+                return '<tr style="background-color:' + rowBg + ';">' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 6px;">' + (idx + 1) + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px; font-weight:600;">' + (m.nama || '-') + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">' + (m.npm || '-') + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px;">' + (m.email || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (m.angkatan || '-') + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; background-color:' + stBg + '; color:' + stColor + '; border:1px solid #CBD5E1; padding:7px 8px;">' + (m.status || 'Aktif').toUpperCase() + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 10px; mso-number-format:\'\\@\';">' + (m.noHp || '-') + '</td>' +
+                '</tr>';
+            }).join('');
+
+            window.unduhExcelHtml(
+                "Direktori Mahasiswa TI",
+                "DIREKTORI ANGGOTA &amp; MAHASISWA TEKNIK INDUSTRI",
+                "UNIVERSITAS PGRI RONGGOLAWE TUBAN (UNIROW)",
+                headersHtml,
+                rowsHtml,
+                list.length + " Mahasiswa Terdaftar",
+                "Direktori_Mahasiswa_INTEGRAL"
+            );
+            window.showToast("Direktori Mahasiswa Excel (" + list.length + " data) berhasil diunduh!", "success");
         };
 
         window.exportCsvMhs = function () {
             var rows = [["No", "Nama", "NPM", "Email", "Angkatan", "Status", "No HP"]];
             state.mahasiswa.forEach(function (m, idx) {
-                rows.push([idx + 1, '"' + m.nama.replace(/"/g, '""') + '"', "'" + m.npm, m.email, m.angkatan, m.status, "'" + m.noHp]);
+                rows.push([idx + 1, m.nama || "-", m.npm || "-", m.email || "-", m.angkatan || "-", m.status || "Aktif", m.noHp || "-"]);
             });
             window.unduhCsv(rows, "Direktori_Mahasiswa_INTEGRAL.csv");
+            window.showToast("Direktori Mahasiswa CSV berhasil diunduh!", "success");
+        };
+
+        window.exportExcelRiwayat = function () {
+            var list = state.riwayat || [];
+            if (list.length === 0) {
+                window.showToast("Belum ada data riwayat peminjaman untuk diekspor.", "info");
+                return;
+            }
+
+            var headersHtml =
+                '<th style="width:45px;">No</th>' +
+                '<th style="width:230px;">Nama Mahasiswa Peminjam</th>' +
+                '<th style="width:125px;">Tgl Pinjam</th>' +
+                '<th style="width:125px;">Batas Kembali</th>' +
+                '<th style="width:125px;">Tgl Kembali</th>' +
+                '<th style="width:130px;">Status Sirkulasi</th>' +
+                '<th style="width:120px;">Denda</th>' +
+                '<th style="width:380px;">Detail Koleksi Buku &amp; Rak</th>';
+
+            var rowsHtml = list.map(function (r, idx) {
+                var rowBg = idx % 2 === 1 ? "#F8FAFC" : "#FFFFFF";
+                var st = String(r.status || "dikembalikan").toLowerCase();
+                var stBg = st === "dikembalikan" ? "#D1FAE5" : (st === "terlambat" ? "#FEE2E2" : "#DBEAFE");
+                var stColor = st === "dikembalikan" ? "#065F46" : (st === "terlambat" ? "#991B1B" : "#1E40AF");
+                var hasDenda = r.denda && r.denda !== "-" && r.denda !== "0";
+                var cleanDetail = String(r.detailBuku || "-").replace(/\[DIKEMBALIKAN\]/g, "(Kembali) ").replace(/\[RUSAK\]/g, "(Rusak) ");
+
+                return '<tr style="background-color:' + rowBg + ';">' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 6px;">' + (idx + 1) + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px; font-weight:600;">' + (r.mahasiswa || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (r.tglPinjam || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (r.batasKembali || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (r.tglKembali || '-') + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; background-color:' + stBg + '; color:' + stColor + '; border:1px solid #CBD5E1; padding:7px 8px;">' + st.toUpperCase() + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px; font-weight:' + (hasDenda ? 'bold' : 'normal') + '; color:' + (hasDenda ? '#DC2626' : '#64748B') + ';">' + (r.denda || '-') + '</td>' +
+                    '<td style="border:1px solid #CBD5E1; padding:7px 10px;">' + cleanDetail + '</td>' +
+                '</tr>';
+            }).join('');
+
+            window.unduhExcelHtml(
+                "Riwayat Peminjaman Buku",
+                "REKAPITULASI RIWAYAT &amp; SIRKULASI PEMINJAMAN BUKU",
+                "RUANG BACA PROGRAM STUDI TEKNIK INDUSTRI UNIROW",
+                headersHtml,
+                rowsHtml,
+                list.length + " Transaksi",
+                "Riwayat_Peminjaman_INTEGRAL"
+            );
+            window.showToast("Rekap Riwayat Peminjaman Excel (" + list.length + " transaksi) berhasil diunduh!", "success");
         };
 
         window.exportCsvRiwayat = function () {
-            var rows = [["No", "Mahasiswa", "Tgl Pinjam", "Batas Kembali", "Status", "Denda", "Detail Buku"]];
+            var rows = [["No", "Mahasiswa", "Tgl Pinjam", "Batas Kembali", "Tgl Kembali", "Status", "Denda", "Detail Buku"]];
             state.riwayat.forEach(function (r, idx) {
-                rows.push([idx + 1, '"' + r.mahasiswa.replace(/"/g, '""') + '"', r.tglPinjam, r.batasKembali, r.status, r.denda, '"' + r.detailBuku.replace(/"/g, '""') + '"']);
+                rows.push([idx + 1, r.mahasiswa || "-", r.tglPinjam || "-", r.batasKembali || "-", r.tglKembali || "-", r.status || "-", r.denda || "-", r.detailBuku || "-"]);
             });
             window.unduhCsv(rows, "Riwayat_Peminjaman_INTEGRAL.csv");
+            window.showToast("Riwayat Peminjaman CSV berhasil diunduh!", "success");
         };
 
         window.unduhCsv = function (rows, filename) {
+            var escCell = function (val) {
+                if (val === null || val === undefined) return '""';
+                var str = String(val).replace(/[\r\n]+/g, ' ').trim();
+                return '"' + str.replace(/"/g, '""') + '"';
+            };
+            var csvBody = "sep=;\r\n" + rows.map(function (r) {
+                return r.map(escCell).join(";");
+            }).join("\r\n");
+
+            var blob = new Blob(["\uFEFF", csvBody], { type: "text/csv;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
             var link = document.createElement("a");
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8,\uFEFF" + rows.map(function (e) { return e.join(","); }).join("\n")));
+            link.setAttribute("href", url);
             link.setAttribute("download", filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         };
 
         /* === SISTEM SIRKULASI & AKSES LABORATORIUM TI === */

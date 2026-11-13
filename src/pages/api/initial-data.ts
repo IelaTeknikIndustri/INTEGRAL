@@ -60,6 +60,11 @@ export const GET: APIRoute = async () => {
 
     if (colErr) throw colErr;
 
+    const collectionMap = new Map<string, any>();
+    for (const c of collections) {
+      collectionMap.set(String(c.id).trim(), c);
+    }
+
     // 2. Ambil seluruh mahasiswa dari Supabase
     const { data: students = [], error: stuErr } = await supabaseAdmin
       .from('students')
@@ -82,20 +87,54 @@ export const GET: APIRoute = async () => {
       .select(`
         id, student_npm, tgl_pinjam, batas_kembali, status, total_denda, hari_terlambat, tgl_kembali, created_at,
         students(nama),
-        loan_items(collections(judul, rak))
+        loan_items(id, status, collections(judul, rak))
       `)
       .order('tgl_pinjam', { ascending: false });
 
     let riwayat: any[] = [];
     const seenMap = new Set<string>();
 
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const TARIF_DENDA_PER_HARI = 1000;
+
     if (dbLoans && dbLoans.length > 0) {
       for (let i = 0; i < dbLoans.length; i++) {
         const nl = dbLoans[i];
         const mhsNama = (nl.students as any)?.nama || studentMap.get(nl.student_npm) || nl.student_npm;
-        const details = (nl.loan_items as any[])?.map(li => `${li.collections?.judul || 'Buku'} | RAK: ${li.collections?.rak || '-'}`).join(' || ') || '';
+        const sortedItems = ((nl.loan_items as any[]) || []).slice().sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+        const details = sortedItems.map(li => {
+          const itemSt = String(li.status || '').toLowerCase();
+          const prefix = itemSt === 'dikembalikan' ? '[DIKEMBALIKAN]' : (itemSt === 'rusak' ? '[RUSAK]' : '');
+          return `${prefix}${li.collections?.judul || 'Buku'} | RAK: ${li.collections?.rak || '-'}`;
+        }).join(' || ') || '';
+
         const rawSt = (nl.status || 'aktif').toLowerCase();
-        const st = (rawSt === 'selesai' || rawSt === 'kembali') ? 'dikembalikan' : rawSt;
+        let st = (rawSt === 'selesai' || rawSt === 'kembali' || rawSt === 'dikembalikan') ? 'dikembalikan' : (rawSt === 'dipinjam' ? 'aktif' : rawSt);
+        let dendaNominal = Number(nl.total_denda || 0);
+        let hariTelat = Number(nl.hari_terlambat || 0);
+
+        // Kalkulasi denda real-time untuk pinjaman yang belum dikembalikan
+        if (st !== 'dikembalikan' && nl.batas_kembali) {
+          const dueParts = String(nl.batas_kembali).split('T')[0].split('-');
+          if (dueParts.length === 3) {
+            const dueMidnight = new Date(
+              parseInt(dueParts[0], 10),
+              parseInt(dueParts[1], 10) - 1,
+              parseInt(dueParts[2], 10)
+            ).getTime();
+            const diffDays = Math.round((todayMidnight - dueMidnight) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) {
+              st = 'terlambat';
+              hariTelat = diffDays;
+              dendaNominal = Math.max(dendaNominal, diffDays * TARIF_DENDA_PER_HARI);
+            } else {
+              st = 'aktif';
+              hariTelat = 0;
+              dendaNominal = 0;
+            }
+          }
+        }
 
         const signature = `${nl.student_npm}_${nl.tgl_pinjam}`;
         seenMap.add(signature);
@@ -107,11 +146,13 @@ export const GET: APIRoute = async () => {
           idTransaksi: nl.id,
           sheetRow: i + 2,
           mahasiswa: mhsNama,
+          npm: nl.student_npm,
           tglPinjam: formatTglIndo(nl.tgl_pinjam),
           batasKembali: formatTglIndo(nl.batas_kembali),
+          tglHarusKembali: nl.batas_kembali,
           status: st,
-          denda: nl.total_denda > 0 ? `Rp ${Number(nl.total_denda).toLocaleString('id-ID')}` : '-',
-          hariTerlambat: String(nl.hari_terlambat || 0),
+          denda: dendaNominal > 0 ? `Rp ${dendaNominal.toLocaleString('id-ID')}` : '-',
+          hariTerlambat: String(hariTelat),
           lastReminder: '-',
           detailBuku: details,
           tglKembali: formatTglIndo(nl.tgl_kembali || '-')
@@ -164,6 +205,7 @@ export const GET: APIRoute = async () => {
             mahasiswa: mhs,
             tglPinjam: formatTglIndo(tglPinjamRaw),
             batasKembali: formatTglIndo(batasKembaliRaw),
+            tglHarusKembali: batasKembaliRaw.split(' ')[0],
             status: status,
             denda: denda,
             hariTerlambat: hariTerlambat,
@@ -175,28 +217,32 @@ export const GET: APIRoute = async () => {
       }
     }
 
-    // Ambil buku rusak dari Supabase jika ada
+    // Ambil buku rusak dari Supabase jika ada dan perkaya dengan detail koleksi
     const { data: damaged = [] } = await supabaseAdmin
       .from('damaged_books')
-      .select('*');
+      .select('*')
+      .order('id', { ascending: false });
 
-    const bukuRusakList = (damaged || []).map((d, idx) => ({
-      id: d.id || String(idx + 1),
-      judul: d.collection_id || 'Buku Rusak',
-      penulis: '-',
-      tahun: '-',
-      stok: d.jumlah || 1,
-      rak: 'Ruang Baca TI',
-      kategori: 'Buku Rusak',
-      keterangan: d.keterangan || '-'
-    }));
+    const bukuRusakList = (damaged || []).map((d, idx) => {
+      const colInfo = collectionMap.get(String(d.collection_id || '').trim());
+      return {
+        id: d.collection_id || d.id || String(idx + 1),
+        judul: colInfo ? colInfo.judul : (d.collection_id || 'Buku Rusak'),
+        penulis: colInfo ? (colInfo.penulis || '-') : '-',
+        tahun: colInfo ? (colInfo.tahun_terbit || '-') : '-',
+        stok: d.jumlah || 1,
+        rak: colInfo ? (colInfo.rak || 'Ruang Baca TI') : 'Ruang Baca TI',
+        kategori: 'Buku Rusak',
+        keterangan: d.keterangan || '-'
+      };
+    });
 
     // 4. Hitung statistik
     const dataLit = collections.filter(c => c.kategori === 'Buku Literatur');
     const dataKp = collections.filter(c => c.kategori === 'Laporan KP');
     const dataSkripsi = collections.filter(c => c.kategori === 'Skripsi');
 
-    const totalStok = collections.reduce((acc, c) => acc + (Number(c.stok) || 1), 0);
+    const totalStok = collections.reduce((acc, c) => acc + (Number(c.stok) || 0), 0);
 
     let cAktif = 0;
     let cTerlambat = 0;
@@ -218,7 +264,7 @@ export const GET: APIRoute = async () => {
           skripsi: dataSkripsi.length,
           totalStok: totalStok,
           mahasiswa: students.length,
-          aktif: cAktif,
+          aktif: cAktif + cTerlambat,
           terlambat: cTerlambat,
           dikembalikan: cKembali
         },
@@ -238,8 +284,8 @@ export const GET: APIRoute = async () => {
           tahun: c.tahun_terbit || '-',
           kategori: c.kategori,
           rak: c.rak || 'Ruang Baca TI',
-          stok: Number(c.stok) || 1,
-          keterangan: c.keterangan || '-'
+          stok: Number(c.stok) ?? 1,
+          keterangan: (c as any).keterangan || '-'
         })),
         bukuRusak: bukuRusakList,
         riwayat: riwayat
