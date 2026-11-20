@@ -18,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    let id = body.id ? String(body.id).trim() : '';
+    let id = body.id ? String(body.id).trim().replace(/\.0$/, '') : '';
 
     if (!id) {
       // Buat ID unik berdasarkan urutan koleksi yang ada
@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
       let maxNum = 1000;
       if (allIds && allIds.length > 0) {
         for (const row of allIds) {
-          const num = parseInt(String(row.id).replace(/[^0-9]/g, ''), 10);
+          const num = parseInt(String(row.id).replace(/\.0$/, '').replace(/[^0-9]/g, ''), 10);
           if (!isNaN(num) && num > maxNum) {
             maxNum = num;
           }

@@ -26,10 +26,11 @@ export const POST: APIRoute = async ({ request }) => {
       updatePayload.stok = Math.max(0, parseInt(String(stok), 10));
     }
 
+    const cleanId = String(id).trim().replace(/\.0$/, '');
     const { error } = await supabaseAdmin
       .from('collections')
       .update(updatePayload)
-      .eq('id', String(id).trim());
+      .in('id', [cleanId, cleanId + '.0']);
 
     if (error) throw error;
 

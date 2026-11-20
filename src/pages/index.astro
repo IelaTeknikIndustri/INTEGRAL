@@ -3822,11 +3822,11 @@ export const prerender = false;
             '    <div style="font-size:8.5pt; margin-bottom:4px;">Verifikasi Sistem INTEGRAL:</div>',
             '    <div style="font-weight:bold; font-size:9.5pt; margin-top:16px;">{{KODE_VALIDASI}}</div>',
             '  </div>',
-            '  <div style="text-align:center; width:250px;">',
+            '  <div style="text-align:center; min-width:280px; width:auto;">',
             '    <div>{{TANGGAL_SURAT}}</div>',
             '    <div>Petugas Ruang Baca TI,</div>',
             '    <div style="height:55px;"></div>',
-            '    <div style="font-weight:bold; text-decoration:underline;">Mochammad Luqman Firdaus</div>',
+            '    <div style="font-weight:bold; text-decoration:underline; white-space:nowrap;">Mochammad Luqman Firdaus</div>',
             '    <div>NIP/NIDN. 0715088901</div>',
             '  </div>',
             '</div>'
@@ -4141,11 +4141,12 @@ export const prerender = false;
         window.stuGenerateBookCardHtml = function (b) {
             var kat = b.kategori || 'Skripsi';
             var katColor = kat === 'Skripsi' ? 'pill-aktif' : (kat === 'Laporan KP' ? 'pill-dikembalikan' : 'pill-terlambat');
-            return '<div class="book-student-card" onclick="window.bukaDetailBukuModal(\'' + b.id + '\')">' +
+            var cleanId = String(b.id).replace(/\.0$/, '');
+            return '<div class="book-student-card" onclick="window.bukaDetailBukuModal(\'' + cleanId + '\')">' +
                 '<div>' +
                     '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
                         '<span class="pill ' + katColor + '" style="font-size:10px; padding:2px 8px;">' + kat + '</span>' +
-                        '<span style="font-family:var(--font-mono); font-size:11px; color:var(--text-subtle);">#' + b.id + '</span>' +
+                        '<span style="font-family:var(--font-mono); font-size:11px; color:var(--text-subtle);">#' + cleanId + '</span>' +
                     '</div>' +
                     '<h4 class="book-card-title" title="' + b.judul.replace(/"/g, '&quot;') + '">' + b.judul + '</h4>' +
                     '<div class="book-card-author">' +
@@ -4421,8 +4422,9 @@ export const prerender = false;
                         ? '<span class="pill pill-aktif">Stok: ' + stokVal + '</span>'
                         : '<span class="pill pill-terlambat">Habis (0)</span>';
 
-                    return '<tr onclick="window.bukaDetailBukuModal(\'' + b.id + '\')" class="tbl-row-clickable">' +
-                        '<td class="td-num">#' + b.id + '</td>' +
+                    var cleanId = String(b.id).replace(/\.0$/, '');
+                    return '<tr onclick="window.bukaDetailBukuModal(\'' + cleanId + '\')" class="tbl-row-clickable">' +
+                        '<td class="td-num">#' + cleanId + '</td>' +
                         '<td class="td-name" style="max-width:380px;">' +
                             '<a class="link-buku" style="color:var(--text); text-decoration:none; font-weight:600; cursor:pointer;">' + b.judul + '</a>' +
                         '</td>' +
@@ -4447,7 +4449,10 @@ export const prerender = false;
 
         window.bukaDetailBukuModal = function (id) {
             var sourceList = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam;
-            var b = sourceList.find(function (x) { return String(x.id) === String(id); });
+            var cleanTargetId = String(id).replace(/\.0$/, '');
+            var b = sourceList.find(function (x) {
+                return String(x.id).replace(/\.0$/, '') === cleanTargetId;
+            });
             if (!b) return;
 
             selectedBookDetail = b;
@@ -4680,7 +4685,12 @@ export const prerender = false;
 
         window.buildAngkatanDropdown = function () {
             var angkatans = {};
-            state.mahasiswa.forEach(function (m) { if (m.angkatan) angkatans[m.angkatan] = (angkatans[m.angkatan] || 0) + 1; });
+            state.mahasiswa.forEach(function (m) {
+                if (m.angkatan) {
+                    var a = String(m.angkatan).replace(/\.0$/, '');
+                    angkatans[a] = (angkatans[a] || 0) + 1;
+                }
+            });
             var keys = Object.keys(angkatans).sort(function (a, b) { return b.localeCompare(a); });
             var opts = '<option value="SEMUA">Semua Angkatan (' + state.mahasiswa.length + ')</option>';
             keys.forEach(function (k) { opts += '<option value="' + k + '">Angkatan ' + k + ' (' + angkatans[k] + ')</option>'; });
@@ -4693,7 +4703,8 @@ export const prerender = false;
         window.renderTabelMhs = function () {
             var q = (document.getElementById("cari-mhs-inp").value || "").toLowerCase();
             var list = state.mahasiswa.filter(function (m) {
-                return (filterAngkatanMhs === "SEMUA" || String(m.angkatan) === String(filterAngkatanMhs)) &&
+                var mA = String(m.angkatan || '').replace(/\.0$/, '');
+                return (filterAngkatanMhs === "SEMUA" || mA === String(filterAngkatanMhs)) &&
                     (filterStatusMhs === "SEMUA" || (m.status || "").toLowerCase() === filterStatusMhs.toLowerCase()) &&
                     ((m.nama || "").toLowerCase().indexOf(q) > -1 || (m.npm || "").toLowerCase().indexOf(q) > -1 || (m.email || "").toLowerCase().indexOf(q) > -1);
             });
@@ -4708,17 +4719,19 @@ export const prerender = false;
                     var badgeHtml = st === 'aktif'
                         ? '<span class="pill pill-aktif">✓ Aktif</span>'
                         : '<span class="pill pill-alumni">Alumni</span>';
+                    var cleanNpm = String(m.npm || '-').replace(/\.0$/, '');
+                    var cleanAngkatan = String(m.angkatan || '-').replace(/\.0$/, '');
 
                     return '<tr>' +
                         '<td class="td-num">#' + (start + idx + 1) + '</td>' +
                         '<td class="td-name">' + (m.nama || '-') + '</td>' +
-                        '<td class="td-mono">' + (m.npm || '-') + '</td>' +
+                        '<td class="td-mono">' + cleanNpm + '</td>' +
                         '<td class="td-muted">' + (m.email || '-') + '</td>' +
-                        '<td><span class="pill-angkatan">' + (m.angkatan || '-') + '</span></td>' +
+                        '<td><span class="pill-angkatan">' + cleanAngkatan + '</span></td>' +
                         '<td>' + badgeHtml + '</td>' +
                         '<td class="td-mono">' + (m.noHp || '-') + '</td>' +
                         '<td style="text-align:center;">' +
-                            '<button class="btn-table-action" onclick="window.periksaBebasLangsung(\'' + m.npm + '\')" title="Periksa Bebas Pustaka">' +
+                            '<button class="btn-table-action" onclick="window.periksaBebasLangsung(\'' + cleanNpm + '\')" title="Periksa Bebas Pustaka">' +
                                 '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>' +
                                 '<span>Bebas</span>' +
                             '</button>' +
@@ -4763,7 +4776,8 @@ export const prerender = false;
         window.renderBookGrid = function () {
             var q = (document.getElementById("cari-buku-grid").value || "").toLowerCase();
             var list = state.bukuPinjam.filter(function (b) {
-                var matchSelected = selectedBukuIds.indexOf(String(b.id)) > -1;
+                var cleanId = String(b.id).replace(/\.0$/, '');
+                var matchSelected = selectedBukuIds.indexOf(String(b.id)) > -1 || selectedBukuIds.indexOf(cleanId) > -1;
                 return matchSelected || ((curKatPinjam === "SEMUA" || b.kategori === curKatPinjam) && ((b.judul || "").toLowerCase().indexOf(q) > -1 || (b.penulis || "").toLowerCase().indexOf(q) > -1));
             });
             var grid = document.getElementById("grid-buku-pinjam");
@@ -4772,8 +4786,9 @@ export const prerender = false;
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:32px; color:var(--text-muted); font-size:13px;">Tidak ada koleksi buku yang cocok dengan filter atau pencarian.</div>';
             } else {
                 grid.innerHTML = list.map(function (b) {
-                    var isSel = selectedBukuIds.indexOf(String(b.id)) > -1;
-                    return '<div class="book-card ' + (isSel ? 'selected' : '') + '" onclick="window.toggleSelectBuku(\'' + b.id + '\')">' +
+                    var cleanId = String(b.id).replace(/\.0$/, '');
+                    var isSel = selectedBukuIds.indexOf(String(b.id)) > -1 || selectedBukuIds.indexOf(cleanId) > -1;
+                    return '<div class="book-card ' + (isSel ? 'selected' : '') + '" onclick="window.toggleSelectBuku(\'' + cleanId + '\')">' +
                         '<div class="book-card-title" title="' + (b.judul || '').replace(/"/g, '&quot;') + '">' + (b.judul || 'Tanpa Judul') + '</div>' +
                         '<div class="book-card-author">' +
                             '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' +
@@ -4796,7 +4811,7 @@ export const prerender = false;
         };
 
         window.toggleSelectBuku = function (id) {
-            id = String(id);
+            id = String(id).replace(/\.0$/, '');
             var idx = selectedBukuIds.indexOf(id);
             if (idx > -1) {
                 selectedBukuIds.splice(idx, 1);
@@ -5512,8 +5527,8 @@ export const prerender = false;
             var rendered = tpl
                 .replace(/\{\{NOMOR_SURAT\}\}/g, noSurat)
                 .replace(/\{\{NAMA\}\}/g, (m.nama || "-").toUpperCase())
-                .replace(/\{\{NPM\}\}/g, m.npm || "-")
-                .replace(/\{\{ANGKATAN\}\}/g, m.angkatan || "2023")
+                .replace(/\{\{NPM\}\}/g, String(m.npm || "-").replace(/\.0$/, ""))
+                .replace(/\{\{ANGKATAN\}\}/g, String(m.angkatan || "2023").replace(/\.0$/, ""))
                 .replace(/\{\{STATUS\}\}/g, m.status || "Aktif")
                 .replace(/\{\{TANGGAL_SURAT\}\}/g, tglSurat)
                 .replace(/\{\{KODE_VALIDASI\}\}/g, "SHA-" + d.getFullYear() + "-UNIROW-TI");
@@ -5812,9 +5827,10 @@ export const prerender = false;
                 var stokColor = stokNum > 0 ? "#065F46" : "#991B1B";
                 var stokLabel = stokNum > 0 ? (stokNum + " Eksemplar") : "Habis (0)";
 
+                var cleanId = String(b.id).replace(/\.0$/, '');
                 return '<tr style="background-color:' + rowBg + ';">' +
                     '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 6px;">' + (idx + 1) + '</td>' +
-                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">#' + b.id + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">#' + cleanId + '</td>' +
                     '<td style="border:1px solid #CBD5E1; padding:7px 10px; font-weight:600;">' + (b.judul || '-') + '</td>' +
                     '<td style="border:1px solid #CBD5E1; padding:7px 10px;">' + (b.penulis || '-') + '</td>' +
                     '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (b.tahun || '-') + '</td>' +
@@ -5841,7 +5857,7 @@ export const prerender = false;
             var rows = [["ID", "Judul", "Penulis", "Tahun", "Stok", "Rak", "Kategori"]];
             var source = curKatBuku === "Buku Rusak" ? state.bukuRusak : state.bukuPinjam.filter(function (b) { return b.kategori === curKatBuku; });
             source.forEach(function (b) {
-                rows.push([b.id, b.judul || "-", b.penulis || "-", b.tahun || "-", b.stok || 0, b.rak || "-", b.kategori || curKatBuku]);
+                rows.push([String(b.id).replace(/\.0$/, ''), b.judul || "-", b.penulis || "-", b.tahun || "-", b.stok || 0, b.rak || "-", b.kategori || curKatBuku]);
             });
             window.unduhCsv(rows, "Katalog_" + curKatBuku.replace(/\s+/g, "_") + ".csv");
             window.showToast("Katalog CSV " + curKatBuku + " berhasil diunduh!", "success");
@@ -5868,13 +5884,15 @@ export const prerender = false;
                 var isAktif = String(m.status || "Aktif").toLowerCase() === "aktif";
                 var stBg = isAktif ? "#D1FAE5" : "#E2E8F0";
                 var stColor = isAktif ? "#065F46" : "#475569";
+                var cleanNpm = String(m.npm || '-').replace(/\.0$/, '');
+                var cleanAngkatan = String(m.angkatan || '-').replace(/\.0$/, '');
 
                 return '<tr style="background-color:' + rowBg + ';">' +
                     '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 6px;">' + (idx + 1) + '</td>' +
                     '<td style="border:1px solid #CBD5E1; padding:7px 10px; font-weight:600;">' + (m.nama || '-') + '</td>' +
-                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">' + (m.npm || '-') + '</td>' +
+                    '<td style="text-align:center; font-weight:bold; border:1px solid #CBD5E1; padding:7px 8px; mso-number-format:\'\\@\';">' + cleanNpm + '</td>' +
                     '<td style="border:1px solid #CBD5E1; padding:7px 10px;">' + (m.email || '-') + '</td>' +
-                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + (m.angkatan || '-') + '</td>' +
+                    '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 8px;">' + cleanAngkatan + '</td>' +
                     '<td style="text-align:center; font-weight:bold; background-color:' + stBg + '; color:' + stColor + '; border:1px solid #CBD5E1; padding:7px 8px;">' + (m.status || 'Aktif').toUpperCase() + '</td>' +
                     '<td style="text-align:center; border:1px solid #CBD5E1; padding:7px 10px; mso-number-format:\'\\@\';">' + (m.noHp || '-') + '</td>' +
                 '</tr>';
@@ -5895,7 +5913,9 @@ export const prerender = false;
         window.exportCsvMhs = function () {
             var rows = [["No", "Nama", "NPM", "Email", "Angkatan", "Status", "No HP"]];
             state.mahasiswa.forEach(function (m, idx) {
-                rows.push([idx + 1, m.nama || "-", m.npm || "-", m.email || "-", m.angkatan || "-", m.status || "Aktif", m.noHp || "-"]);
+                var cleanNpm = String(m.npm || "-").replace(/\.0$/, "");
+                var cleanAngkatan = String(m.angkatan || "-").replace(/\.0$/, "");
+                rows.push([idx + 1, m.nama || "-", cleanNpm, m.email || "-", cleanAngkatan, m.status || "Aktif", m.noHp || "-"]);
             });
             window.unduhCsv(rows, "Direktori_Mahasiswa_INTEGRAL.csv");
             window.showToast("Direktori Mahasiswa CSV berhasil diunduh!", "success");

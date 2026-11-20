@@ -62,7 +62,10 @@ export const GET: APIRoute = async () => {
 
     const collectionMap = new Map<string, any>();
     for (const c of collections) {
-      collectionMap.set(String(c.id).trim(), c);
+      const rawId = String(c.id).trim();
+      const cleanId = rawId.replace(/\.0$/, '');
+      collectionMap.set(rawId, c);
+      collectionMap.set(cleanId, c);
     }
 
     // 2. Ambil seluruh mahasiswa dari Supabase
@@ -142,11 +145,11 @@ export const GET: APIRoute = async () => {
 
         riwayat.push({
           noUrut: i + 1,
-          id: nl.id,
-          idTransaksi: nl.id,
+          id: String(nl.id),
+          idTransaksi: String(nl.id),
           sheetRow: i + 2,
           mahasiswa: mhsNama,
-          npm: nl.student_npm,
+          npm: String(nl.student_npm || '').replace(/\.0$/, ''),
           tglPinjam: formatTglIndo(nl.tgl_pinjam),
           batasKembali: formatTglIndo(nl.batas_kembali),
           tglHarusKembali: nl.batas_kembali,
@@ -224,9 +227,11 @@ export const GET: APIRoute = async () => {
       .order('id', { ascending: false });
 
     const bukuRusakList = (damaged || []).map((d, idx) => {
-      const colInfo = collectionMap.get(String(d.collection_id || '').trim());
+      const colIdStr = String(d.collection_id || '').trim();
+      const colInfo = collectionMap.get(colIdStr) || collectionMap.get(colIdStr.replace(/\.0$/, ''));
+      const cleanId = String(d.collection_id || d.id || idx + 1).replace(/\.0$/, '');
       return {
-        id: d.collection_id || d.id || String(idx + 1),
+        id: cleanId,
         judul: colInfo ? colInfo.judul : (d.collection_id || 'Buku Rusak'),
         penulis: colInfo ? (colInfo.penulis || '-') : '-',
         tahun: colInfo ? (colInfo.tahun_terbit || '-') : '-',
@@ -270,7 +275,7 @@ export const GET: APIRoute = async () => {
         },
         mahasiswa: students.map((s, idx) => ({
           no: idx + 1,
-          npm: s.npm,
+          npm: String(s.npm || '').replace(/\.0$/, ''),
           nama: s.nama,
           angkatan: String(s.angkatan || '2023').replace(/\.0$/, ''),
           status: s.status || 'Aktif',
@@ -278,7 +283,7 @@ export const GET: APIRoute = async () => {
           noHp: s.no_hp || '-'
         })),
         bukuPinjam: collections.map(c => ({
-          id: c.id,
+          id: String(c.id).replace(/\.0$/, ''),
           judul: c.judul,
           penulis: c.penulis || '-',
           tahun: c.tahun_terbit || '-',

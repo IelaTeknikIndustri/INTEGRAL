@@ -54,10 +54,14 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 2. Cek stok koleksi
+    const rawIds = (collectionIds as any[]).map(x => String(x).trim());
+    const cleanIds = rawIds.map(x => x.replace(/\.0$/, ''));
+    const allLookupIds = Array.from(new Set([...rawIds, ...cleanIds]));
+
     const { data: collections, error: colErr } = await supabaseAdmin
       .from('collections')
       .select('id, judul, stok, rak')
-      .in('id', collectionIds);
+      .in('id', allLookupIds);
 
     if (colErr || !collections || collections.length === 0) {
       return new Response(JSON.stringify({ success: false, message: 'Buku yang dipilih tidak ditemukan dalam katalog' }), {

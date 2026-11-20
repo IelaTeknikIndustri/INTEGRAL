@@ -84,18 +84,25 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (totalDenda > 0) isEligible = false;
 
+    // Bersihkan format angkatan dan npm dari suffix .0
+    const cleanStudent = {
+      ...student,
+      npm: String(student.npm || '').replace(/\.0$/, ''),
+      angkatan: String(student.angkatan || '2023').replace(/\.0$/, '')
+    };
+
     // 3. Nomor surat dan kode validasi
     const dt = new Date();
     const ymd = dt.getFullYear() + ('0' + (dt.getMonth() + 1)).slice(-2) + ('0' + dt.getDate()).slice(-2);
-    const nomorSurat = `BP/${student.npm || 'TI'}/${ymd}`;
-    const kodeValidasi = generateValidationCode(student.npm || 'TI');
+    const nomorSurat = `BP/${cleanStudent.npm || 'TI'}/${ymd}`;
+    const kodeValidasi = generateValidationCode(cleanStudent.npm || 'TI');
 
     return new Response(JSON.stringify({
       success: true,
       eligible: isEligible,
       cleared: isEligible,
-      mhs: student,
-      student: student,
+      mhs: cleanStudent,
+      student: cleanStudent,
       totalDenda: totalDenda,
       nomorSurat: nomorSurat,
       kodeValidasi: kodeValidasi
