@@ -1967,6 +1967,14 @@ export const prerender = false;
         min-width: 290px !important;
     }
 
+    /* Pastikan NIDN rata kiri tepat di bawah huruf S (SUSANTI DHINI) */
+    #a4-simulated-sheet div[style*="display:inline-block"],
+    #a4-simulated-sheet div[style*="display: inline-block"],
+    #printable-letter div[style*="display:inline-block"],
+    #printable-letter div[style*="display: inline-block"] {
+        text-align: left !important;
+    }
+
     /* === TEMPLATE SURAT EDITOR TABS & PREVIEW === */
     .tab-btn-tpl {
         flex: 1;
@@ -3700,8 +3708,11 @@ export const prerender = false;
         var isGAS = true;
         var PER_PAGE = 15;
         var STORAGE_KEY = "INTEGRAL_SESSION_ACTIVE";
-        var TEMPLATE_STORAGE_KEY = "INTEGRAL_SURAT_BEBAS_TEMPLATE_V2";
-        try { localStorage.removeItem("INTEGRAL_SURAT_BEBAS_TEMPLATE"); } catch (e) { }
+        var TEMPLATE_STORAGE_KEY = "INTEGRAL_SURAT_BEBAS_TEMPLATE_V3";
+        try {
+            localStorage.removeItem("INTEGRAL_SURAT_BEBAS_TEMPLATE");
+            localStorage.removeItem("INTEGRAL_SURAT_BEBAS_TEMPLATE_V2");
+        } catch (e) { }
         var THEME_STORAGE_KEY = "INTEGRAL_THEME";
 
         /* === UI FEEDBACK HELPERS === */
@@ -3846,12 +3857,14 @@ export const prerender = false;
             '    <div style="font-size:8.5pt; margin-bottom:4px;">Verifikasi Sistem INTEGRAL:</div>',
             '    <div style="font-weight:bold; font-size:9.5pt; margin-top:16px;">{{KODE_VALIDASI}}</div>',
             '  </div>',
-            '  <div style="text-align:center; min-width:280px; width:auto;">',
+            '  <div style="text-align:center; min-width:290px; width:auto;">',
             '    <div>{{TANGGAL_SURAT}}</div>',
             '    <div>KEPALA LABORATORIUM</div>',
             '    <div style="height:55px;"></div>',
-            '    <div style="font-weight:bold; text-decoration:underline; white-space:nowrap;">SUSANTI DHINI ANGGRAINI, S.Si, M.Si</div>',
-            '    <div>NIDN. 0723128804</div>',
+            '    <div style="display:inline-block; text-align:left;">',
+            '      <div style="font-weight:bold; text-decoration:underline; white-space:nowrap;">SUSANTI DHINI ANGGRAINI, S.Si, M.Si</div>',
+            '      <div style="text-align:left;">NIDN.0723128804</div>',
+            '    </div>',
             '  </div>',
             '</div>'
         ].join('\n');
@@ -5422,12 +5435,21 @@ export const prerender = false;
 
         function sanitizeSuratHtml(html) {
             if (!html) return html;
-            return html
-                .replace(/style="([^"]*text-decoration:\s*underline[^"]*)"/gi, function (match, s) {
-                    return s.indexOf('white-space') === -1 ? 'style="' + s + '; white-space:nowrap; display:inline-block;"' : match;
-                })
-                .replace(/width:\s*2[45]0px;?/gi, 'min-width:290px; width:auto;')
-                .replace(/(SUSANTI DHINI ANGGRAINI,\s*S\.Si,?)[\s\r\n]*(?:<br\s*\/?>)?[\s\r\n]*(M\.Si)/gi, '$1 $2');
+            var res = html;
+            res = res.replace(/style="([^"]*text-decoration:\s*underline[^"]*)"/gi, function (match, s) {
+                return s.indexOf('white-space') === -1 ? 'style="' + s + '; white-space:nowrap; display:inline-block;"' : match;
+            });
+            res = res.replace(/width:\s*2[45]0px;?/gi, 'min-width:290px; width:auto;');
+            res = res.replace(/(SUSANTI DHINI ANGGRAINI,\s*S\.Si,?)[\s\r\n]*(?:<br\s*\/?>)?[\s\r\n]*(M\.Si)/gi, '$1 $2');
+
+            // Bungkus nama & NIDN agar NIDN rata kiri tepat di bawah huruf S (SUSANTI DHINI) jika belum terbungkus
+            if (res.indexOf('display:inline-block; text-align:left;') === -1 && res.indexOf('display: inline-block; text-align: left;') === -1) {
+                res = res.replace(
+                    /(<div style="font-weight:bold; text-decoration:underline;[^>]*>[\s\S]*?<\/div>)\s*(?:<div[^>]*>)?\s*(NIDN[^\s<]*\s*[0-9]+)\s*(?:<\/div>)?/i,
+                    '<div style="display:inline-block; text-align:left;">\n      $1\n      <div style="text-align:left;">$2</div>\n    </div>'
+                );
+            }
+            return res;
         }
 
         window.updateA4PreviewFromEditor = function () {
