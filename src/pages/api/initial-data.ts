@@ -260,9 +260,17 @@ export const GET: APIRoute = async () => {
       else if (st === 'dikembalikan') cKembali++;
     });
 
+    // Ambil template surat resmi dari configs
+    const { data: tplRow } = await supabaseAdmin
+      .from('configs')
+      .select('value')
+      .eq('key', 'TEMPLATE_SURAT_BEBAS')
+      .maybeSingle();
+
     return new Response(JSON.stringify({
       success: true,
       data: {
+        templateSurat: tplRow?.value || null,
         stats: {
           lit: dataLit.length,
           kp: dataKp.length,

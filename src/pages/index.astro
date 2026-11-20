@@ -1930,7 +1930,7 @@ export const prerender = false;
         }
     }
 
-    /* === ENFORCE NUMBERING ON A4 SURAT BEBAS === */
+    /* === ENFORCE NUMBERING & SIGNATORY ON A4 SURAT BEBAS === */
     #a4-simulated-sheet ol, #printable-letter ol {
         list-style-type: decimal !important;
         list-style-position: outside !important;
@@ -1942,6 +1942,29 @@ export const prerender = false;
         display: list-item !important;
         margin-bottom: 4px !important;
         padding-left: 2px !important;
+    }
+
+    /* Pastikan gelar nama pejabat tanda tangan surat TIDAK PERNAH terpotong / turun baris */
+    #a4-simulated-sheet [style*="text-decoration:underline"],
+    #a4-simulated-sheet [style*="text-decoration: underline"],
+    #printable-letter [style*="text-decoration:underline"],
+    #printable-letter [style*="text-decoration: underline"] {
+        white-space: nowrap !important;
+        display: inline-block !important;
+        font-size: 10.5pt !important;
+        word-break: keep-all !important;
+    }
+
+    #a4-simulated-sheet div[style*="width:240px"],
+    #a4-simulated-sheet div[style*="width: 240px"],
+    #a4-simulated-sheet div[style*="width:250px"],
+    #a4-simulated-sheet div[style*="width: 250px"],
+    #printable-letter div[style*="width:240px"],
+    #printable-letter div[style*="width: 240px"],
+    #printable-letter div[style*="width:250px"],
+    #printable-letter div[style*="width: 250px"] {
+        width: auto !important;
+        min-width: 290px !important;
     }
 
     /* === TEMPLATE SURAT EDITOR TABS & PREVIEW === */
@@ -3677,7 +3700,8 @@ export const prerender = false;
         var isGAS = true;
         var PER_PAGE = 15;
         var STORAGE_KEY = "INTEGRAL_SESSION_ACTIVE";
-        var TEMPLATE_STORAGE_KEY = "INTEGRAL_SURAT_BEBAS_TEMPLATE";
+        var TEMPLATE_STORAGE_KEY = "INTEGRAL_SURAT_BEBAS_TEMPLATE_V2";
+        try { localStorage.removeItem("INTEGRAL_SURAT_BEBAS_TEMPLATE"); } catch (e) { }
         var THEME_STORAGE_KEY = "INTEGRAL_THEME";
 
         /* === UI FEEDBACK HELPERS === */
@@ -3824,15 +3848,15 @@ export const prerender = false;
             '  </div>',
             '  <div style="text-align:center; min-width:280px; width:auto;">',
             '    <div>{{TANGGAL_SURAT}}</div>',
-            '    <div>Petugas Ruang Baca TI,</div>',
+            '    <div>KEPALA LABORATORIUM</div>',
             '    <div style="height:55px;"></div>',
-            '    <div style="font-weight:bold; text-decoration:underline; white-space:nowrap;">Mochammad Luqman Firdaus</div>',
-            '    <div>NIP/NIDN. 0715088901</div>',
+            '    <div style="font-weight:bold; text-decoration:underline; white-space:nowrap;">SUSANTI DHINI ANGGRAINI, S.Si, M.Si</div>',
+            '    <div>NIDN. 0723128804</div>',
             '  </div>',
             '</div>'
         ].join('\n');
 
-        var state = { user: null, stats: {}, mahasiswa: [], bukuPinjam: [], riwayat: [], bukuRusak: [], labLogs: [] };
+        var state = { user: null, stats: {}, mahasiswa: [], bukuPinjam: [], riwayat: [], bukuRusak: [], labLogs: [], templateSurat: null };
         var curKatBuku = "Buku Literatur", pageBuku = 1;
         var filterRakBukuVal = "SEMUA", sortBukuVal = "ID_ASC";
         var selectedBookDetail = null;
@@ -4217,6 +4241,10 @@ export const prerender = false;
                             state.bukuPinjam = res.data.bukuPinjam;
                             state.riwayat = res.data.riwayat;
                             state.bukuRusak = res.data.bukuRusak || [];
+                            if (res.data.templateSurat) {
+                                state.templateSurat = res.data.templateSurat;
+                                try { localStorage.setItem(TEMPLATE_STORAGE_KEY, res.data.templateSurat); } catch (e) { }
+                            }
 
                             if (state.user && state.user.peran === "Mahasiswa") {
                                 window.initStudentPortal();
@@ -5392,8 +5420,18 @@ export const prerender = false;
             }
         };
 
+        function sanitizeSuratHtml(html) {
+            if (!html) return html;
+            return html
+                .replace(/style="([^"]*text-decoration:\s*underline[^"]*)"/gi, function (match, s) {
+                    return s.indexOf('white-space') === -1 ? 'style="' + s + '; white-space:nowrap; display:inline-block;"' : match;
+                })
+                .replace(/width:\s*2[45]0px;?/gi, 'min-width:290px; width:auto;')
+                .replace(/(SUSANTI DHINI ANGGRAINI,\s*S\.Si,?)[\s\r\n]*(?:<br\s*\/?>)?[\s\r\n]*(M\.Si)/gi, '$1 $2');
+        }
+
         window.updateA4PreviewFromEditor = function () {
-            var rawTpl = document.getElementById("template-html-editor").value || DEFAULT_SURAT_TEMPLATE;
+            var rawTpl = document.getElementById("template-html-editor").value || state.templateSurat || localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
             var d = new Date();
             var bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             var tglSurat = "Tuban, " + d.getDate() + " " + bln[d.getMonth()] + " " + d.getFullYear();
@@ -5408,7 +5446,7 @@ export const prerender = false;
                 .replace(/\{\{KODE_VALIDASI\}\}/g, "SHA-2026-UNIROW-TI");
 
             var sheet = document.getElementById("a4-simulated-sheet");
-            if (sheet) sheet.innerHTML = rendered;
+            if (sheet) sheet.innerHTML = sanitizeSuratHtml(rendered);
         };
 
         window.terapkanFormKeTemplate = function () {
@@ -5438,7 +5476,7 @@ export const prerender = false;
         };
 
         window.cetakDariModalPreview = function () {
-            var rawTpl = document.getElementById("template-html-editor").value || DEFAULT_SURAT_TEMPLATE;
+            var rawTpl = document.getElementById("template-html-editor").value || state.templateSurat || localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
             var d = new Date();
             var bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             var tglSurat = "Tuban, " + d.getDate() + " " + bln[d.getMonth()] + " " + d.getFullYear();
@@ -5453,7 +5491,7 @@ export const prerender = false;
                 .replace(/\{\{KODE_VALIDASI\}\}/g, "SHA-2026-UNIROW-TI");
 
             var printContainer = document.getElementById("printable-letter");
-            printContainer.innerHTML = rendered;
+            printContainer.innerHTML = sanitizeSuratHtml(rendered);
             document.body.classList.add("printing-letter");
             printContainer.style.display = "block";
 
@@ -5517,7 +5555,7 @@ export const prerender = false;
         window.cetakSuratBebasResmi = function () {
             if (!lastBebasData || !lastBebasData.mhs) return;
             var m = lastBebasData.mhs;
-            var tpl = localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
+            var tpl = state.templateSurat || localStorage.getItem(TEMPLATE_STORAGE_KEY) || DEFAULT_SURAT_TEMPLATE;
 
             var d = new Date();
             var bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -5534,7 +5572,7 @@ export const prerender = false;
                 .replace(/\{\{KODE_VALIDASI\}\}/g, "SHA-" + d.getFullYear() + "-UNIROW-TI");
 
             var printContainer = document.getElementById("printable-letter");
-            printContainer.innerHTML = rendered;
+            printContainer.innerHTML = sanitizeSuratHtml(rendered);
             document.body.classList.add("printing-letter");
             printContainer.style.display = "block";
 
